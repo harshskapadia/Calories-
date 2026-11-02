@@ -1,0 +1,12 @@
+{
+  "experiment": "ablation_effnet_b0",
+  "backbone": "efficientnet_b0",
+  "split": "test",
+  "num_images": 3000,
+  "num_classes": 20,
+  "top1": 0.91,
+  "top5": 0.9876666666666667,
+  "macro_f1": 0.9101990476375624,
+  "params_m": 4.03,
+  "cpu_latency_ms": 24.9
+}

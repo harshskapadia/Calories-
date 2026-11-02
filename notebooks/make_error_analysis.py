@@ -8,9 +8,10 @@ import argparse, os
 ap = argparse.ArgumentParser(description="Generate notebooks/02_error_analysis.ipynb for an experiment (then execute it with nbconvert).")
 ap.add_argument("experiment", help="e.g. improved_all101 or full_convnext_tiny")
 ap.add_argument("--notes", help="markdown file with the written failure analysis")
+ap.add_argument("--out", default="02_error_analysis.ipynb", help="notebook filename inside notebooks/")
 args = ap.parse_args()
 EXP = args.experiment
-NOTES = open(args.notes).read() if args.notes else "_Notes to be written after reviewing the outputs above._"
+NOTES = open(args.notes).read() if args.notes else "_Write your observations here after reviewing the outputs above (see 02_error_analysis.ipynb for an example)._"
 nb = nbf.v4.new_notebook(); M, C = nbf.v4.new_markdown_cell, nbf.v4.new_code_cell
 nb.cells = [
 M(f"# 02 · Error analysis: `{EXP}`\n\nInputs come from `python -m src.evaluate` (`results/{EXP}/`). Goal: understand *which* dishes fail, *why*, and *what a mistake costs* in calories."),
@@ -80,5 +81,5 @@ plt.tight_layout(); plt.savefig(f'{ROOT}/assets/failure_cases.jpg', dpi=80); plt
 M("## Notes: why these fail\n\n" + NOTES),
 ]
 nb.metadata["kernelspec"] = {"name": "nutrisnap", "display_name": "nutrisnap", "language": "python"}
-nbf.write(nb, os.path.join(os.path.dirname(os.path.abspath(__file__)), "02_error_analysis.ipynb"))
-print("wrote notebooks/02_error_analysis.ipynb")
+nbf.write(nb, os.path.join(os.path.dirname(os.path.abspath(__file__)), args.out))
+print(f"wrote notebooks/{args.out}")

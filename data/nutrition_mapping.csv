@@ -1,0 +1,102 @@
+class,components,serving_g,match,notes
+apple_pie,2707995:100,,exact,
+baby_back_ribs,2705894:100,,close,"FNDDS 'Pork, ribs' (generic pork ribs)"
+baklava,2708044:100,,exact,
+beef_carpaccio,2705853:75|2705730:10|2710186:7|2709789:8,100,composite,raw beef + parmesan + olive oil + greens (lettuce as arugula proxy)
+beef_tartare,2705853:85|2707172:8|2709795:5|2710186:2,150,composite,raw beef + raw egg yolk + onion + oil
+beet_salad,2709872:60|2709789:22|2705716:10|2710186:8,200,composite,cooked beets + greens + goat cheese + olive oil
+beignets,2708071:100,90,exact,serving overridden: 2 beignets
+bibimbap,2708950:100,400,exact,serving overridden: 1 bowl
+bread_pudding,2705680:100,,exact,
+breakfast_burrito,2707344:100,,close,"FNDDS 'Egg burrito, with sausage'"
+bruschetta,2707652:100,130,exact,serving overridden: 3 pieces
+caesar_salad,2709591:85|2710199:15,200,composite,FNDDS Caesar salad (no dressing) + Caesar dressing
+cannoli,2708052:100,,close,"FNDDS 'Pastry, Italian, with cheese'"
+caprese_salad,2705722:45|2709719:45|2710186:7|2709780:3,200,composite,mozzarella + tomato + olive oil + basil
+carrot_cake,2707859:100,,exact,
+ceviche,2706463:100,,exact,
+cheese_plate,2705704:50|2708132:20|2709237:30,150,composite,assorted cheese + crackers + grapes
+cheesecake,2707861:100,,exact,
+chicken_curry,2706437:100,,exact,
+chicken_quesadilla,2708593:100,180,exact,serving overridden: 1 whole quesadilla
+chicken_wings,2706059:100,200,close,"wings from restaurant, baked/broiled; serving overridden: ~6 wings, edible portion"
+chocolate_cake,2707866:100,,exact,"bakery, chocolate icing"
+chocolate_mousse,2705698:100,,close,FNDDS 'Mousse'
+churros,2708070:100,90,exact,serving overridden: 2 churros
+clam_chowder,2707139:100,,exact,New England (cream-based) chowder
+club_sandwich,2706997:100,,exact,restaurant
+crab_cakes,2706549:100,,exact,
+creme_brulee,2705684:100,,exact,
+croque_madame,2706965:70|2707159:20|2705703:10,250,composite,ham & cheese sandwich + fried egg + white sauce
+cup_cakes,2707853:100,,close,"FNDDS 'Cake or cupcake, NFS'"
+deviled_eggs,2707181:100,120,exact,serving overridden: 4 halves
+donuts,2708062:100,,exact,
+dumplings,2708708:100,150,close,"FNDDS 'Wonton, dumpling or pot sticker, steamed'; serving overridden: ~6 pieces"
+edamame,2707436:100,,exact,
+eggs_benedict,2707180:100,,exact,
+escargots,2706368:100,,exact,
+falafel,2707408:100,120,exact,serving overridden: 4 patties
+filet_mignon,2705841:100,,exact,beef tenderloin steak
+fish_and_chips,2706244:50|2709458:50,350,composite,fried cod + fried french fries
+foie_gras,2706155:100,,proxy,"FNDDS 'Liver, paste or pate' (foie gras is fattier)"
+french_fries,2709461:100,,exact,fast food
+french_onion_soup,2710108:100,,exact,
+french_toast,2708331:100,130,exact,serving overridden: 2 slices
+fried_calamari,2706334:100,,exact,
+fried_rice,2708952:100,,exact,
+frozen_yogurt,2705451:100,,exact,
+garlic_bread,2707627:100,,exact,restaurant
+gnocchi,2708722:100,,exact,potato gnocchi
+greek_salad,2709830:100,200,exact,no dressing; serving overridden: side-salad plate
+grilled_cheese_sandwich,2705801:100,,exact,
+grilled_salmon,2706287:100,,exact,
+guacamole,2709307:100,,exact,
+gyoza,2708705:100,150,close,"FNDDS 'Wonton, dumpling or pot sticker, fried'; serving overridden: ~6 pieces"
+hamburger,2706920:100,,exact,
+hot_and_sour_soup,2707136:100,,exact,
+hot_dog,2707056:100,,exact,hot dog on white bun
+huevos_rancheros,2707191:100,,exact,
+hummus,2707402:100,,exact,
+ice_cream,2705629:100,,exact,
+lasagna,2708750:100,,exact,with meat
+lobster_bisque,2707140:100,,close,"FNDDS 'Soup, bisque'"
+lobster_roll_sandwich,2706349:55|2707656:30|2710204:15,200,composite,lobster + hot dog bun + mayonnaise
+macaroni_and_cheese,2708811:100,,exact,
+macarons,2707936:100,60,proxy,"FNDDS 'Cookie, macaroon' (coconut macaroon, not French macaron); serving overridden: 3 macarons"
+miso_soup,2707455:100,,exact,
+mussels,2706350:100,150,exact,serving overridden: edible meat from ~1 lb in shell
+nachos,2708576:100,,exact,
+omelette,2707198:100,,exact,
+onion_rings,2710055:100,,exact,
+oysters,2706351:100,,exact,raw
+pad_thai,2708804:100,,exact,
+paella,2706711:100,,exact,with seafood
+pancakes,2708304:100,,exact,
+panna_cotta,2705597:60|2705385:27|2710258:13,120,composite,heavy cream + whole milk + sugar (gelatin negligible)
+peking_duck,2706141:100,,exact,
+pho,2707124:100,,exact,with meat
+pizza,2708614:100,,close,"cheese pizza, restaurant"
+pork_chop,2705866:100,,exact,
+poutine,2709461:60|2705748:25|2707145:15,400,composite,fries + cheese curds (cottage cheese proxy) + beef gravy
+prime_rib,2705829:100,,close,"ribeye, lean and fat eaten"
+pulled_pork_sandwich,2706975:100,,close,"FNDDS 'Barbecue pork sandwich, on white bun'"
+ramen,2709153:100,,exact,ramen bowl
+ravioli,2708761:100,,exact,with tomato sauce
+red_velvet_cake,2707884:100,,exact,
+risotto,2708407:80|2705730:10|2710154:5|2705597:5,250,composite,rice cooked with fat + parmesan + butter + cream
+samosa,2708730:100,,exact,
+sashimi,2706308:50|2706284:50,100,composite,raw tuna + raw salmon
+scallops,2706356:100,120,exact,baked or broiled; serving overridden: ~5 large scallops
+seaweed_salad,2709805:85|2710190:6|2707442:5|2710258:4,100,composite,seaweed + sesame oil + soy sauce + sugar
+shrimp_and_grits,2706363:35|2708369:55|2705885:5|2710154:5,350,composite,shrimp + cheese grits + bacon + butter
+spaghetti_bolognese,2708837:100,,close,"FNDDS 'Pasta with tomato-based sauce and meat, restaurant'"
+spaghetti_carbonara,2708357:65|2705885:12|2707172:10|2705730:10|2710186:3,300,composite,pasta + bacon + egg yolk + parmesan + oil
+spring_rolls,2708702:100,,close,"FNDDS 'Egg roll, with beef and/or pork' (fried)"
+steak,2705824:100,,exact,
+strawberry_shortcake,2707896:100,,exact,
+sushi,2708959:100,,exact,
+tacos,2708514:100,,exact,
+takoyaki,2708304:60|2706331:25|2710204:8|2707442:3|2710258:4,120,composite,batter (pancake proxy) + octopus + mayo + soy sauce + sugar (takoyaki sauce proxy)
+tiramisu,2705702:100,,exact,
+tuna_tartare,2706308:80|2709223:12|2707442:4|2710190:4,120,composite,raw tuna + avocado + soy sauce + sesame oil
+waffles,2708325:100,,exact,

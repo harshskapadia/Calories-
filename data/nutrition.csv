@@ -1,0 +1,102 @@
+class,display_name,kcal_per_100g,protein_per_100g,carbs_per_100g,fat_per_100g,serving_g,match,fdc_ids,fndds_description,notes
+apple_pie,Apple Pie,296.0,2.7,37.55,15.28,150.0,exact,2707995:100,"Pie, apple",
+baby_back_ribs,Baby Back Ribs,254.0,16.22,12.13,15.12,105.0,close,2705894:100,"Pork, ribs","FNDDS 'Pork, ribs' (generic pork ribs)"
+baklava,Baklava,440.0,6.58,37.55,29.34,80.0,exact,2708044:100,Baklava,
+beef_carpaccio,Beef Carpaccio,265.6,16.89,1.13,21.04,100.0,composite,2705853:75|2705730:10|2710186:7|2709789:8,"Beef, ground, raw + Cheese, Parmesan, hard + Olive oil + Lettuce, raw",raw beef + parmesan + olive oil + greens (lettuce as arugula proxy)
+beef_tartare,Beef Tartare,227.2,17.01,0.5,16.96,150.0,composite,2705853:85|2707172:8|2709795:5|2710186:2,"Beef, ground, raw + Egg, yolk only, raw + Onions, raw + Olive oil",raw beef + raw egg yolk + onion + oil
+beet_salad,Beet Salad,139.8,3.36,6.78,11.11,200.0,composite,2709872:60|2709789:22|2705716:10|2710186:8,"Beets, fresh, cooked, no added fat + Lettuce, raw + Cheese, goat + Olive oil",cooked beets + greens + goat cheese + olive oil
+beignets,Beignets,417.0,5.46,53.69,20.18,90.0,exact,2708071:100,Beignet,serving overridden: 2 beignets
+bibimbap,Bibimbap,76.0,5.5,8.11,2.44,400.0,exact,2708950:100,"Bibimbap, Korean",serving overridden: 1 bowl
+bread_pudding,Bread Pudding,156.0,5.6,23.53,4.86,100.0,exact,2705680:100,"Pudding, bread",
+breakfast_burrito,Breakfast Burrito,257.0,11.27,18.88,14.96,190.0,close,2707344:100,"Egg burrito, with sausage","FNDDS 'Egg burrito, with sausage'"
+bruschetta,Bruschetta,171.0,4.29,21.32,7.61,130.0,exact,2707652:100,Bruschetta,serving overridden: 3 pieces
+caesar_salad,Caesar Salad,146.8,3.73,6.86,11.58,200.0,composite,2709591:85|2710199:15,"Caesar salad, with romaine, no dressing + Caesar dressing",FNDDS Caesar salad (no dressing) + Caesar dressing
+cannoli,Cannoli,267.0,7.52,35.06,10.94,70.0,close,2708052:100,"Pastry, Italian, with cheese","FNDDS 'Pastry, Italian, with cheese'"
+caprese_salad,Caprese Salad,205.9,11.13,3.9,16.34,200.0,composite,2705722:45|2709719:45|2710186:7|2709780:3,"Cheese, Mozzarella, NFS + Tomatoes, raw + Olive oil + Basil, raw",mozzarella + tomato + olive oil + basil
+carrot_cake,Carrot Cake,374.0,2.49,51.8,17.52,200.0,exact,2707859:100,"Cake or cupcake, carrot",
+ceviche,Ceviche,63.0,10.53,3.58,0.76,125.0,exact,2706463:100,Ceviche,
+cheese_plate,Cheese Plate,317.4,11.95,20.25,20.98,150.0,composite,2705704:50|2708132:20|2709237:30,"Cheese, NFS + Crackers, NFS + Grapes, raw",assorted cheese + crackers + grapes
+cheesecake,Cheesecake,399.0,5.29,34.82,26.52,175.0,exact,2707861:100,"Cheesecake, plain",
+chicken_curry,Chicken Curry,107.0,6.48,6.54,6.48,240.0,exact,2706437:100,Chicken curry,
+chicken_quesadilla,Chicken Quesadilla,287.0,14.45,27.32,12.99,180.0,exact,2708593:100,"Quesadilla, chicken",serving overridden: 1 whole quesadilla
+chicken_wings,Chicken Wings,264.0,23.08,0.0,18.35,200.0,close,2706059:100,"Chicken wing, baked or broiled, from fast food / restaurant","wings from restaurant, baked/broiled; serving overridden: ~6 wings, edible portion"
+chocolate_cake,Chocolate Cake,345.0,3.29,52.25,15.2,175.0,exact,2707866:100,"Cake or cupcake, chocolate with chocolate icing, bakery","bakery, chocolate icing"
+chocolate_mousse,Chocolate Mousse,212.0,4.2,16.23,15.12,85.0,close,2705698:100,Mousse,FNDDS 'Mousse'
+churros,Churros,419.0,6.05,48.87,22.21,90.0,exact,2708070:100,Churros,serving overridden: 2 churros
+clam_chowder,Clam Chowder,93.0,3.12,9.25,4.8,255.0,exact,2707139:100,"Soup, New England clam chowder",New England (cream-based) chowder
+club_sandwich,Club Sandwich,234.0,15.99,18.43,10.55,145.0,exact,2706997:100,"Club sandwich or sub, restaurant",restaurant
+crab_cakes,Crab Cakes,214.0,14.4,4.48,14.97,85.0,exact,2706549:100,"Crab, cake",
+creme_brulee,Creme Brulee,113.0,4.06,17.85,2.83,130.0,exact,2705684:100,Creme brulee,
+croque_madame,Croque Madame,199.9,12.56,16.8,9.17,250.0,composite,2706965:70|2707159:20|2705703:10,"Ham sandwich on white, with cheese + Egg, whole, fried with butter + White sauce or gravy",ham & cheese sandwich + fried egg + white sauce
+cup_cakes,Cup Cakes,352.0,2.84,53.6,14.77,175.0,close,2707853:100,"Cake or cupcake, NFS","FNDDS 'Cake or cupcake, NFS'"
+deviled_eggs,Deviled Eggs,198.0,11.52,1.07,15.9,120.0,exact,2707181:100,"Egg, deviled",serving overridden: 4 halves
+donuts,Donuts,426.0,5.52,49.52,22.86,75.0,exact,2708062:100,"Doughnut, NFS",
+dumplings,Dumplings,113.0,6.9,11.07,4.6,150.0,close,2708708:100,"Wonton, dumpling or pot sticker, steamed","FNDDS 'Wonton, dumpling or pot sticker, steamed'; serving overridden: ~6 pieces"
+edamame,Edamame,140.0,11.54,8.63,7.58,80.0,exact,2707436:100,"Edamame, cooked",
+eggs_benedict,Eggs Benedict,288.0,13.81,8.48,22.1,155.0,exact,2707180:100,"Egg, Benedict",
+escargots,Escargots,158.0,19.99,2.48,6.91,85.0,exact,2706368:100,Escargot,
+falafel,Falafel,514.0,8.28,28.96,41.19,120.0,exact,2707408:100,Falafel,serving overridden: 4 patties
+filet_mignon,Filet Mignon,196.0,30.46,0.0,8.25,160.0,exact,2705841:100,"Beef, steak, tenderloin",beef tenderloin steak
+fish_and_chips,Fish And Chips,207.5,7.72,15.11,12.79,350.0,composite,2706244:50|2709458:50,"Fish, cod, fried + Potato, french fries, from fresh, fried",fried cod + fried french fries
+foie_gras,Foie Gras,201.0,13.45,6.55,13.1,85.0,proxy,2706155:100,"Liver, paste or pate","FNDDS 'Liver, paste or pate' (foie gras is fattier)"
+french_fries,French Fries,312.0,3.43,41.44,14.73,110.0,exact,2709461:100,"Potato, french fries, fast food",fast food
+french_onion_soup,French Onion Soup,108.0,5.45,11.84,4.47,245.0,exact,2710108:100,"Soup, French onion",
+french_toast,French Toast,273.0,10.36,32.34,11.38,130.0,exact,2708331:100,"French toast, NFS",serving overridden: 2 slices
+fried_calamari,Fried Calamari,234.0,13.76,14.06,13.22,85.0,exact,2706334:100,"Calamari, fried",
+fried_rice,Fried Rice,174.0,3.84,32.5,3.19,198.0,exact,2708952:100,"Rice, fried, NFS",
+frozen_yogurt,Frozen Yogurt,127.0,3.0,21.6,3.6,175.0,exact,2705451:100,"Frozen yogurt, NFS",
+garlic_bread,Garlic Bread,349.0,8.34,41.64,16.58,74.0,exact,2707627:100,"Garlic bread, from fast food / restaurant",restaurant
+gnocchi,Gnocchi,135.0,2.44,17.2,6.33,188.0,exact,2708722:100,"Gnocchi, potato",potato gnocchi
+greek_salad,Greek Salad,48.0,2.75,4.35,2.26,200.0,exact,2709830:100,"Greek Salad, no dressing",no dressing; serving overridden: side-salad plate
+grilled_cheese_sandwich,Grilled Cheese Sandwich,343.0,11.03,28.09,20.78,116.0,exact,2705801:100,"Grilled cheese sandwich, NFS",
+grilled_salmon,Grilled Salmon,259.0,25.92,0.0,16.48,140.0,exact,2706287:100,"Fish, salmon, grilled",
+guacamole,Guacamole,155.0,1.95,8.45,14.18,60.0,exact,2709307:100,"Guacamole, NFS",
+gyoza,Gyoza,192.0,8.76,14.05,11.13,150.0,close,2708705:100,"Wonton, dumpling or pot sticker, fried","FNDDS 'Wonton, dumpling or pot sticker, fried'; serving overridden: ~6 pieces"
+hamburger,Hamburger,288.0,17.51,20.68,14.38,145.0,exact,2706920:100,"Hamburger, NFS",
+hot_and_sour_soup,Hot And Sour Soup,39.0,2.58,4.35,1.21,245.0,exact,2707136:100,"Soup, hot and sour",
+hot_dog,Hot Dog,296.0,10.85,23.73,17.37,102.0,exact,2707056:100,"Hot dog sandwich, NFS, on white bun",hot dog on white bun
+huevos_rancheros,Huevos Rancheros,121.0,6.68,8.85,6.65,236.0,exact,2707191:100,Huevos rancheros,
+hummus,Hummus,243.0,7.35,14.9,17.1,60.0,exact,2707402:100,"Hummus, plain",
+ice_cream,Ice Cream,221.0,3.57,26.36,11.3,135.0,exact,2705629:100,"Ice cream, NFS",
+lasagna,Lasagna,139.0,7.45,16.17,4.97,250.0,exact,2708750:100,Lasagna with meat,with meat
+lobster_bisque,Lobster Bisque,75.0,2.28,5.9,4.81,255.0,close,2707140:100,"Soup, bisque","FNDDS 'Soup, bisque'"
+lobster_roll_sandwich,Lobster Roll Sandwich,235.4,14.47,14.85,12.83,200.0,composite,2706349:55|2707656:30|2710204:15,"Lobster + Roll, white, hot dog bun + Mayonnaise, regular",lobster + hot dog bun + mayonnaise
+macaroni_and_cheese,Macaroni And Cheese,223.0,8.68,23.08,10.5,230.0,exact,2708811:100,Macaroni or noodles with cheese,
+macarons,Macarons,460.0,3.02,61.22,22.55,60.0,proxy,2707936:100,"Cookie, macaroon","FNDDS 'Cookie, macaroon' (coconut macaroon, not French macaron); serving overridden: 3 macarons"
+miso_soup,Miso Soup,24.0,2.21,2.3,0.85,245.0,exact,2707455:100,"Soup, miso or tofu",
+mussels,Mussels,109.0,15.06,4.67,2.84,150.0,exact,2706350:100,Mussels,serving overridden: edible meat from ~1 lb in shell
+nachos,Nachos,265.0,7.6,23.85,15.85,125.0,exact,2708576:100,"Nachos, NFS",
+omelette,Omelette,185.0,11.58,0.91,15.0,110.0,exact,2707198:100,"Egg omelet or scrambled egg, NS as to fat",
+onion_rings,Onion Rings,352.0,4.19,39.94,19.82,120.0,exact,2710055:100,Fried onion rings,
+oysters,Oysters,51.0,5.71,2.72,1.71,85.0,exact,2706351:100,"Oysters, raw",raw
+pad_thai,Pad Thai,154.0,8.13,14.36,7.5,200.0,exact,2708804:100,"Pad Thai, NFS",
+paella,Paella,143.0,8.03,16.44,4.76,300.0,exact,2706711:100,Paella with seafood,with seafood
+pancakes,Pancakes,282.0,7.41,35.32,12.07,100.0,exact,2708304:100,"Pancakes, plain",
+panna_cotta,Panna Cotta,274.4,2.09,16.48,22.24,120.0,composite,2705597:60|2705385:27|2710258:13,"Cream, heavy + Milk, whole + Sugar, white, granulated or lump",heavy cream + whole milk + sugar (gelatin negligible)
+peking_duck,Peking Duck,154.0,5.32,6.47,11.76,85.0,exact,2706141:100,"Duck, Peking",
+pho,Pho,77.0,5.81,5.6,3.33,245.0,exact,2707124:100,"Soup, pho, with meat",with meat
+pizza,Pizza,266.0,11.39,33.33,9.69,238.0,close,2708614:100,"Pizza, cheese, from restaurant or fast food, NS as to type of crust","cheese pizza, restaurant"
+pork_chop,Pork Chop,183.0,27.5,0.0,7.55,120.0,exact,2705866:100,"Pork, chop, NS as to fat eaten",
+poutine,Poutine,220.9,5.53,26.74,10.25,400.0,composite,2709461:60|2705748:25|2707145:15,"Potato, french fries, fast food + Cheese, cottage, creamed, large or small curd + Gravy, beef",fries + cheese curds (cottage cheese proxy) + beef gravy
+prime_rib,Prime Rib,289.0,23.5,0.0,21.64,240.0,close,2705829:100,"Beef, steak, ribeye, lean and fat eaten","ribeye, lean and fat eaten"
+pulled_pork_sandwich,Pulled Pork Sandwich,243.0,14.97,24.86,8.83,180.0,close,2706975:100,"Barbecue pork sandwich, on white bun","FNDDS 'Barbecue pork sandwich, on white bun'"
+ramen,Ramen,127.0,7.13,13.95,4.57,245.0,exact,2709153:100,"Ramen bowl, NFS",ramen bowl
+ravioli,Ravioli,138.0,6.92,14.61,5.9,250.0,exact,2708761:100,"Ravioli, NS as to filling, with tomato sauce",with tomato sauce
+red_velvet_cake,Red Velvet Cake,355.0,2.79,54.36,14.58,200.0,exact,2707884:100,"Cake or cupcake, red velvet",
+risotto,Risotto,213.9,5.21,22.79,10.98,250.0,composite,2708407:80|2705730:10|2710154:5|2705597:5,"Rice, white, cooked, fat added, NS as to fat type + Cheese, Parmesan, hard + Butter, NFS + Cream, heavy",rice cooked with fat + parmesan + butter + cream
+samosa,Samosa,310.0,5.14,33.16,17.47,75.0,exact,2708730:100,Samosa,
+sashimi,Sashimi,148.5,22.42,0.0,5.83,100.0,composite,2706308:50|2706284:50,"Fish, tuna, raw + Fish, salmon, raw",raw tuna + raw salmon
+scallops,Scallops,126.0,14.99,3.96,5.14,120.0,exact,2706356:100,"Scallops, baked or broiled",baked or broiled; serving overridden: ~5 large scallops
+seaweed_salad,Seaweed Salad,106.6,3.39,10.98,6.46,100.0,composite,2709805:85|2710190:6|2707442:5|2710258:4,"Seaweed, raw + Sesame oil + Soy sauce + Sugar, white, granulated or lump",seaweed + sesame oil + soy sauce + sugar
+shrimp_and_grits,Shrimp And Grits,152.2,9.89,6.75,9.25,350.0,composite,2706363:35|2708369:55|2705885:5|2710154:5,"Shrimp, steamed or boiled + Grits, with cheese, fat added + Bacon, NS as to type of meat, cooked + Butter, NFS",shrimp + cheese grits + bacon + butter
+spaghetti_bolognese,Spaghetti Bolognese,178.0,5.43,17.74,9.25,250.0,close,2708837:100,"Pasta with tomato-based sauce and meat, restaurant","FNDDS 'Pasta with tomato-based sauce and meat, restaurant'"
+spaghetti_carbonara,Spaghetti Carbonara,261.1,12.84,21.11,13.65,300.0,composite,2708357:65|2705885:12|2707172:10|2705730:10|2710186:3,"Pasta, cooked + Bacon, NS as to type of meat, cooked + Egg, yolk only, raw + Cheese, Parmesan, hard + Olive oil",pasta + bacon + egg yolk + parmesan + oil
+spring_rolls,Spring Rolls,272.0,7.58,27.02,14.7,100.0,close,2708702:100,"Egg roll, with beef and/or pork","FNDDS 'Egg roll, with beef and/or pork' (fried)"
+steak,Steak,229.0,27.0,0.0,12.88,160.0,exact,2705824:100,"Beef, steak, NFS",
+strawberry_shortcake,Strawberry Shortcake,214.0,3.31,40.09,4.73,175.0,exact,2707896:100,"Cake, strawberry shortcake",
+sushi,Sushi,94.0,2.92,18.39,0.67,180.0,exact,2708959:100,"Sushi, NFS",
+tacos,Tacos,246.0,15.31,15.62,13.56,105.0,exact,2708514:100,"Taco, NFS",
+takoyaki,Takoyaki,297.7,8.08,28.72,16.5,120.0,composite,2708304:60|2706331:25|2710204:8|2707442:3|2710258:4,"Pancakes, plain + Octopus + Mayonnaise, regular + Soy sauce + Sugar, white, granulated or lump",batter (pancake proxy) + octopus + mayo + soy sauce + sugar (takoyaki sauce proxy)
+tiramisu,Tiramisu,353.0,5.65,29.44,23.86,175.0,exact,2705702:100,Tiramisu,
+tuna_tartare,Tuna Tartare,143.9,20.09,1.22,6.17,120.0,composite,2706308:80|2709223:12|2707442:4|2710190:4,"Fish, tuna, raw + Avocado, raw + Soy sauce + Sesame oil",raw tuna + avocado + soy sauce + sesame oil
+waffles,Waffles,373.0,8.7,41.5,18.82,75.0,exact,2708325:100,"Waffle, plain",

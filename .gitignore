@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# data & large artifacts (never committed)
+data/raw/
+data/cache/
+data/splits/*.parquet
+checkpoints/
+*.pt
+*.pth
+!app/model/*.pt
+wandb/
+.ipynb_checkpoints/
+flagged/
+.gradio/

@@ -1,0 +1,19 @@
+# Core
+torch>=2.3
+torchvision>=0.18
+timm>=1.0
+datasets>=2.20
+numpy>=1.26
+pillow>=10.0
+opencv-python-headless>=4.9
+# Training / analysis
+pandas>=2.1
+scikit-learn>=1.4
+matplotlib>=3.8
+seaborn>=0.13
+pyyaml>=6.0
+requests>=2.31
+# App
+gradio>=4.40
+# Dev
+pytest>=8.0

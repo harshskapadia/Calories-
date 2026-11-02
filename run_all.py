@@ -109,7 +109,8 @@ def main() -> None:
             nb = f"03_error_analysis_{final_exp}.ipynb"  # keeps the committed 02 example intact
             sh(PY, "notebooks/make_error_analysis.py", final_exp, "--out", nb)
             sh(PY, "-m", "jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace",
-               "--ExecutePreprocessor.timeout=1800", f"notebooks/{nb}")
+               "--ExecutePreprocessor.timeout=1800", "--ExecutePreprocessor.kernel_name=python3",
+               f"notebooks/{nb}")
 
         elif step == "export":
             sh(PY, "scripts/export_model.py", ckpt)

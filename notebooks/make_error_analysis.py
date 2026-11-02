@@ -80,6 +80,6 @@ for (_, r), ax2 in zip(wrong.iterrows(), axes.reshape(-1, 2)):
 plt.tight_layout(); plt.savefig(f'{ROOT}/assets/failure_cases.jpg', dpi=80); plt.show()"""),
 M("## Notes: why these fail\n\n" + NOTES),
 ]
-nb.metadata["kernelspec"] = {"name": "nutrisnap", "display_name": "nutrisnap", "language": "python"}
+nb.metadata["kernelspec"] = {"name": "python3", "display_name": "Python 3", "language": "python"}
 nbf.write(nb, os.path.join(os.path.dirname(os.path.abspath(__file__)), args.out))
 print(f"wrote notebooks/{args.out}")

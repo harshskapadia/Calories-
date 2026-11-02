@@ -1,0 +1,30 @@
+# Full Food-101 (68k train / 7.5k val / 25k test). Intended for a GPU (Colab T4/L4/A100).
+# ~10-15 min/epoch on a T4 with AMP.
+experiment: full_convnext_tiny
+data:
+  name: full
+  short_side: 256
+  num_classes: null
+  val_frac: 0.1
+  seed: 42
+model:
+  backbone: convnext_tiny
+  pretrained: true
+  drop_rate: 0.2
+train:
+  img_size: 224
+  epochs: 12
+  batch_size: 64
+  lr: 2.0e-4
+  weight_decay: 0.05
+  label_smoothing: 0.1
+  warmup_epochs: 1
+  freeze_backbone_epochs: 0
+  amp: true
+  patience: 3
+  num_workers: 8
+  seed: 42
+augment:
+  randaugment: true
+  color_jitter: 0.2
+  random_erasing: 0.25

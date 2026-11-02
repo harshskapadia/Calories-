@@ -1,0 +1,33 @@
+# Backbone ablation: identical data/schedule, only the backbone (and its standard LR) differs.
+experiment: ablation_effnet_b0
+data:
+  name: subset20
+  short_side: 256
+  num_classes: 20
+  class_selection: random
+  train_per_class: 250
+  val_per_class: 50
+  test_per_class: 150
+  val_frac: 0.1
+  seed: 42
+model:
+  backbone: efficientnet_b0
+  pretrained: true
+  drop_rate: 0.2
+train:
+  img_size: 224
+  epochs: 5
+  batch_size: 48
+  lr: 1.0e-3
+  weight_decay: 0.05
+  label_smoothing: 0.1
+  warmup_epochs: 1
+  freeze_backbone_epochs: 0
+  amp: true
+  patience: 3
+  num_workers: 4
+  seed: 42
+augment:
+  randaugment: true
+  color_jitter: 0.2
+  random_erasing: 0.1

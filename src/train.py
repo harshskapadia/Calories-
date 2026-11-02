@@ -24,7 +24,7 @@ import torch
 import yaml
 from torch import nn
 
-from src.data import build_loaders
+from src.data import build_loaders, image_root_for, manifest_path
 from src.models import count_params, create_model, save_checkpoint, set_backbone_trainable
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -106,8 +106,23 @@ def plot_history(csv_path: Path, out_png: Path) -> None:
     plt.close(fig)
 
 
+def ensure_splits(cfg: dict[str, Any]) -> None:
+    """Create the config's train/val/test manifests if they don't exist yet."""
+    if all(manifest_path(cfg, s).exists() for s in ("train", "val", "test")):
+        return
+    from data.prepare_food101 import make_splits  # local import: only needed once
+
+    d = cfg["data"]
+    if not (image_root_for(cfg) / "index.csv").exists():
+        raise FileNotFoundError("Food-101 not exported yet: run `make data` first")
+    make_splits(image_root_for(cfg), d["name"], d.get("num_classes"), d.get("class_selection", "first"),
+                d.get("train_per_class"), d.get("val_per_class"), d.get("test_per_class"),
+                d.get("val_frac", 0.1), d.get("seed", 42))
+
+
 def train(cfg: dict[str, Any], out_dir: Path, use_wandb: bool = False) -> dict[str, Any]:
     tcfg, mcfg = cfg["train"], cfg["model"]
+    ensure_splits(cfg)
     seed_everything(tcfg.get("seed", 42))
     device = get_device()
     amp = bool(tcfg.get("amp", True))

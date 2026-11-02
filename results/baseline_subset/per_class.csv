@@ -1,0 +1,11 @@
+class,precision,recall,f1,support
+cheesecake,0.7708,0.7400,0.7551,100
+carrot_cake,0.8989,0.8000,0.8466,100
+caprese_salad,0.8763,0.8500,0.8629,100
+strawberry_shortcake,0.8304,0.9300,0.8774,100
+beef_carpaccio,0.9100,0.9100,0.9100,100
+donuts,0.9300,0.9300,0.9300,100
+sashimi,0.9216,0.9400,0.9307,100
+croque_madame,0.9400,0.9400,0.9400,100
+escargots,0.9495,0.9400,0.9447,100
+ramen,0.9333,0.9800,0.9561,100

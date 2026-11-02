@@ -189,7 +189,7 @@ python run_all.py             # the real thing
 
 Useful flags: `--steps data ablation` (run selected steps; finished steps are skipped on re-runs),
 `--final-config configs/gpu/ablation_convnext_tiny.yaml` (ship the more accurate ConvNeXt), `--batch-size 16`
-(if you see *CUDA out of memory*), `--workers 4` (fewer DataLoader processes).
+(if you see *CUDA out of memory*), `--workers 2` (fewer DataLoader processes; use it if Windows shows error 1455 "paging file is too small").
 
 **4. Use the app and publish your results**
 

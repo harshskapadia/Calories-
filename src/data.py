@@ -103,8 +103,11 @@ def build_loaders(cfg: dict[str, Any]) -> tuple[dict[str, DataLoader], list[str]
             batch_size=tcfg["batch_size"] * (1 if is_train else 2),
             shuffle=is_train,
             drop_last=is_train,
-            num_workers=tcfg.get("num_workers", 4),
+            # eval loaders get half the workers; only the train loader keeps its workers alive.
+            # (On Windows each worker is a full Python+torch process, ~0.5-1 GB of committed memory;
+            #  keeping 3 loaders' workers alive at once can exhaust the paging file: error 1455.)
+            num_workers=tcfg.get("num_workers", 4) if is_train else max(0, tcfg.get("num_workers", 4) // 2),
             pin_memory=torch.cuda.is_available(),
-            persistent_workers=tcfg.get("num_workers", 4) > 0,
+            persistent_workers=is_train and tcfg.get("num_workers", 4) > 0,
         )
     return loaders, classes

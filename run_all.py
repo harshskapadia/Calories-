@@ -44,7 +44,10 @@ def main() -> None:
     ap.add_argument("--steps", nargs="+", choices=STEPS, default=STEPS)
     ap.add_argument("--final-config", default="configs/gpu/ablation_effnet_b0.yaml",
                     help="config whose best checkpoint becomes the app model")
-    ap.add_argument("--workers", type=int, default=min(8, os.cpu_count() or 2), help="DataLoader workers")
+    # Windows spawns a full process per worker (high memory use), so default lower there.
+    default_workers = min(4 if os.name == "nt" else 8, os.cpu_count() or 2)
+    ap.add_argument("--workers", type=int, default=default_workers,
+                    help="DataLoader workers (lower to 2 if you see Windows error 1455 / out of memory)")
     ap.add_argument("--batch-size", type=int, default=None, help="override batch size (lower it if you run out of GPU memory)")
     ap.add_argument("--quick", action="store_true", help="1 epoch, capped data: verifies everything works")
     args = ap.parse_args()

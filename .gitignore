@@ -16,3 +16,4 @@ flagged/
 .gradio/
 data/splits/*.csv
 logs/
+build/

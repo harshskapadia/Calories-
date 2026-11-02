@@ -181,4 +181,5 @@ with gr.Blocks(title="NutriSnap: food photo to calories") as demo:
 
 if __name__ == "__main__":
     demo.launch(server_name=os.environ.get("GRADIO_SERVER_NAME", "0.0.0.0"),
+                share=os.environ.get("GRADIO_SHARE", "0") == "1",  # public link, e.g. from Colab
                 theme=gr.themes.Soft(primary_hue="teal"), css=CSS)

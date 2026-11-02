@@ -1,6 +1,6 @@
 # 🍽️ NutriSnap: food photo → dish → portion → calories & macros
 
-[![tests](https://img.shields.io/badge/tests-pytest-green)](tests/) ![python](https://img.shields.io/badge/python-3.11-blue) ![pytorch](https://img.shields.io/badge/PyTorch-timm-orange) ![gradio](https://img.shields.io/badge/demo-Gradio-ff7c00)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/harshskapadia/Calories-/blob/main/notebooks/nutrisnap_colab.ipynb) [![tests](https://img.shields.io/badge/tests-pytest-green)](tests/) ![python](https://img.shields.io/badge/python-3.11-blue) ![pytorch](https://img.shields.io/badge/PyTorch-timm-orange) ![gradio](https://img.shields.io/badge/demo-Gradio-ff7c00)
 
 Snap or upload a photo of a meal. NutriSnap recognises the dish (101 classes), shows **where the
 model looked** (Grad-CAM), estimates the **portion**, and returns **calories, protein, carbs and fat**,
@@ -120,8 +120,8 @@ make run-app                                    # http://localhost:7860
 python -m src.predict meal.jpg --portion large --cam-out cam.jpg  # CLI
 ```
 
-**Full Food-101 on a GPU:** open [`notebooks/train_full_gpu_colab.ipynb`](notebooks/train_full_gpu_colab.ipynb) in Colab
-(T4 or better). It trains `configs/full_gpu.yaml` and downloads the checkpoint and results.
+**Full Food-101 on a GPU:** open [`notebooks/nutrisnap_colab.ipynb`](https://colab.research.google.com/github/harshskapadia/Calories-/blob/main/notebooks/nutrisnap_colab.ipynb) in Colab
+(T4 or better). Part A launches the app in ~3 min; Part B trains on all of Food-101 and relaunches the app with the new model.
 
 ## Deploy to Hugging Face Spaces
 

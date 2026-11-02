@@ -22,7 +22,7 @@ train:
   freeze_backbone_epochs: 0
   amp: true
   patience: 3
-  num_workers: 8
+  num_workers: 2
   seed: 42
 augment:
   randaugment: true

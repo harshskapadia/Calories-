@@ -224,13 +224,35 @@ def train(cfg: dict[str, Any], out_dir: Path, use_wandb: bool = False) -> dict[s
     return summary
 
 
+def apply_overrides(cfg: dict[str, Any], overrides: list[str] | None) -> dict[str, Any]:
+    """Apply ``section.key=value`` overrides (value parsed as YAML), e.g. ``train.batch_size=128``."""
+    for item in overrides or []:
+        key, _, raw = item.partition("=")
+        if not _:
+            raise ValueError(f"override must look like a.b=value, got {item!r}")
+        node = cfg
+        *parents, leaf = key.split(".")
+        for k in parents:
+            node = node.setdefault(k, {})
+        value = yaml.safe_load(raw)
+        if isinstance(value, str):  # YAML 1.1 reads "3e-4" (no dot) as a string
+            try:
+                value = float(value)
+            except ValueError:
+                pass
+        node[leaf] = value
+    return cfg
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", type=Path, required=True)
     ap.add_argument("--out", type=Path, default=None, help="default: checkpoints/<experiment>")
     ap.add_argument("--wandb", action="store_true")
+    ap.add_argument("--set", nargs="*", default=[], metavar="KEY=VALUE",
+                    help="config overrides, e.g. --set train.num_workers=2 train.epochs=3")
     args = ap.parse_args()
-    cfg = yaml.safe_load(args.config.read_text())
+    cfg = apply_overrides(yaml.safe_load(args.config.read_text()), args.set)
     out = args.out or ROOT / "checkpoints" / cfg["experiment"]
     print(json.dumps(train(cfg, out, args.wandb), indent=2))
 

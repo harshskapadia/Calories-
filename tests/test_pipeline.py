@@ -123,3 +123,24 @@ def test_exif_rotation_is_applied() -> None:
     img.save(buf, "JPEG", exif=exif)
     buf.seek(0)
     assert Predictor.load_image(Image.open(buf)).size == (20, 40)
+
+
+def test_config_overrides() -> None:
+    from src.train import apply_overrides
+
+    cfg = {"train": {"epochs": 5, "lr": 1e-3}, "data": {"name": "x"}}
+    out = apply_overrides(cfg, ["train.epochs=2", "train.lr=3e-4", "model.backbone=convnext_tiny", "data.num_classes=null"])
+    assert out["train"]["epochs"] == 2 and out["train"]["lr"] == pytest.approx(3e-4)
+    assert out["model"]["backbone"] == "convnext_tiny" and out["data"]["num_classes"] is None
+    with pytest.raises(ValueError):
+        apply_overrides(cfg, ["train.epochs"])
+
+
+def test_fp16_export_roundtrip(ckpt: Path, tmp_path: Path, photo: Image.Image) -> None:
+    from scripts.export_model import export
+
+    out = export(ckpt, tmp_path / "app.pt")
+    assert out.stat().st_size < ckpt.stat().st_size * 0.6
+    full, small = Predictor(ckpt, tta=False), Predictor(out, tta=False)
+    assert next(small.model.parameters()).dtype == torch.float32  # cast back on load
+    assert torch.allclose(full.probabilities(photo), small.probabilities(photo), atol=1e-2)

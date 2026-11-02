@@ -86,7 +86,7 @@ def main() -> None:
                 sh(PY, "data/prepare_food101.py", "--config", cfg, "--workers", str(args.workers))
 
         elif step == "baseline":
-            if not (ROOT / "checkpoints/baseline_subset/best.pt").exists():
+            if not (ROOT / "checkpoints/baseline_subset/summary.json").exists():  # written only when training completes
                 sh(PY, "-m", "src.train", "--config", "configs/baseline_subset.yaml", "--set", *overrides)
             sh(PY, "-m", "src.evaluate", "--checkpoint", "checkpoints/baseline_subset/best.pt",
                "--num-workers", str(args.workers))
@@ -96,7 +96,7 @@ def main() -> None:
             sh(PY, "-m", "src.ablation", "--configs", *ablation_cfgs, "--name", name, "--set", *overrides)
 
         elif step == "final":
-            if not (ROOT / ckpt).exists():
+            if not (ROOT / ckpt).with_name("summary.json").exists():  # a stopped run leaves best.pt but no summary
                 sh(PY, "-m", "src.train", "--config", args.final_config, "--set", *overrides)
 
         elif step == "evaluate":

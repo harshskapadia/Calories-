@@ -26,7 +26,8 @@ def run(configs: list[Path], skip_trained: bool = True, overrides: list[str] | N
     for cfg_path in configs:
         cfg = apply_overrides(yaml.safe_load(cfg_path.read_text()), overrides)
         ckpt_dir = ROOT / "checkpoints" / cfg["experiment"]
-        if not (skip_trained and (ckpt_dir / "best.pt").exists()):
+        # summary.json is written only when training completes, so a run that was stopped mid-way retrains
+        if not (skip_trained and (ckpt_dir / "summary.json").exists()):
             train(cfg, ckpt_dir)
         m = evaluate(ckpt_dir / "best.pt", "test")
         with open(ckpt_dir / "metrics.csv") as f:

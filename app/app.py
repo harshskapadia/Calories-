@@ -38,7 +38,8 @@ DISCLAIMER = (
 CSS = """
 .gradio-container {max-width: 980px !important; margin: auto;}
 #kcal-card {text-align:center; border-radius:16px; padding:14px 8px;
-            background: linear-gradient(135deg, #264653 0%, #2a9d8f 100%); color: white;}
+            background: linear-gradient(135deg, #264653 0%, #2a9d8f 100%);}
+#kcal-card, #kcal-card * {color: #ffffff !important;}
 #kcal-card .big {font-size: 2.6rem; font-weight: 800; line-height: 1.1;}
 #kcal-card .macros {display:flex; justify-content:space-around; margin-top:8px; font-size:1rem;}
 #kcal-card .macros b {display:block; font-size:1.3rem;}
@@ -69,7 +70,9 @@ def _nutrition_outputs(label: str, grams: float):
          "kcal": [round(mk["protein"]), round(mk["carbs"]), round(mk["fat"])],
          "grams": [est.protein_g, est.carbs_g, est.fat_g]}
     )
-    return _card(est.display_name, est.grams, est.kcal, est.protein_g, est.carbs_g, est.fat_g, note), chart
+    # pin the axis at 0 (Gradio otherwise auto-scales and can hide the smallest bar)
+    chart_update = gr.update(value=chart, y_lim=[0, max(10, float(chart.kcal.max()) * 1.15)])
+    return _card(est.display_name, est.grams, est.kcal, est.protein_g, est.carbs_g, est.fat_g, note), chart_update
 
 
 def _preset_grams(label: str, preset: str) -> float:
@@ -152,7 +155,8 @@ with gr.Blocks(title="NutriSnap: food photo to calories") as demo:
             grams = gr.Slider(0, 1200, value=0, step=5, label="Portion (grams)")
             card = gr.HTML()
             chart = gr.BarPlot(x="macro", y="kcal", color="macro", color_map=MACRO_COLORS,
-                               title="Energy by macronutrient (kcal)", height=220, show_label=False)
+                               title="Energy by macronutrient (kcal)", height=220, show_label=False,
+                               x_title=" ", y_title="kcal", y_lim=[0, 100])
 
     with gr.Accordion("🔍 What did the model look at? (Grad-CAM)", open=True):
         cam = gr.Image(label="Grad-CAM overlay", height=300, interactive=False)

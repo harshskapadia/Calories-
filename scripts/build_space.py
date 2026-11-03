@@ -33,16 +33,22 @@ short_description: Food photo to dish, portion, calories and macros
 
 # NutriSnap 🍽️
 
-Upload or snap a photo of a meal: the model recognises the dish (Food-101, 101 classes),
-shows a Grad-CAM heatmap of what it looked at, and estimates calories and macros for an
-adjustable portion using USDA FoodData Central (FNDDS) values.
+Upload or snap a photo of a meal: the model recognises the dish (139 Western and Indian dishes,
+ConvNeXt-Tiny, 88.8% top-1 on 26,836 test images), shows a Grad-CAM heatmap of what it looked at,
+and estimates calories and macros for an adjustable portion using USDA FoodData Central (FNDDS).
+Anything it doesn't recognise can be looked up in a search over 5,500+ foods.
+
+Training data: Food-101 (research use) and the SohlHealth Enhanced Indian Food Classification
+dataset (CC-BY-4.0).
 
 **All values are estimates. Not medical or dietary advice.**
 
 Source code, training pipeline and evaluation: https://github.com/harshskapadia/Calories-
 """
 
-SPACE_REQUIREMENTS = """torch>=2.3
+SPACE_REQUIREMENTS = """# CPU-only PyTorch wheels: much smaller and faster to install than the default CUDA build
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.3
 torchvision>=0.18
 timm>=1.0
 numpy>=1.26
@@ -70,7 +76,8 @@ def build(out: Path, ckpt: Path) -> Path:
     shutil.copy2(ckpt, out / "app" / "model" / "nutrisnap.pt")
     if (ROOT / "app" / "examples").exists():
         shutil.copytree(ROOT / "app" / "examples", out / "app" / "examples")
-    shutil.copy2(ROOT / "data" / "nutrition.csv", out / "data" / "nutrition.csv")
+    for f in ("nutrition.csv", "food_search.csv"):  # dishes + the 5,400-food search table
+        shutil.copy2(ROOT / "data" / f, out / "data" / f)
     (out / "README.md").write_text(SPACE_README.format(gradio_version=gradio.__version__))
     (out / "requirements.txt").write_text(SPACE_REQUIREMENTS)
     size = sum(p.stat().st_size for p in out.rglob("*") if p.is_file()) / 1e6

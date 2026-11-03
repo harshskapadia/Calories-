@@ -265,18 +265,16 @@ python -m src.train --config configs/full_gpu.yaml --set train.epochs=20 train.b
 
 ## Deploy to Hugging Face Spaces
 
-After `python run_all.py` has produced `app/model/nutrisnap.pt`:
+One command builds the Space (app, inference code, model, nutrition + search tables, examples) and uploads it:
 
 ```bash
-python scripts/build_space.py            # assembles build/space/ (app, src, model, nutrition table, examples)
-hf auth login                            # paste a Hugging Face token with *write* access
-hf repos create <your-hf-username>/nutrisnap --type space --space-sdk gradio
-hf upload <your-hf-username>/nutrisnap build/space . --repo-type space
+hf auth login                                                  # once: paste a Hugging Face token with WRITE access
+python scripts/deploy_space.py --space <your-hf-username>/nutrisnap
 ```
 
-The Space builds in a few minutes at `https://huggingface.co/spaces/<your-hf-username>/nutrisnap`.
-`build/space/` has its own `README.md` with the Spaces YAML header (`sdk: gradio`, `app_file: app/app.py`) and a
-slim `requirements.txt`. It runs on the free CPU tier (ConvNeXt-Tiny ~55 ms/image, EfficientNet-B0 ~25 ms/image on CPU).
+The Space builds in a few minutes at `https://huggingface.co/spaces/<your-hf-username>/nutrisnap` and runs on the
+free CPU tier (CPU-only PyTorch wheels; ~3 s per analysis including Grad-CAM). Re-run the same command after
+retraining to update it. `python scripts/build_space.py` only assembles `build/space/` without uploading.
 
 ## Limitations
 

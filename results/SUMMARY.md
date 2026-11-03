@@ -1,8 +1,8 @@
 # NutriSnap results summary
 
-Final (app) model: `gpu_ablation_effnet_b0`
+Final (app) model: `multi_convnext_tiny`
 
-- Test top-1 **83.5%**, top-5 **96.4%**, macro-F1 0.833 on 25,250 images / 101 classes; 4.14 M params; 22.0 ms/img on CPU
+- Test top-1 **88.8%**, top-5 **97.7%**, macro-F1 0.893 on 26,836 images / 139 classes; 27.93 M params; 242.8 ms/img on CPU
 
 
 ## ablation_gpu

@@ -140,6 +140,23 @@ example photos (confidence within 0.5 points) at ~1 s per photo. The page has ca
 "not sure" warning, dish correction, portion presets/grams, macro breakdown and the 5,570-food search. Grad-CAM stays in the
 Gradio app (`python app/app.py`).
 
+### Packaged foods and drinks (barcode + product search)
+
+For anything in a package (biscuits, chips, shakes, lassi, protein drinks…) the page looks the product up in
+[Open Food Facts](https://world.openfoodfacts.org), the open database of ~3 million products (data under the ODbL,
+credited on the page):
+
+- **📷 Live barcode scanning** with the phone camera: the browser's built-in `BarcodeDetector` where available
+  (Chrome on Android), otherwise [zxing-wasm](https://github.com/Sec-ant/zxing-wasm) (vendored, loaded only when needed).
+  Also works from a **barcode photo** or by **typing the number**.
+- **Search by name** ("Amul lassi", "protein shake").
+- A **full nutrition label** per portion and per 100 g / 100 ml: energy, fat, saturates, carbs, sugars, fibre, protein, salt,
+  plus **Nutri-Score**, **NOVA** processing group, ingredients and allergens; drinks automatically switch to ml.
+
+Tested end to end in Chromium with real products: typed barcode (Britannia 5050, Nutri-Score E), a barcode photo and a
+**live camera stream** (fake video device showing an EAN-13; decoded and looked up in 1.8 s), and name search. Open Food Facts
+rate-limits search (~10/min) and occasionally answers 503, so requests retry with backoff and then show a clear "busy" message.
+
 Rebuild after retraining with `python scripts/build_web.py` (or `make web`); preview with `python -m http.server -d docs 8000`.
 
 ## Results

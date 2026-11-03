@@ -1,0 +1,3 @@
+zxing-wasm 3.1.4 (npm), MIT License, https://github.com/Sec-ant/zxing-wasm
+Files: dist/iife/reader/index.js (renamed zxing-reader.js), dist/reader/zxing_reader.wasm. Unmodified.
+Built on ZXing-C++ (Apache-2.0), https://github.com/zxing-cpp/zxing-cpp

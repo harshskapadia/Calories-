@@ -180,7 +180,9 @@ function render() {
   if (!food) return;
   const k = state.grams / 100;
   const P = food.p * k, C = food.c * k, F = food.f * k, kcal = food.kcal * k;
-  $("food-name").textContent = `${food.name} · ${Math.round(state.grams)} g`;
+  const unit = food.unit || "g";
+  $("unit").textContent = unit;
+  $("food-name").textContent = `${food.name} · ${Math.round(state.grams)} ${unit}`;
   $("kcal").textContent = Math.round(kcal);
   $("p").textContent = `${Math.round(P)} g`;
   $("c").textContent = `${Math.round(C)} g`;
@@ -191,6 +193,8 @@ function render() {
     $(`b${m}`).style.width = `${(e[m] / max) * 100}%`;
     $(`k${m}`).textContent = `${Math.round(e[m])} kcal`;
   }
+  if (typeof renderProductInfo === "function") renderProductInfo(food, state.grams);
+  if (food.match === "off") { $("source").innerHTML = food.sourceHtml; return; }
   $("source").textContent = food.match === "usda" ? "Nutrition: USDA FoodData Central (FNDDS)."
     : food.match === "exact" ? `Nutrition: USDA FNDDS "${food.source}".`
     : `Nutrition: ${food.match} match from USDA FNDDS (${food.source}).`;

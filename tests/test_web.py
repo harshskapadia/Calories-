@@ -23,7 +23,10 @@ def test_meta_and_foods_are_consistent() -> None:
 
 def test_site_files_present() -> None:
     for rel in ["index.html", "app.js", "style.css", "model/nutrisnap.int8.onnx", "ort/ort.wasm.min.js",
-                "ort/ort-wasm-simd-threaded.mjs", "ort/ort-wasm-simd-threaded.wasm", "examples/index.json", ".nojekyll"]:
+                "ort/ort-wasm-simd-threaded.mjs", "ort/ort-wasm-simd-threaded.wasm", "examples/index.json", ".nojekyll",
+                "products.js", "zxing/zxing-reader.js", "zxing/zxing_reader.wasm"]:
         assert (DOCS / rel).exists(), rel
     html = (DOCS / "index.html").read_text(encoding="utf-8")
-    assert 'src="ort/ort.wasm.min.js"' in html and 'src="app.js"' in html
+    assert 'src="ort/ort.wasm.min.js"' in html and 'src="app.js"' in html and 'src="products.js"' in html
+    js = (DOCS / "products.js").read_text(encoding="utf-8")
+    assert "world.openfoodfacts.org" in js and "Open Food Facts" in html and "ODbL" in html  # attribution

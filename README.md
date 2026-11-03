@@ -104,10 +104,23 @@ All 5,431 FNDDS foods are also exported to `data/food_search.csv` for the app's 
 | Some dishes have 100 photos, others 1,000 | `balanced_sampling`: sample weight ∝ 1/√(class count) |
 | Raw softmax confidence is over-confident | **Temperature scaling** fitted on the validation set after every training run (and `python -m src.calibrate` for existing checkpoints); the app shows calibrated confidence and the evaluation reports ECE |
 
-A CPU smoke test of the full multi-cuisine pipeline (12 random dishes from both datasets, 2 epochs) confirmed that
-calibration cuts expected calibration error from 0.21 to 0.09 on validation. Train the real 139-dish model on a GPU with
-`python run_all.py --final-config configs/gpu/multi_convnext_tiny.yaml --steps data final evaluate analysis export summary --batch-size 16 --workers 2`
-(~2 h on an RTX 3050 Ti); its test metrics land in `results/multi_convnext_tiny/`.
+### Multi-cuisine results (139 dishes, 26,836 test images)
+
+Trained with `python run_all.py --final-config configs/gpu/multi_convnext_tiny.yaml --steps data final evaluate analysis export summary --batch-size 16 --workers 2`
+on a laptop **RTX 3050 Ti (4 GB)**: ConvNeXt-Tiny, 10 epochs × ~10.5 min, phone-photo augmentation, balanced sampling.
+
+| Model | Dishes | Test top-1 | Test top-5 | Macro-F1 |
+|---|---|---|---|---|
+| ConvNeXt-Tiny, Food-101 only | 101 | 89.2% | 98.1% | 0.892 |
+| **ConvNeXt-Tiny, Food-101 + Indian** (app model) | **139** | **88.8%** | **97.7%** | **0.893** |
+
+Adding 38 Indian dishes (and the harder phone-photo augmentation) kept accuracy level while extending coverage by 38%.
+The two test sets differ (the 139-dish one adds Indian test images), so this is a like-for-like *coverage* comparison,
+not an identical-benchmark one. Per-class scores, the confusion matrix and calibration (ECE before/after temperature
+scaling) are in [`results/multi_convnext_tiny/`](results/multi_convnext_tiny/).
+
+A CPU smoke test of the same pipeline (12 random dishes from both datasets) showed temperature scaling cutting
+expected calibration error from 0.21 to 0.09 on validation.
 
 ## Results
 
@@ -131,7 +144,7 @@ learning rate) changes.
 | Backbone | Test top-1 | Test top-5 | Macro-F1 | Params | CPU latency (bs 1) | GPU train time / epoch |
 |---|---|---|---|---|---|---|
 | EfficientNet-B0 | 83.5% | 96.4% | 0.833 | 4.1 M | 23 ms | 4.9 min |
-| **ConvNeXt-Tiny** | **89.2%** | **98.1%** | **0.892** | 27.9 M | 55 ms | 8.5 min |
+| **ConvNeXt-Tiny** | **89.2%** | **98.1%** | **0.892** | 27.9 M | 55 ms* | 8.5 min |
 
 **Takeaways**
 - ConvNeXt-Tiny is **+5.7 points top-1** (about 35% fewer errors) for 7× the parameters and 2.4× the CPU latency.
@@ -139,6 +152,8 @@ learning rate) changes.
 - EfficientNet-B0 remains the choice for on-device or very low-latency use (4 M params, ~8 MB in fp16).
 - The most-confused pairs on the full set are sensible look-alikes: steak ↔ filet mignon, chocolate mousse ↔ chocolate cake,
   pork chop ↔ filet mignon, ice cream ↔ frozen yogurt.
+
+\* Laptop CPU timings vary a lot with power mode and background load: the same architecture measured 55 ms in the ablation run and 243 ms in the multi-cuisine run.
 
 Raw outputs: [`results/ablation_gpu.md`](results/ablation_gpu.md), per-model folders in [`results/`](results/).
 

@@ -248,15 +248,7 @@ function showTab(which) {
   $("results").hidden = which !== "meal" || !$("top3").children.length;
 }
 
-function setPalette(p) {
-  if (p === "mono") delete document.documentElement.dataset.palette; else document.documentElement.dataset.palette = p;
-  document.querySelectorAll(".palette button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.p === p));
-  try { localStorage.setItem("palette", p); } catch (e) { /* private mode: just don't remember */ }
-}
-
 function wire() {
-  document.querySelectorAll(".palette button").forEach((b) => b.addEventListener("click", () => setPalette(b.dataset.p)));
-  setPalette(document.documentElement.dataset.palette || "mono");
   $("tab-meal").addEventListener("click", () => showTab("meal"));
   $("tab-pack").addEventListener("click", () => showTab("pack"));
   for (const id of ["camera", "file"]) {

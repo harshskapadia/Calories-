@@ -1,0 +1,30 @@
+{
+  "photos_train": 4764,
+  "photos_test_unseen_dishes": 1236,
+  "dishes_test_unseen": 562,
+  "ridge_lambda": 3,
+  "constant_median": {
+    "mae_kcal": 193.3,
+    "median_abs_pct": 41.7,
+    "within_25pct": 34.6,
+    "within_50pct": 74.5
+  },
+  "app_pipeline_name_then_table": {
+    "mae_kcal": 260.3,
+    "median_abs_pct": 56.3,
+    "within_25pct": 16.5,
+    "within_50pct": 40.1
+  },
+  "photo_to_nutrition_ridge": {
+    "mae_kcal": 104.6,
+    "median_abs_pct": 19.8,
+    "within_25pct": 61.3,
+    "within_50pct": 88.2
+  },
+  "macro_mae_g": {
+    "protein_g": 6.8,
+    "carbohydrate_g": 13.9,
+    "fat_g": 6.0
+  },
+  "label_note": "labels are GPT-4o/Qwen estimates reviewed by crowd annotators (dataset card), not weighed food"
+}

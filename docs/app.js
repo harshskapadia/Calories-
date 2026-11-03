@@ -112,6 +112,7 @@ async function analyze(blob) {
   if (!state.session) { setStatus("The model is still loading, one moment…"); return; }
   state.lastBlob = blob;
   $("ov-results").hidden = true;
+  $("photo-est").hidden = true;
   $("preview").src = URL.createObjectURL(blob);
   $("preview").hidden = false;
   $("drop-hint").hidden = true;

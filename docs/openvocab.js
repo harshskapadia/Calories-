@@ -1,17 +1,19 @@
 /* "Identify anything": CLIP image encoder (int8 ONNX, loaded on demand) vs. 5,139 pre-computed food-name embeddings. */
 "use strict";
 
-const ov = { session: null, meta: null, bank: null, loading: null };
+const ov = { session: null, meta: null, bank: null, loading: null, head: null, est: null };
 
 async function loadOpenVocab() {
   if (ov.loading) return ov.loading;
   ov.loading = (async () => {
     const st = (t) => { $("ov-status").textContent = t; };
     st("Downloading the open-vocabulary model…");
-    const [meta, bankBuf] = await Promise.all([
+    const [meta, bankBuf, head] = await Promise.all([
       fetch("model/clip_vocab.json").then((r) => r.json()),
       fetch("model/clip_text.bin").then((r) => r.arrayBuffer()),
+      fetch("model/calorie_head.json").then((r) => (r.ok ? r.json() : null)).catch(() => null),
     ]);
+    ov.head = head;
     const bytes = await fetchWithProgress("model/clip_visual.int8.onnx", (f) => st(`Downloading the open-vocabulary model… ${Math.round(f * 100)}% of 96 MB`));
     st("Starting the model…");
     ov.session = await ort.InferenceSession.create(bytes, { executionProviders: ["wasm"], graphOptimizationLevel: "all" });
@@ -32,9 +34,16 @@ async function identifyAnything() {
     $("ov-status").textContent = `Comparing with ${region ? region + " dishes + USDA foods" : `${ov.meta.keys.length.toLocaleString()} foods`}…`;
     const t0 = performance.now();
     const m = ov.meta;
-    const x = await toTensor(state.lastBlob, { size: m.size, resize: m.resize, mean: m.mean, std: m.std, flip: false });
+    // original + mirrored photo in one batch, averaged: steadier matches and calorie estimates
+    const x = await toTensor(state.lastBlob, { size: m.size, resize: m.resize, mean: m.mean, std: m.std, flip: true });
     const { embedding } = await ov.session.run({ image: x });
-    const e = embedding.data, D = m.dim, N = m.keys.length;
+    const D = m.dim, N = m.keys.length;
+    const e = new Float32Array(D);
+    let norm = 0;
+    for (let d = 0; d < D; d++) { e[d] = (embedding.data[d] + embedding.data[D + d]) / 2; norm += e[d] * e[d]; }
+    norm = Math.sqrt(norm);
+    for (let d = 0; d < D; d++) e[d] /= norm;
+    showPhotoEstimate(e);
     const scores = new Float32Array(N);
     for (let i = 0; i < N; i++) {
       if (region && ov.regions[i] !== region && ov.regions[i] !== "core") { scores[i] = -9; continue; }
@@ -71,6 +80,30 @@ async function identifyAnything() {
     $("ov-btn").disabled = false;
   }
 }
+
+/** Calories & macros straight from the photo: linear head on the CLIP embedding (scripts/calorie_model.py). */
+function showPhotoEstimate(e) {
+  const h = ov.head;
+  if (!h) return;
+  const y = h.b.map((bias, j) => bias + h.W[j].reduce((acc, w, d) => acc + w * e[d], 0));
+  const kcal = Math.exp(y[0]);
+  let s = y.slice(1).map((v) => Math.max(v, 0.01));
+  const z = s.reduce((a, b) => a + b, 0);
+  s = s.map((v) => v / z);
+  ov.est = { kcal, p: (kcal * s[0]) / 4, c: (kcal * s[1]) / 4, f: (kcal * s[2]) / 9 };
+  $("pe-kcal").textContent = Math.round(kcal);
+  $("pe-macros").textContent = `${Math.round(ov.est.p)} g protein · ${Math.round(ov.est.c)} g carbs · ${Math.round(ov.est.f)} g fat`;
+  const m = h.metrics_unseen;
+  $("pe-note").textContent = `Learned from ${h.trained_on.toLocaleString()} real meal photos. On dishes it never saw, half of its estimates ` +
+    `were within ±${Math.round(m.median_abs_pct)}% (vs. labels that are themselves reviewed AI estimates). Use it as a guide.`;
+  $("photo-est").hidden = false;
+}
+
+$("pe-use").addEventListener("click", () => {
+  const food = state.foods.get(state.key);
+  if (!ov.est || !food || !food.kcal) return;
+  setGrams(Math.round((ov.est.kcal / food.kcal) * 100 / 5) * 5); // portion whose kcal matches the photo estimate
+});
 
 $("ov-btn").addEventListener("click", identifyAnything);
 $("ov-region").addEventListener("change", () => { if (state.lastBlob && ov.session) identifyAnything(); });

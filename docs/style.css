@@ -164,3 +164,9 @@ details { margin-top: 10px; } summary { cursor: pointer; font-weight: 600; }
 .ov-results li:last-child button { border-bottom: 0; }
 .ov-results li button:hover, .ov-results li button:focus-visible { background: var(--accent-soft); }
 .ov-results .sub { color: var(--muted); font-size: .8rem; }
+
+.photo-est { margin-top: 12px; border: 1px solid var(--accent-2); border-radius: 12px; padding: 12px; background: var(--accent-soft); }
+.pe-title { font-weight: 600; }
+.pe-kcal { font-size: 1.8rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.pe-macros { font-variant-numeric: tabular-nums; }
+.photo-est .btn { width: 100%; margin-top: 8px; }

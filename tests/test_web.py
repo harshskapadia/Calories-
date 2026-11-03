@@ -41,3 +41,21 @@ def test_open_vocabulary_bank() -> None:
     assert (DOCS / "model" / "clip_text.bin").stat().st_size == n * d
     assert (DOCS / "model" / "clip_visual.int8.onnx").stat().st_size < 100e6  # GitHub file limit
     assert any("milk shake" in x for x in meta["names"]) and any("smoothie" in x for x in meta["names"])
+
+
+def test_world_dishes_and_regions() -> None:
+    meta = json.loads((DOCS / "model" / "clip_vocab.json").read_text(encoding="utf-8"))
+    foods = {r[0]: r for r in json.loads((DOCS / "data" / "foods.json").read_text(encoding="utf-8"))}
+    assert len(meta["regions"]) == len(meta["keys"]) and len(meta["region_list"]) >= 15
+    world = [k for k in meta["keys"] if k.startswith("wd_")]
+    assert len(world) > 5000
+    for k in world[:200]:  # world dishes carry approximate nutrition + provenance (source|desc|qid|similarity)
+        row = foods[k]
+        assert row[7] == "approx" and row[2] > 0 and len(row[8].split("|")) == 4
+
+
+def test_calorie_head_shape() -> None:
+    head = json.loads((DOCS / "model" / "calorie_head.json").read_text(encoding="utf-8"))
+    dim = json.loads((DOCS / "model" / "clip_vocab.json").read_text(encoding="utf-8"))["dim"]
+    assert len(head["W"]) == len(head["b"]) == 4 and all(len(r) == dim for r in head["W"])
+    assert head["trained_on"] > 1000 and 0 < head["metrics_unseen"]["median_abs_pct"] < 100

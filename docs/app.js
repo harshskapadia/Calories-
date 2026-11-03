@@ -199,6 +199,15 @@ function render() {
   }
   if (typeof renderProductInfo === "function") renderProductInfo(food, state.grams);
   if (food.match === "off") { $("source").innerHTML = food.sourceHtml; return; }
+  if (food.match === "approx") {
+    const [src, desc, qid, sim] = food.source.split("|");
+    const rough = Number(sim) < 0.7;
+    $("source").innerHTML = `${desc ? `<b>${escapeHtml(food.name)}</b>: ${escapeHtml(desc)}. ` : ""}` +
+      `Nutrition is <b>approximate</b>: borrowed from the most similar USDA food, "${escapeHtml(src)}".` +
+      (rough ? ` ⚠️ Rough match: check it or use search.` : "") +
+      ` <a href="https://www.wikidata.org/wiki/${qid}" target="_blank" rel="noopener">About this dish</a> (Wikidata).`;
+    return;
+  }
   $("source").textContent = food.match === "usda" ? "Nutrition: USDA FoodData Central (FNDDS)."
     : food.match === "exact" ? `Nutrition: USDA FNDDS "${food.source}".`
     : `Nutrition: ${food.match} match from USDA FNDDS (${food.source}).`;
@@ -216,7 +225,7 @@ function search(q) {
   hits.sort((a, b) => (a.match === "usda") - (b.match === "usda") || a.name.length - b.name.length);
   box.innerHTML = hits.length
     ? hits.slice(0, 25).map((f) => `<li><button type="button" data-key="${f.key}">${escapeHtml(f.name)}` +
-        `<span class="tag">${f.match === "usda" ? "USDA" : "dish"} · ${Math.round(f.kcal)} kcal/100 g</span></button></li>`).join("")
+        `<span class="tag">${f.match === "usda" ? "USDA" : f.match === "approx" ? "world dish" : "dish"} · ${Math.round(f.kcal)} kcal/100 g</span></button></li>`).join("")
     : `<li><button type="button" disabled>No match. Try a simpler word (e.g. "lentil", "rice").</button></li>`;
   box.hidden = false;
 }

@@ -16,6 +16,7 @@ async function loadOpenVocab() {
     st("Starting the model…");
     ov.session = await ort.InferenceSession.create(bytes, { executionProviders: ["wasm"], graphOptimizationLevel: "all" });
     ov.meta = meta;
+    ov.regions = meta.regions || meta.keys.map(() => "core");
     ov.bank = new Int8Array(bankBuf);
     st("");
   })();
@@ -27,7 +28,8 @@ async function identifyAnything() {
   $("ov-btn").disabled = true;
   try {
     await loadOpenVocab();
-    $("ov-status").textContent = "Comparing with 5,139 foods…";
+    const region = $("ov-region").value;
+    $("ov-status").textContent = `Comparing with ${region ? region + " dishes + USDA foods" : `${ov.meta.keys.length.toLocaleString()} foods`}…`;
     const t0 = performance.now();
     const m = ov.meta;
     const x = await toTensor(state.lastBlob, { size: m.size, resize: m.resize, mean: m.mean, std: m.std, flip: false });
@@ -35,6 +37,7 @@ async function identifyAnything() {
     const e = embedding.data, D = m.dim, N = m.keys.length;
     const scores = new Float32Array(N);
     for (let i = 0; i < N; i++) {
+      if (region && ov.regions[i] !== region && ov.regions[i] !== "core") { scores[i] = -9; continue; }
       let s = 0;
       const o = i * D;
       for (let d = 0; d < D; d++) s += e[d] * ov.bank[o + d];
@@ -51,7 +54,7 @@ async function identifyAnything() {
       const li = document.createElement("li");
       const b = document.createElement("button");
       b.type = "button";
-      const tag = m.keys[i].startsWith("fndds_") ? "USDA food" : "dish";
+      const tag = m.keys[i].startsWith("fndds_") ? "USDA food" : m.keys[i].startsWith("wd_") ? `${ov.regions[i]} · world dish` : "dish";
       b.innerHTML = `<span>${escapeHtml(food ? food.name : m.names[i])}<span class="sub"> · ${tag}${food ? ` · ${Math.round(food.kcal)} kcal/100 g` : ""}</span></span>` +
         `<span class="sub">${Math.round((ex[r] / z) * 100)}%</span>`;
       b.addEventListener("click", () => { selectFood(m.keys[i]); $("nutrition").scrollIntoView({ behavior: "smooth", block: "start" }); });
@@ -59,7 +62,8 @@ async function identifyAnything() {
       list.append(li);
     });
     list.hidden = false;
-    $("ov-status").textContent = `Best matches among 5,139 foods (${Math.round(performance.now() - t0)} ms). Tap the right one.`;
+    const pool = region ? `${region} dishes + USDA foods` : `${N.toLocaleString()} foods`;
+    $("ov-status").textContent = `Best matches among ${pool} (${Math.round(performance.now() - t0)} ms). Tap the right one.`;
   } catch (err) {
     console.error(err);
     $("ov-status").textContent = `Couldn't run the open-vocabulary model: ${err.message}`;
@@ -69,3 +73,18 @@ async function identifyAnything() {
 }
 
 $("ov-btn").addEventListener("click", identifyAnything);
+$("ov-region").addEventListener("change", () => { if (state.lastBlob && ov.session) identifyAnything(); });
+// fill the cuisine filter from the (small) vocabulary file without loading the big model
+fetch("model/clip_vocab.json").then((r) => r.json()).then((m) => {
+  const total = m.keys.length.toLocaleString();
+  $("ov-count").textContent = total;
+  $("chip-count").textContent = total;
+  if (!(m.region_list || []).length) $("ov-region").closest("label").hidden = true; // no world dishes built yet
+  const counts = {};
+  (m.regions || []).forEach((r) => { counts[r] = (counts[r] || 0) + 1; });
+  for (const r of m.region_list || []) {
+    const o = document.createElement("option");
+    o.value = r; o.textContent = `${r} (${counts[r]})`;
+    $("ov-region").append(o);
+  }
+}).catch(() => {});

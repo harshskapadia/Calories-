@@ -17,7 +17,7 @@
       <ul class="chips" aria-label="Highlights">
         <li>🔒 Runs on your device</li>
         <li>139 dishes · Western &amp; Indian</li>
-        <li>5,570 foods searchable</li>
+        <li><span id="chip-count">5,000+</span> dishes &amp; foods</li>
         <li>📦 3M+ packaged products</li>
       </ul>
     </div>
@@ -90,9 +90,12 @@
       <div id="warn" class="warn" hidden></div>
       <ol id="top3" class="top3"></ol>
       <p class="muted small" id="timing"></p>
+      <label class="field ov-cuisine">Cuisine <span class="muted">(narrows the search, more accurate)</span>
+        <select id="ov-region"><option value="">🌍 All cuisines</option></select>
+      </label>
       <button id="ov-btn" type="button" class="btn ov-btn">🌍 Identify anything: any cuisine, shakes, drinks…</button>
-      <p class="muted small" id="ov-note">Matches the photo against 5,139 foods with an open-vocabulary AI model
-        (CLIP). One-time 96 MB download, then runs on this device.</p>
+      <p class="muted small" id="ov-note">Matches the photo against <span id="ov-count">thousands of</span> dishes and foods
+        with an open-vocabulary AI model (CLIP). One-time 96 MB download, then runs on this device.</p>
       <div id="ov-status" class="muted small" role="status" aria-live="polite"></div>
       <ol id="ov-results" class="ov-results" hidden></ol>
     </section>
@@ -107,7 +110,7 @@
 
       <div class="field">
         <label for="search">Not in the list? Search any food</label>
-        <input id="search" type="search" placeholder="e.g. dal, roti, pho, oatmeal" autocomplete="off">
+        <input id="search" type="search" placeholder="e.g. dal, roti, pho, rogan josh, injera" autocomplete="off">
         <ul id="search-results" class="search-results" hidden></ul>
       </div>
 
@@ -159,7 +162,8 @@
       <ul>
         <li><b>Model:</b> ConvNeXt-Tiny fine-tuned on Food-101 + an Indian food dataset (139 dishes),
           <b>88.8% top-1 / 97.7% top-5</b> on 26,836 test photos.
-          For anything else, <b>Identify anything</b> uses CLIP (open_clip ViT-B/32, DataComp-XL) against 5,139 food names. Exported to ONNX with int8 weights (34 MB) and run in your
+          For anything else, <b>Identify anything</b> uses CLIP (open_clip ViT-B/32, DataComp-XL) against a large list of food names
+          (every USDA food, plus world dishes from Wikidata when built; their nutrition is approximate, borrowed from the most similar USDA food). Exported to ONNX with int8 weights (34 MB) and run in your
           browser with ONNX Runtime Web, so no photo is uploaded anywhere.</li>
         <li><b>Confidence</b> is calibrated (temperature scaling) so "70%" means roughly 70% correct; below 40% the app says it's not sure.</li>
         <li><b>Nutrition:</b> USDA FoodData Central (FNDDS) per-100 g values × your portion; typical servings from USDA portion data.</li>

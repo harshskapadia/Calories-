@@ -16,8 +16,26 @@ IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
 
 
+class RandomJPEG:
+    """Re-encode a PIL image as JPEG at a random quality: mimics phone/messaging-app compression."""
+
+    def __init__(self, p: float = 0.3, quality: tuple[int, int] = (30, 90)):
+        self.p, self.quality = p, quality
+
+    def __call__(self, img: Image.Image) -> Image.Image:
+        import io
+        import random
+
+        if random.random() >= self.p:
+            return img
+        buf = io.BytesIO()
+        img.save(buf, "JPEG", quality=random.randint(*self.quality))
+        buf.seek(0)
+        return Image.open(buf).convert("RGB")
+
+
 def build_transforms(img_size: int = 224, train: bool = False, aug: dict[str, Any] | None = None) -> T.Compose:
-    """Train: RandomResizedCrop + flip (+ optional RandAugment / ColorJitter / RandomErasing).
+    """Train: RandomResizedCrop + flip (+ optional phone-photo aug / RandAugment / ColorJitter / RandomErasing).
     Eval: resize short side to img_size/0.875 then center crop (standard ImageNet protocol)."""
     aug = aug or {}
     if not train:
@@ -33,6 +51,13 @@ def build_transforms(img_size: int = 224, train: bool = False, aug: dict[str, An
         T.RandomResizedCrop(img_size, scale=(aug.get("min_scale", 0.35), 1.0)),
         T.RandomHorizontalFlip(),
     ]
+    if aug.get("phone_aug"):  # real-world robustness: angle, blur, compression, colourless light
+        ops += [
+            T.RandomPerspective(distortion_scale=0.2, p=0.25),
+            T.RandomApply([T.GaussianBlur(5, sigma=(0.1, 2.0))], p=0.2),
+            RandomJPEG(p=0.3),
+            T.RandomGrayscale(p=0.02),
+        ]
     if aug.get("randaugment"):
         ops.append(T.RandAugment(num_ops=2, magnitude=aug.get("ra_magnitude", 9)))
     cj = aug.get("color_jitter", 0.0)
@@ -77,6 +102,9 @@ def classes_from_manifest(manifest: str | Path) -> list[str]:
 
 
 def image_root_for(cfg: dict[str, Any]) -> Path:
+    """Folder that manifest paths are relative to: the Food-101 export, or data/cache for multi-source configs."""
+    if cfg["data"].get("sources"):
+        return ROOT / "data" / "cache"
     return ROOT / "data" / "cache" / f"food101_{cfg['data'].get('short_side', 256)}"
 
 
@@ -98,10 +126,22 @@ def build_loaders(cfg: dict[str, Any]) -> tuple[dict[str, DataLoader], list[str]
             classes,
             build_transforms(tcfg["img_size"], train=is_train, aug=cfg.get("augment")),
         )
+        sampler = None
+        if is_train and tcfg.get("balanced_sampling"):
+            # sample each image with weight 1/sqrt(class count): rare dishes are seen more often without
+            # fully discarding the extra data of big classes (full 1/count tends to overfit tiny classes)
+            from collections import Counter
+
+            from torch.utils.data import WeightedRandomSampler
+
+            counts = Counter(y for _, y in ds.samples)
+            weights = [counts[y] ** -0.5 for _, y in ds.samples]
+            sampler = WeightedRandomSampler(weights, num_samples=len(weights), replacement=True)
         loaders[split] = DataLoader(
             ds,
             batch_size=tcfg["batch_size"] * (1 if is_train else 2),
-            shuffle=is_train,
+            shuffle=is_train and sampler is None,
+            sampler=sampler,
             drop_last=is_train,
             # eval loaders get half the workers; only the train loader keeps its workers alive.
             # (On Windows each worker is a full Python+torch process, ~0.5-1 GB of committed memory;

@@ -17,16 +17,23 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.nutrition import PORTION_MULTIPLIERS, load_db  # noqa: E402
+from src.nutrition import PORTION_MULTIPLIERS, load_full_db  # noqa: E402
 from src.portion import estimate_grams_from_reference  # noqa: E402
 from src.predict import Predictor  # noqa: E402
 
 CKPT = Path(os.environ.get("NUTRISNAP_CKPT", ROOT / "app" / "model" / "nutrisnap.pt"))
 EXAMPLES_DIR = ROOT / "app" / "examples"
 
-DB = load_db()
+DB = load_full_db()  # recognisable dishes + every USDA FNDDS food (keys fndds_<id>)
 PREDICTOR = Predictor(CKPT) if CKPT.exists() else None
-CHOICES = [(DB.get(c).display_name, c) for c in DB.classes]
+DISHES = PREDICTOR.classes if PREDICTOR else [c for c in DB.classes if not c.startswith("fndds_")]
+CHOICES = sorted(((DB.get(c).display_name, c) for c in DISHES), key=lambda t: t[0])
+# Search list: every dish in our nutrition table (even ones this model can't recognise), then every
+# USDA food (tagged so duplicate names are distinguishable)
+SEARCH_CHOICES = sorted(((DB.get(c).display_name, c) for c in DB.classes if not c.startswith("fndds_")),
+                        key=lambda t: t[0]) + sorted(
+    ((f"{DB.get(c).display_name} · USDA", c) for c in DB.classes if c.startswith("fndds_")), key=lambda t: t[0].lower())
+LOW_CONFIDENCE = 0.4
 MACRO_COLORS = {"Protein": "#2a9d8f", "Carbs": "#e9c46a", "Fat": "#e76f51"}
 
 DISCLAIMER = (
@@ -63,7 +70,8 @@ def _card(name: str, grams: float, kcal: float, p: float, c: float, f: float, no
 def _nutrition_outputs(label: str, grams: float):
     est = DB.estimate(label, float(grams))
     info = DB.get(label)
-    note = "" if info.match == "exact" else f"nutrition source: {info.match} match ({info.source})"
+    note = {"exact": "", "usda": "nutrition: USDA FoodData Central"}.get(
+        info.match, f"nutrition source: {info.match} match ({info.source})")
     mk = est.macro_kcal()
     chart = pd.DataFrame(
         {"macro": ["Protein", "Carbs", "Fat"],
@@ -92,19 +100,31 @@ def analyze(image: Image.Image | None, preset: str):
     grams = _preset_grams(top, preset)
     card, chart = _nutrition_outputs(top, grams)
     conf = {p.display_name: p.confidence for p in preds}
-    warn = ("🤔 Low confidence: please check the dish name below and correct it if needed."
-            if preds[0].confidence < 0.4 else "")
-    return (conf, cam, gr.update(value=top), gr.update(value=grams), card, chart, warn, img)
+    warn = (f"🤔 **Not sure** (best guess {preds[0].confidence:.0%}). This may be a dish I wasn't trained on. "
+            "Pick the right dish below, or use **Search any food** to find it."
+            if preds[0].confidence < LOW_CONFIDENCE else "")
+    return (conf, cam, gr.update(value=top), gr.update(value=grams), card, chart, warn, img, top,
+            gr.update(value=None))
 
 
 def on_label_change(label: str, preset: str, image: Image.Image | None):
     """User corrected the dish: re-scale the portion to that dish and re-explain the photo."""
     if not label:
-        return gr.skip(), gr.skip(), gr.skip(), gr.skip()
+        return gr.skip(), gr.skip(), gr.skip(), gr.skip(), gr.skip()
     grams = _preset_grams(label, preset)
     card, chart = _nutrition_outputs(label, grams)
-    cam = PREDICTOR.explain(image, label) if (image is not None and PREDICTOR) else gr.skip()
-    return gr.update(value=grams), card, chart, cam
+    known = PREDICTOR is not None and label in PREDICTOR.classes
+    cam = PREDICTOR.explain(image, label) if (image is not None and known) else gr.skip()
+    return gr.update(value=grams), card, chart, cam, label
+
+
+def on_search(food: str, preset: str):
+    """User picked any food from the search box (works for dishes the model doesn't know)."""
+    if not food:
+        return gr.skip(), gr.skip(), gr.skip(), gr.skip()
+    grams = _preset_grams(food, preset)
+    card, chart = _nutrition_outputs(food, grams)
+    return gr.update(value=grams), card, chart, food
 
 
 def on_preset_change(label: str, preset: str):
@@ -135,9 +155,11 @@ def on_reference(image: Image.Image | None, label: str, ref: str):
 
 # --------------------------------------------------------------------------------- UI
 with gr.Blocks(title="NutriSnap: food photo to calories") as demo:
-    gr.Markdown("# 🍽️ NutriSnap\nSnap a meal → dish recognition → portion → calories & macros.")
+    gr.Markdown(f"# 🍽️ NutriSnap\nSnap a meal → dish recognition → portion → calories & macros. "
+                f"Recognises **{len(DISHES)} dishes**; **{len(SEARCH_CHOICES):,} foods** searchable.")
     gr.Markdown(DISCLAIMER)
     img_state = gr.State(None)
+    food_state = gr.State(None)  # the food whose nutrition is shown (a recognised dish or a searched food)
 
     with gr.Row(equal_height=False):
         with gr.Column(scale=1, min_width=300):
@@ -152,6 +174,8 @@ with gr.Blocks(title="NutriSnap: food photo to calories") as demo:
             warn = gr.Markdown()
             top3 = gr.Label(num_top_classes=3, label="Top-3 predictions")
             label = gr.Dropdown(CHOICES, label="Dish (correct it if wrong)", filterable=True)
+            search = gr.Dropdown(SEARCH_CHOICES, value=None, filterable=True,
+                                 label="Not in the list? Search any food (type e.g. 'dal', 'roti', 'pho')")
             grams = gr.Slider(0, 1200, value=0, step=5, label="Portion (grams)")
             card = gr.HTML()
             chart = gr.BarPlot(x="macro", y="kcal", color="macro", color_map=MACRO_COLORS,
@@ -170,15 +194,17 @@ with gr.Blocks(title="NutriSnap: food photo to calories") as demo:
         ref_msg = gr.Markdown()
         ref_dbg = gr.Image(label="Detected regions", height=260, interactive=False)
 
-    btn.click(analyze, [image, preset], [top3, cam, label, grams, card, chart, warn, img_state])
-    label.input(on_label_change, [label, preset, img_state], [grams, card, chart, cam])
-    preset.input(on_preset_change, [label, preset], [grams, card, chart])
-    grams.release(on_grams_change, [label, grams], [card, chart])
-    ref_btn.click(on_reference, [img_state, label, ref], [grams, card, chart, ref_dbg, ref_msg])
+    btn.click(analyze, [image, preset], [top3, cam, label, grams, card, chart, warn, img_state, food_state, search])
+    label.input(on_label_change, [label, preset, img_state], [grams, card, chart, cam, food_state])
+    search.input(on_search, [search, preset], [grams, card, chart, food_state])
+    preset.input(on_preset_change, [food_state, preset], [grams, card, chart])
+    grams.release(on_grams_change, [food_state, grams], [card, chart])
+    ref_btn.click(on_reference, [img_state, food_state, ref], [grams, card, chart, ref_dbg, ref_msg])
 
     backbone = PREDICTOR.cfg["model"]["backbone"] if PREDICTOR else "no model loaded"
-    gr.Markdown(f"Model: {backbone} fine-tuned on Food-101 ({len(PREDICTOR.classes) if PREDICTOR else 0} dishes) · Nutrition: USDA FoodData Central (FNDDS) · "
-                "[Source code](https://github.com/harshskapadia/Calories-)")
+    data = "Food-101 + Indian food (CC-BY-4.0)" if len(DISHES) > 101 else "Food-101"
+    gr.Markdown(f"Model: {backbone} fine-tuned on {data}, {len(DISHES)} dishes · "
+                "Nutrition: USDA FoodData Central (FNDDS) · [Source code](https://github.com/harshskapadia/Calories-)")
 
 if __name__ == "__main__":
     demo.launch(server_name=os.environ.get("GRADIO_SERVER_NAME", "0.0.0.0"),

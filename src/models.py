@@ -48,5 +48,6 @@ def load_checkpoint(path: str | Path, device: str | torch.device = "cpu") -> tup
     cfg = ckpt["config"]
     model = create_model(cfg["model"]["backbone"], len(ckpt["classes"]), pretrained=False)
     model.load_state_dict(ckpt["state_dict"])
+    model.temperature = float(ckpt.get("temperature", 1.0))  # set by src/calibrate.py; 1.0 = uncalibrated
     model.to(device).eval()
     return model, ckpt["classes"], cfg

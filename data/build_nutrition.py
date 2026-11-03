@@ -144,14 +144,52 @@ def build(mapping_csv: Path, fndds_dir: Path, out_csv: Path) -> int:
     return len(rows)
 
 
+def build_search(fndds_dir: Path, out_csv: Path) -> int:
+    """Write every FNDDS food (~5,400) as a searchable table with per-100 g macros and a typical serving.
+
+    Used by the app's "search any food" box for dishes the image model doesn't know. Serving =
+    FNDDS "Quantity not specified" portion, else the first listed portion, else 100 g.
+    """
+    with open(fndds_dir / "food.csv", newline="") as f:
+        desc = {r["fdc_id"]: r["description"] for r in csv.DictReader(f)}
+    desc_ids = set(desc)
+    _, nut, serving = load_fndds(fndds_dir, desc_ids)
+    first_portion: dict[str, float] = {}
+    with open(fndds_dir / "food_portion.csv", newline="") as f:
+        for r in csv.DictReader(f):
+            g = float(r["gram_weight"] or 0)
+            if g > 0 and r["fdc_id"] not in first_portion:
+                first_portion[r["fdc_id"]] = g
+    rows = []
+    for fid, d in sorted(desc.items(), key=lambda kv: kv[1].lower()):
+        n = nut.get(fid, {})
+        if not all(k in n for k in NUTRIENTS):
+            continue
+        rows.append({
+            "class": f"fndds_{fid}", "display_name": d,
+            "kcal_per_100g": n["kcal"], "protein_per_100g": n["protein"],
+            "carbs_per_100g": n["carbs"], "fat_per_100g": n["fat"],
+            "serving_g": serving.get(fid) or first_portion.get(fid) or 100.0,
+            "match": "usda", "fdc_ids": f"{fid}:100", "fndds_description": d, "notes": "",
+        })
+    with open(out_csv, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        w.writeheader()
+        w.writerows(rows)
+    print(f"Wrote {len(rows)} searchable USDA foods -> {out_csv}")
+    return len(rows)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--mapping", type=Path, default=ROOT / "nutrition_mapping.csv")
     ap.add_argument("--raw-dir", type=Path, default=ROOT / "raw" / "fndds")
     ap.add_argument("--out", type=Path, default=ROOT / "nutrition.csv")
+    ap.add_argument("--search-out", type=Path, default=ROOT / "food_search.csv")
     args = ap.parse_args()
     fndds_dir = download_fndds(args.raw_dir)
     build(args.mapping, fndds_dir, args.out)
+    build_search(fndds_dir, args.search_out)
 
 
 if __name__ == "__main__":

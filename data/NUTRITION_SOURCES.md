@@ -1,6 +1,6 @@
 # Nutrition data: sources and method
 
-`data/nutrition.csv` gives, for each of the 101 Food-101 classes:
+`data/nutrition.csv` gives, for each of the 139 recognisable dishes (101 Food-101 + 38 Indian; 5 Indian labels merge into Food-101 classes):
 
 | column | meaning |
 |---|---|
@@ -37,13 +37,21 @@ household **portion weights**.
 
 | match | count | meaning |
 |---|---|---|
-| `exact` | 67 | FNDDS has the dish itself |
-| `close` | 14 | a near-equivalent dish (e.g. cannoli → "Pastry, Italian, with cheese") |
-| `composite` | 18 | no FNDDS entry; built from ingredients with a documented recipe (e.g. caprese = 45% mozzarella, 45% tomato, 7% olive oil, 3% basil) |
-| `proxy` | 2 | a known-imperfect stand-in: foie gras → liver pâté; macarons → coconut macaroon |
+| `exact` | 74 | FNDDS has the dish itself (incl. "chappatti or roti", idli, masala dosa, pakora, palak paneer, fish curry, white rice) |
+| `close` | 20 | a near-equivalent dish (e.g. cannoli → "Pastry, Italian, with cheese"; biryani → "Biryani with chicken"; kheer → "Firni, Indian pudding") |
+| `composite` | 40 | no FNDDS entry; built from ingredients with a documented recipe (e.g. caprese = 45% mozzarella, 45% tomato, 7% olive oil, 3% basil; dal makhani = lentils + kidney beans + butter + cream) |
+| `proxy` | 5 | a known-imperfect stand-in: foie gras → liver pâté; macarons → coconut macaroon; dhokla → idli; ghevar → funnel cake; kulfi → ice cream |
+
+Indian dishes use Indian-typical portions (1 katori ≈ 150–200 g of curry, 2 chapatis = 80 g, 3 idlis = 120 g).
+The [Indian Food Composition Tables 2017](https://ifct2017.github.io) (NIN) list raw ingredients rather than
+cooked dishes, so FNDDS (which has cooked Indian dishes) was used for consistency with the rest of the table.
+
+### Search table
+`data/food_search.csv` contains **all 5,431 FNDDS foods** (per-100 g macros + typical serving), so the app can
+give an estimate for anything the image model doesn't recognise.
 
 ### Sanity checks (enforced in `tests/test_nutrition.py`)
-- All 101 classes are present.
+- Every Food-101 class and every Indian dataset label (after merging) has a row: 139 in total.
 - 4·protein + 4·carbs + 9·fat matches the stated kcal within 15% for every class.
 - Serving weights are between 10 g and 1 kg.
 

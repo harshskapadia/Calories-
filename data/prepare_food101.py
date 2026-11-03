@@ -1,4 +1,5 @@
-"""Download Food-101 from the Hugging Face Hub and build train/val/test manifests.
+"""Download Food-101 (and other datasets in data/sources.yaml) from the Hugging Face Hub and build
+train/val/test manifests.
 
 Two stages (both idempotent):
 
@@ -35,8 +36,6 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 CACHE = ROOT / "data" / "cache"
 SPLITS = ROOT / "data" / "splits"
-HF_DATASET = "ethz/food101"
-HF_TO_LOCAL = {"train": "train", "validation": "test"}
 
 
 # --------------------------------------------------------------------------- export
@@ -50,28 +49,44 @@ def _resize_and_save(args: tuple[bytes, str, int]) -> None:
     img.save(out_path, "JPEG", quality=90)
 
 
-def export(short_side: int = 256, workers: int = os.cpu_count() or 2) -> Path:
-    """Stream Food-101 from the HF Hub and save resized JPEGs + index.csv."""
+SOURCES_FILE = ROOT / "data" / "sources.yaml"
+
+
+def load_sources() -> dict[str, dict]:
+    return yaml.safe_load(SOURCES_FILE.read_text())
+
+
+def export(short_side: int = 256, workers: int = os.cpu_count() or 2, source: str = "food101") -> Path:
+    """Stream one HF image-classification dataset and save resized JPEGs + index.csv.
+
+    index.csv paths are relative to the source folder (data/cache/<dir>/). Labels may be a
+    ClassLabel (int) or a plain string column; both are stored as strings.
+    """
     from datasets import Image as HFImage, load_dataset
 
-    out_root = CACHE / f"food101_{short_side}"
+    spec = load_sources()[source]
+    out_root = CACHE / spec["dir"].replace("_256", f"_{short_side}")
     index_path = out_root / "index.csv"
     if index_path.exists():
-        print(f"[export] already done: {index_path}")
+        print(f"[export] {source}: already done ({index_path})")
         return out_root
 
     rows: list[tuple[str, str, str]] = []
     with ProcessPoolExecutor(workers) as pool:
-        for hf_split, local_split in HF_TO_LOCAL.items():
-            ds = load_dataset(HF_DATASET, split=hf_split, streaming=True)
-            names = ds.features["label"].names
+        for hf_split, local_split in spec["splits"].items():
+            ds = load_dataset(spec["hf"], split=hf_split, streaming=True)
+            feat = ds.features["label"]
+            names = getattr(feat, "names", None)  # ClassLabel -> list of names; string column -> None
             ds = ds.cast_column("image", HFImage(decode=False))  # raw bytes; decode in workers
-            for name in names:
-                (out_root / local_split / name).mkdir(parents=True, exist_ok=True)
             batch, futures = [], []
+            made: set[str] = set()
             for i, ex in enumerate(ds):
-                cls = names[ex["label"]]
-                rel = f"{local_split}/{cls}/{i:06d}.jpg"
+                cls = names[ex["label"]] if names else str(ex["label"]).strip().lower().replace(" ", "_")
+                if cls not in made:
+                    (out_root / local_split / cls).mkdir(parents=True, exist_ok=True)
+                    made.add(cls)
+                # prefix with the HF split so two HF splits mapped to one local split never collide
+                rel = f"{local_split}/{cls}/{hf_split}_{i:06d}.jpg"
                 batch.append((ex["image"]["bytes"], str(out_root / rel), short_side))
                 rows.append((rel, cls, local_split))
                 if len(batch) == 256:
@@ -81,19 +96,39 @@ def export(short_side: int = 256, workers: int = os.cpu_count() or 2) -> Path:
                     while len(futures) > 4 * workers:
                         futures.pop(0).result()
                 if i % 5000 == 0:
-                    print(f"[export] {hf_split}: {i} images", flush=True)
+                    print(f"[export] {source}/{hf_split}: {i} images", flush=True)
             if batch:
                 futures.append(pool.submit(_map_batch, batch))
             for f in futures:
                 f.result()
-            print(f"[export] {hf_split}: done ({sum(r[2] == local_split for r in rows)} images)")
+            print(f"[export] {source}/{hf_split}: done")
 
     with open(index_path, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["path", "label", "split"])
         w.writerows(rows)
-    print(f"[export] wrote {len(rows)} rows -> {index_path}")
+    print(f"[export] {source}: wrote {len(rows)} rows -> {index_path}")
     return out_root
+
+
+def build_combined_index(sources: list[str], short_side: int, name: str) -> Path:
+    """Merge several exported sources into data/cache/index_<name>.csv (paths relative to data/cache),
+    mapping labels through each source's aliases so shared dishes become one class."""
+    specs = load_sources()
+    out = CACHE / f"index_{name}.csv"
+    n = 0
+    with open(out, "w", newline="") as fo:
+        w = csv.writer(fo)
+        w.writerow(["path", "label", "split", "source"])
+        for src in sources:
+            d = specs[src]["dir"].replace("_256", f"_{short_side}")
+            aliases = specs[src].get("aliases") or {}
+            with open(CACHE / d / "index.csv", newline="") as fi:
+                for row in csv.DictReader(fi):
+                    w.writerow([f"{d}/{row['path']}", aliases.get(row["label"], row["label"]), row["split"], src])
+                    n += 1
+    print(f"[index] {'+'.join(sources)}: {n} images -> {out}")
+    return out
 
 
 def _map_batch(batch: list[tuple[bytes, str, int]]) -> None:
@@ -112,10 +147,16 @@ def make_splits(
     test_per_class: int | None = None,
     val_frac: float = 0.1,
     seed: int = 42,
+    index_file: Path | None = None,
+    min_test: int = 20,
 ) -> dict[str, Path]:
-    """Write stratified train/val/test manifests (paths relative to ``image_root``)."""
+    """Write stratified train/val/test manifests (paths relative to ``image_root``).
+
+    Classes with fewer than ``min_test`` test images get a test set held out of their train pool,
+    so every class is evaluated. Food-101 (250 test images per class) is unaffected.
+    """
     by_split: dict[str, dict[str, list[str]]] = {"train": defaultdict(list), "test": defaultdict(list)}
-    with open(image_root / "index.csv", newline="") as f:
+    with open(index_file or image_root / "index.csv", newline="") as f:
         for row in csv.DictReader(f):
             by_split[row["split"]][row["label"]].append(row["path"])
 
@@ -128,10 +169,14 @@ def make_splits(
     for cls in classes:
         train_paths = sorted(by_split["train"][cls])
         rng.shuffle(train_paths)
-        n_val = round(len(train_paths) * val_frac)
-        val, train = train_paths[:n_val], train_paths[n_val:]
         test = sorted(by_split["test"][cls])
         rng.shuffle(test)
+        if len(test) < min_test:
+            # the source dataset has (almost) no test images for this dish: hold some out of its train pool
+            n_test = max(min_test, round(len(train_paths) * val_frac))
+            test, train_paths = test + train_paths[:n_test], train_paths[n_test:]
+        n_val = round(len(train_paths) * val_frac)
+        val, train = train_paths[:n_val], train_paths[n_val:]
         out["train"] += [(p, cls) for p in train[:train_per_class]]
         out["val"] += [(p, cls) for p in val[:val_per_class]]
         out["test"] += [(p, cls) for p in test[:test_per_class]]
@@ -149,25 +194,40 @@ def make_splits(
     return paths
 
 
+def splits_from_config(d: dict, export_missing: bool = False, workers: int = os.cpu_count() or 2) -> dict[str, Path]:
+    """Make the train/val/test manifests for a config's ``data`` section.
+
+    Single-source configs (no ``sources`` key) keep the original Food-101 layout. Multi-source
+    configs export any missing source (if ``export_missing``), merge them into one index with
+    shared labels, and write manifests whose paths are relative to data/cache/.
+    """
+    short = d.get("short_side", 256)
+    sources = d.get("sources")
+    kwargs = dict(name=d["name"], num_classes=d.get("num_classes"), class_selection=d.get("class_selection", "first"),
+                  train_per_class=d.get("train_per_class"), val_per_class=d.get("val_per_class"),
+                  test_per_class=d.get("test_per_class"), val_frac=d.get("val_frac", 0.1), seed=d.get("seed", 42))
+    if not sources:
+        root = export(short, workers) if export_missing else CACHE / f"food101_{short}"
+        if not (root / "index.csv").exists():
+            raise FileNotFoundError("Food-101 not exported yet: run `python run_all.py --steps data` first")
+        return make_splits(root, **kwargs)
+    specs = load_sources()
+    for src in sources:
+        idx = CACHE / specs[src]["dir"].replace("_256", f"_{short}") / "index.csv"
+        if not idx.exists():
+            if not export_missing:
+                raise FileNotFoundError(f"dataset {src!r} not exported yet: run `python run_all.py --steps data` first")
+            export(short, workers, source=src)
+    index = build_combined_index(sources, short, d["name"])
+    return make_splits(CACHE, index_file=index, **kwargs)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--config", type=Path, required=True)
     ap.add_argument("--workers", type=int, default=os.cpu_count() or 2)
     args = ap.parse_args()
-    cfg = yaml.safe_load(args.config.read_text())["data"]
-
-    image_root = export(cfg.get("short_side", 256), args.workers)
-    make_splits(
-        image_root,
-        name=cfg["name"],
-        num_classes=cfg.get("num_classes"),
-        class_selection=cfg.get("class_selection", "first"),
-        train_per_class=cfg.get("train_per_class"),
-        val_per_class=cfg.get("val_per_class"),
-        test_per_class=cfg.get("test_per_class"),
-        val_frac=cfg.get("val_frac", 0.1),
-        seed=cfg.get("seed", 42),
-    )
+    splits_from_config(yaml.safe_load(args.config.read_text())["data"], export_missing=True, workers=args.workers)
 
 
 if __name__ == "__main__":

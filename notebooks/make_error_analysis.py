@@ -21,7 +21,10 @@ import pandas as pd, numpy as np, matplotlib.pyplot as plt
 from PIL import Image
 ROOT = os.path.abspath('..'); EXP = '{EXP}'
 R = f'{{ROOT}}/results/{{EXP}}'
-IMG_ROOT = f'{{ROOT}}/data/cache/food101_256'
+import yaml
+from src.data import image_root_for
+_cfg = yaml.safe_load(open(f'{{ROOT}}/checkpoints/{{EXP}}/config.yaml'))
+IMG_ROOT = str(image_root_for(_cfg))   # Food-101 folder, or data/cache for multi-cuisine models
 metrics = json.load(open(f'{{R}}/metrics.json')); metrics"""),
 M("## Per-class F1: hardest and easiest dishes"),
 C("""pc = pd.read_csv(f'{R}/per_class.csv').sort_values('f1')

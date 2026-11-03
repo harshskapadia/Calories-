@@ -2,9 +2,10 @@
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/harshskapadia/Calories-/blob/main/notebooks/nutrisnap_colab.ipynb) [![tests](https://img.shields.io/badge/tests-pytest-green)](tests/) ![python](https://img.shields.io/badge/python-3.11-blue) ![pytorch](https://img.shields.io/badge/PyTorch-timm-orange) ![gradio](https://img.shields.io/badge/demo-Gradio-ff7c00)
 
-Snap or upload a photo of a meal. NutriSnap recognises the dish (101 classes), shows **where the
-model looked** (Grad-CAM), estimates the **portion**, and returns **calories, protein, carbs and fat**,
-with every number editable, because the model will sometimes be wrong.
+Snap or upload a photo of a meal. NutriSnap recognises the dish (**139 Western and Indian dishes**), shows
+**where the model looked** (Grad-CAM), estimates the **portion**, and returns **calories, protein, carbs and fat**,
+with every number editable, because the model will sometimes be wrong. Anything it can't recognise can be looked
+up in a **search over 5,500+ foods** (every USDA FNDDS food plus all 139 dishes).
 
 <p align="center"><img src="assets/app_mobile.jpg" width="300" alt="NutriSnap on a phone"></p>
 
@@ -13,7 +14,7 @@ with every number editable, because the model will sometimes be wrong.
 ---
 
 ## Contents
-[Problem](#problem) · [Architecture](#architecture) · [Data](#data) · [Results](#results) · [Error analysis](#error-analysis) · [Portion estimation](#portion-estimation) · [Run on your GPU](#run-on-your-own-gpu-recommended) · [Deploy to Hugging Face Spaces](#deploy-to-hugging-face-spaces) · [Limitations](#limitations) · [Future work](#future-work)
+[Problem](#problem) · [Architecture](#architecture) · [Data](#data) · [Multi-cuisine & robustness](#multi-cuisine-model-and-robustness) · [Results](#results) · [Error analysis](#error-analysis) · [Portion estimation](#portion-estimation) · [Run on your GPU](#run-on-your-own-gpu-recommended) · [Deploy to Hugging Face Spaces](#deploy-to-hugging-face-spaces) · [Limitations](#limitations) · [Future work](#future-work)
 
 ## Problem
 Logging food is the step most people give up on in calorie tracking: searching a database and
@@ -61,9 +62,19 @@ flowchart LR
 
 ## Data
 
-**Images: [Food-101](https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/)** (Bossard et al., ECCV 2014), loaded via
-Hugging Face `datasets` (`ethz/food101`). 101 classes × 1,000 images (750 train / 250 test). The training
-images were intentionally left uncleaned by the authors and contain some label noise.
+**Images.** Datasets are registered in [`data/sources.yaml`](data/sources.yaml) and merged into one label space
+(shared dishes such as pizza, samosa or Indian "burger" = Food-101 "hamburger" become one class):
+
+| Dataset | Dishes | Images | Licence |
+|---|---|---|---|
+| [Food-101](https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/) (Bossard et al., ECCV 2014), `ethz/food101` | 101, mostly Western | 101,000 | research use |
+| [Enhanced Indian Food Classification](https://huggingface.co/datasets/SohlHealth/enhanced-indian-food-classification) (SohlHealth) | 43 Indian (biryani, dosa, idli, chapati, dal makhani, chole, paneer dishes, poha, momos, gulab jamun, chai…) | 15,404 | CC-BY-4.0 |
+| **Merged** (`configs/gpu/multi_convnext_tiny.yaml`) | **139** (5 shared) | 116,404 | |
+
+Food-101's training images were intentionally left uncleaned and contain label noise. The Indian dataset is
+web-scraped: some images carry watermarks, and its own test split is missing ~20 dishes, so for any class with
+fewer than 20 test images a test set is held out of its training pool, so every class is evaluated (verified: no image
+appears in two splits). Vietnamese and other datasets found on the Hub were left out because they state no licence.
 
 | Split | Source | Used for |
 |---|---|---|
@@ -74,12 +85,29 @@ images were intentionally left uncleaned by the authors and contain some label n
 Augmentations (train): RandomResizedCrop(224, scale 0.35–1), horizontal flip, RandAugment(2, 9),
 ColorJitter(0.2), RandomErasing(0.1). Eval: resize 256 → center crop 224. No raw data is committed.
 
-**Nutrition: USDA FoodData Central, FNDDS 2021–2023** (public domain). Every class is mapped by hand to FNDDS
-foods: 67 exact matches, 14 close, 18 composite recipes (e.g. caprese = mozzarella + tomato + olive oil + basil),
-and 2 documented proxies. Typical serving weights come from FNDDS portion data. See
+**Nutrition: USDA FoodData Central, FNDDS 2021–2023** (public domain). Every dish is mapped by hand to FNDDS
+foods: 74 exact matches (FNDDS includes roti, idli, dosa, pakora, palak paneer, fish curry…), 20 close,
+40 composite recipes (e.g. dal makhani = lentils + kidney beans + butter + cream) and 5 documented proxies.
+Typical serving weights come from FNDDS portion data, or Indian-typical portions (1 katori, 2 chapatis) for new dishes.
+All 5,431 FNDDS foods are also exported to `data/food_search.csv` for the app's search box. See
 [data/NUTRITION_SOURCES.md](data/NUTRITION_SOURCES.md).
 
 <p align="center"><img src="assets/nutrition_overview.png" width="760" alt="Nutrition table overview"></p>
+
+## Multi-cuisine model and robustness
+
+| Problem | What NutriSnap does |
+|---|---|
+| Food-101 is mostly Western | Adds 43 Indian dishes (139 total); new datasets plug in via `data/sources.yaml` |
+| No model knows every dish | **Search any food**: 5,570 entries (all dishes + every USDA FNDDS food), and a clear *"not sure: pick or search"* message below 40% confidence |
+| Real phone photos are blurry, compressed and tilted | `phone_aug`: random perspective, Gaussian blur, JPEG re-compression (q 30–90), occasional greyscale, on top of RandAugment / ColorJitter / RandomErasing |
+| Some dishes have 100 photos, others 1,000 | `balanced_sampling`: sample weight ∝ 1/√(class count) |
+| Raw softmax confidence is over-confident | **Temperature scaling** fitted on the validation set after every training run (and `python -m src.calibrate` for existing checkpoints); the app shows calibrated confidence and the evaluation reports ECE |
+
+A CPU smoke test of the full multi-cuisine pipeline (12 random dishes from both datasets, 2 epochs) confirmed that
+calibration cuts expected calibration error from 0.21 to 0.09 on validation. Train the real 139-dish model on a GPU with
+`python run_all.py --final-config configs/gpu/multi_convnext_tiny.yaml --steps data final evaluate analysis export summary --batch-size 16 --workers 2`
+(~2 h on an RTX 3050 Ti); its test metrics land in `results/multi_convnext_tiny/`.
 
 ## Results
 
@@ -238,7 +266,7 @@ slim `requirements.txt`. It runs on the free CPU tier (ConvNeXt-Tiny ~55 ms/imag
 ## Limitations
 
 - **One dish per photo.** Food-101 is single-label, so a plate with steak *and* fries gets one label.
-- **Closed set of 101 dishes.** Anything else (e.g. dal, a smoothie) is forced into the nearest class. The low-confidence flag and the manual override mitigate this; they don't solve it.
+- **Closed set of dishes.** A photo of a dish the model wasn't trained on is forced into the nearest known class, sometimes *confidently* (in testing, a 12-dish model called a biryani "bhindi masala" at 83%). Calibration, the "not sure" message and the search-any-food box mitigate this; they don't solve it.
 - **Recipe variance.** Nutrition is a *typical US recipe*. Oil, dressing, cheese and restaurant portions can change calories by ±30–50%.
 - **Portion is the biggest error source.** A single photo has no depth. Presets are population averages, and the reference-object method assumes a typical thickness.
 - **Training-data bias.** Food-101 is scraped from foodspotting.com: mostly Western restaurant dishes, well-lit and photographed from a typical angle.
@@ -254,6 +282,6 @@ slim `requirements.txt`. It runs on the free CPU tier (ConvNeXt-Tiny ~55 ms/imag
 - **Learn from corrections**: log user corrections (opt-in) as hard examples for re-training.
 
 ## Acknowledgements
-Food-101 (Bossard, Guillaumin & Van Gool, 2014) · USDA FoodData Central · timm (Ross Wightman) · Grad-CAM (Selvaraju et al., 2017) · Gradio.
+Food-101 (Bossard, Guillaumin & Van Gool, 2014) · Enhanced Indian Food Classification dataset (SohlHealth, CC-BY-4.0) · USDA FoodData Central · timm (Ross Wightman) · Grad-CAM (Selvaraju et al., 2017) · Gradio.
 
-Example photos in `app/examples/` are from the Food-101 test split (research use).
+Example photos in `app/examples/` are held-out test images from Food-101 (research use) and the SohlHealth Indian dataset (CC-BY-4.0).

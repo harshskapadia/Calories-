@@ -85,7 +85,7 @@ def main() -> None:
 
         elif step == "data":
             # one export (~5 GB download, ~2.4 GB on disk) serves every config; splits are tiny CSVs
-            for cfg in ["configs/baseline_subset.yaml", *ablation_cfgs]:
+            for cfg in dict.fromkeys(["configs/baseline_subset.yaml", *ablation_cfgs, args.final_config]):
                 sh(PY, "data/prepare_food101.py", "--config", cfg, "--workers", str(args.workers))
 
         elif step == "baseline":

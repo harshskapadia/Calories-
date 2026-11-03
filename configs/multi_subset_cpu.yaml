@@ -1,0 +1,36 @@
+# Tiny multi-cuisine run to smoke-test the pipeline on a CPU (minutes). Not for real results.
+experiment: multi_subset_cpu
+data:
+  name: multi_subset
+  sources: [food101, indian43]
+  short_side: 256
+  num_classes: 12
+  class_selection: random
+  train_per_class: 40
+  val_per_class: 10
+  test_per_class: 20
+  val_frac: 0.1
+  seed: 7
+model:
+  backbone: efficientnet_b0
+  pretrained: true
+  drop_rate: 0.2
+train:
+  img_size: 160
+  epochs: 2
+  batch_size: 32
+  lr: 1.0e-3
+  weight_decay: 0.05
+  label_smoothing: 0.1
+  warmup_epochs: 0
+  freeze_backbone_epochs: 0
+  amp: true
+  patience: 3
+  num_workers: 2
+  balanced_sampling: true
+  seed: 7
+augment:
+  phone_aug: true
+  randaugment: true
+  color_jitter: 0.2
+  random_erasing: 0.1

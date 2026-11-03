@@ -83,7 +83,7 @@ class ManifestDataset(Dataset):
         self.image_root = Path(image_root)
         self.classes = classes
         self.class_to_idx = {c: i for i, c in enumerate(classes)}
-        with open(manifest, newline="") as f:
+        with open(manifest, newline="", encoding="utf-8") as f:
             self.samples = [(r["path"], self.class_to_idx[r["label"]]) for r in csv.DictReader(f)]
         self.transform = transform
 
@@ -97,7 +97,7 @@ class ManifestDataset(Dataset):
 
 
 def classes_from_manifest(manifest: str | Path) -> list[str]:
-    with open(manifest, newline="") as f:
+    with open(manifest, newline="", encoding="utf-8") as f:
         return sorted({r["label"] for r in csv.DictReader(f)})
 
 

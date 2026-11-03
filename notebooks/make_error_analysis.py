@@ -11,7 +11,7 @@ ap.add_argument("--notes", help="markdown file with the written failure analysis
 ap.add_argument("--out", default="02_error_analysis.ipynb", help="notebook filename inside notebooks/")
 args = ap.parse_args()
 EXP = args.experiment
-NOTES = open(args.notes).read() if args.notes else "_Write your observations here after reviewing the outputs above (see 02_error_analysis.ipynb for an example)._"
+NOTES = open(args.notes, encoding="utf-8").read() if args.notes else "_Write your observations here after reviewing the outputs above (see 02_error_analysis.ipynb for an example)._"
 nb = nbf.v4.new_notebook(); M, C = nbf.v4.new_markdown_cell, nbf.v4.new_code_cell
 nb.cells = [
 M(f"# 02 · Error analysis: `{EXP}`\n\nInputs come from `python -m src.evaluate` (`results/{EXP}/`). Goal: understand *which* dishes fail, *why*, and *what a mistake costs* in calories."),
@@ -23,9 +23,9 @@ ROOT = os.path.abspath('..'); EXP = '{EXP}'
 R = f'{{ROOT}}/results/{{EXP}}'
 import yaml
 from src.data import image_root_for
-_cfg = yaml.safe_load(open(f'{{ROOT}}/checkpoints/{{EXP}}/config.yaml'))
+_cfg = yaml.safe_load(open(f'{{ROOT}}/checkpoints/{{EXP}}/config.yaml', encoding='utf-8'))
 IMG_ROOT = str(image_root_for(_cfg))   # Food-101 folder, or data/cache for multi-cuisine models
-metrics = json.load(open(f'{{R}}/metrics.json')); metrics"""),
+metrics = json.load(open(f'{{R}}/metrics.json', encoding='utf-8')); metrics"""),
 M("## Per-class F1: hardest and easiest dishes"),
 C("""pc = pd.read_csv(f'{R}/per_class.csv').sort_values('f1')
 show = pd.concat([pc.head(12), pc.tail(8)])

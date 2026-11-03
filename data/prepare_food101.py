@@ -53,7 +53,7 @@ SOURCES_FILE = ROOT / "data" / "sources.yaml"
 
 
 def load_sources() -> dict[str, dict]:
-    return yaml.safe_load(SOURCES_FILE.read_text())
+    return yaml.safe_load(SOURCES_FILE.read_text(encoding="utf-8"))
 
 
 def export(short_side: int = 256, workers: int = os.cpu_count() or 2, source: str = "food101") -> Path:
@@ -103,7 +103,7 @@ def export(short_side: int = 256, workers: int = os.cpu_count() or 2, source: st
                 f.result()
             print(f"[export] {source}/{hf_split}: done")
 
-    with open(index_path, "w", newline="") as f:
+    with open(index_path, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["path", "label", "split"])
         w.writerows(rows)
@@ -117,13 +117,13 @@ def build_combined_index(sources: list[str], short_side: int, name: str) -> Path
     specs = load_sources()
     out = CACHE / f"index_{name}.csv"
     n = 0
-    with open(out, "w", newline="") as fo:
+    with open(out, "w", newline="", encoding="utf-8") as fo:
         w = csv.writer(fo)
         w.writerow(["path", "label", "split", "source"])
         for src in sources:
             d = specs[src]["dir"].replace("_256", f"_{short_side}")
             aliases = specs[src].get("aliases") or {}
-            with open(CACHE / d / "index.csv", newline="") as fi:
+            with open(CACHE / d / "index.csv", newline="", encoding="utf-8") as fi:
                 for row in csv.DictReader(fi):
                     w.writerow([f"{d}/{row['path']}", aliases.get(row["label"], row["label"]), row["split"], src])
                     n += 1
@@ -156,7 +156,7 @@ def make_splits(
     so every class is evaluated. Food-101 (250 test images per class) is unaffected.
     """
     by_split: dict[str, dict[str, list[str]]] = {"train": defaultdict(list), "test": defaultdict(list)}
-    with open(index_file or image_root / "index.csv", newline="") as f:
+    with open(index_file or image_root / "index.csv", newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
             by_split[row["split"]][row["label"]].append(row["path"])
 
@@ -185,7 +185,7 @@ def make_splits(
     paths = {}
     for split, rows in out.items():
         p = SPLITS / f"{name}_{split}.csv"
-        with open(p, "w", newline="") as f:
+        with open(p, "w", newline="", encoding="utf-8") as f:
             w = csv.writer(f)
             w.writerow(["path", "label"])
             w.writerows(rows)
@@ -227,7 +227,7 @@ def main() -> None:
     ap.add_argument("--config", type=Path, required=True)
     ap.add_argument("--workers", type=int, default=os.cpu_count() or 2)
     args = ap.parse_args()
-    splits_from_config(yaml.safe_load(args.config.read_text())["data"], export_missing=True, workers=args.workers)
+    splits_from_config(yaml.safe_load(args.config.read_text(encoding="utf-8"))["data"], export_missing=True, workers=args.workers)
 
 
 if __name__ == "__main__":

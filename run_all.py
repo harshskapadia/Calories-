@@ -36,7 +36,7 @@ def sh(*args: str) -> None:
 
 
 def experiment(config: str) -> str:
-    return yaml.safe_load((ROOT / config).read_text())["experiment"]
+    return yaml.safe_load((ROOT / config).read_text(encoding="utf-8"))["experiment"]
 
 
 def main() -> None:
@@ -119,13 +119,13 @@ def main() -> None:
             lines = ["# NutriSnap results summary\n", f"Final (app) model: `{final_exp}`\n"]
             m = ROOT / "results" / final_exp / "metrics.json"
             if m.exists():
-                d = json.loads(m.read_text())
+                d = json.loads(m.read_text(encoding="utf-8"))
                 lines.append(f"- Test top-1 **{d['top1']:.1%}**, top-5 **{d['top5']:.1%}**, macro-F1 {d['macro_f1']:.3f} "
                              f"on {d['num_images']:,} images / {d['num_classes']} classes; "
                              f"{d['params_m']} M params; {d['cpu_latency_ms']} ms/img on CPU\n")
             for table in sorted((ROOT / "results").glob("ablation*.md")):
-                lines += [f"\n## {table.stem}\n", table.read_text()]
-            (ROOT / "results" / "SUMMARY.md").write_text("\n".join(lines))
+                lines += [f"\n## {table.stem}\n", table.read_text(encoding="utf-8")]
+            (ROOT / "results" / "SUMMARY.md").write_text("\n".join(lines), encoding="utf-8")
             print("\n".join(lines))
             print("\nNext: `python app/app.py` -> http://localhost:7860, then commit results/ + app/model/ and push.")
 

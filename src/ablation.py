@@ -24,13 +24,13 @@ ROOT = Path(__file__).resolve().parents[1]
 def run(configs: list[Path], skip_trained: bool = True, overrides: list[str] | None = None) -> list[dict]:
     rows = []
     for cfg_path in configs:
-        cfg = apply_overrides(yaml.safe_load(cfg_path.read_text()), overrides)
+        cfg = apply_overrides(yaml.safe_load(cfg_path.read_text(encoding="utf-8")), overrides)
         ckpt_dir = ROOT / "checkpoints" / cfg["experiment"]
         # summary.json is written only when training completes, so a run that was stopped mid-way retrains
         if not (skip_trained and (ckpt_dir / "summary.json").exists()):
             train(cfg, ckpt_dir)
         m = evaluate(ckpt_dir / "best.pt", "test")
-        with open(ckpt_dir / "metrics.csv") as f:
+        with open(ckpt_dir / "metrics.csv", encoding="utf-8") as f:
             hist = list(csv.DictReader(f))
         m["epochs"] = len(hist)
         m["train_s_per_epoch"] = round(sum(float(r["epoch_time_s"]) for r in hist) / len(hist))
@@ -42,7 +42,7 @@ def write_table(rows: list[dict], out_dir: Path, name: str = "ablation") -> str:
     out_dir.mkdir(parents=True, exist_ok=True)
     keys = ["backbone", "top1", "top5", "macro_f1", "params_m", "cpu_latency_ms", "train_s_per_epoch",
             "epochs", "num_classes", "num_images"]
-    with open(out_dir / f"{name}.csv", "w", newline="") as f:
+    with open(out_dir / f"{name}.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=keys, extrasaction="ignore")
         w.writeheader()
         w.writerows(rows)
@@ -52,7 +52,7 @@ def write_table(rows: list[dict], out_dir: Path, name: str = "ablation") -> str:
         md.append(f"| {r['backbone']} | {r['top1']:.1%} | {r['top5']:.1%} | {r['macro_f1']:.3f} | "
                   f"{r['params_m']:.1f} | {r['cpu_latency_ms']:.0f} | {r['train_s_per_epoch']} |")
     text = "\n".join(md)
-    (out_dir / f"{name}.md").write_text(text + "\n")
+    (out_dir / f"{name}.md").write_text(text + "\n", encoding="utf-8")
     return text
 
 

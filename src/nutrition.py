@@ -72,7 +72,7 @@ class NutritionDB:
     @classmethod
     def from_csv(cls, path: str | Path = DEFAULT_CSV) -> "NutritionDB":
         foods: dict[str, FoodInfo] = {}
-        with open(path, newline="") as f:
+        with open(path, newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
                 info = FoodInfo(
                     name=row["class"],

@@ -78,8 +78,8 @@ def build(out: Path, ckpt: Path) -> Path:
         shutil.copytree(ROOT / "app" / "examples", out / "app" / "examples")
     for f in ("nutrition.csv", "food_search.csv"):  # dishes + the 5,400-food search table
         shutil.copy2(ROOT / "data" / f, out / "data" / f)
-    (out / "README.md").write_text(SPACE_README.format(gradio_version=gradio.__version__))
-    (out / "requirements.txt").write_text(SPACE_REQUIREMENTS)
+    (out / "README.md").write_text(SPACE_README.format(gradio_version=gradio.__version__), encoding="utf-8")
+    (out / "requirements.txt").write_text(SPACE_REQUIREMENTS, encoding="utf-8")
     size = sum(p.stat().st_size for p in out.rglob("*") if p.is_file()) / 1e6
     print(f"Space assembled in {out} ({size:.1f} MB)")
     return out

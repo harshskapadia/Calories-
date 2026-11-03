@@ -87,7 +87,7 @@ def plot_history(csv_path: Path, out_png: Path) -> None:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    with open(csv_path) as f:
+    with open(csv_path, encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
     ep = [int(r["epoch"]) for r in rows]
     fig, ax = plt.subplots(1, 2, figsize=(10, 3.8))
@@ -122,7 +122,7 @@ def train(cfg: dict[str, Any], out_dir: Path, use_wandb: bool = False) -> dict[s
     device = get_device()
     amp = bool(tcfg.get("amp", True))
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "config.yaml").write_text(yaml.safe_dump(cfg, sort_keys=False))
+    (out_dir / "config.yaml").write_text(yaml.safe_dump(cfg, sort_keys=False), encoding="utf-8")
 
     loaders, classes = build_loaders(cfg)
     model = create_model(mcfg["backbone"], len(classes), mcfg.get("pretrained", True), mcfg.get("drop_rate", 0.0))
@@ -154,7 +154,7 @@ def train(cfg: dict[str, Any], out_dir: Path, use_wandb: bool = False) -> dict[s
 
     log_path = out_dir / "metrics.csv"
     fields = ["epoch", "lr", "train_loss", "train_acc", "val_loss", "val_acc", "val_top5", "epoch_time_s"]
-    with open(log_path, "w", newline="") as f:
+    with open(log_path, "w", newline="", encoding="utf-8") as f:
         csv.writer(f).writerow(fields)
 
     best_acc, best_epoch, bad_epochs = -1.0, -1, 0
@@ -192,7 +192,7 @@ def train(cfg: dict[str, Any], out_dir: Path, use_wandb: bool = False) -> dict[s
             "val_top5": val["top5"],
             "epoch_time_s": time.time() - t0,
         }
-        with open(log_path, "a", newline="") as f:
+        with open(log_path, "a", newline="", encoding="utf-8") as f:
             csv.writer(f).writerow([f"{row[k]:.6g}" if isinstance(row[k], float) else row[k] for k in fields])
         print(f"epoch {epoch}: train_loss {row['train_loss']:.3f} acc {row['train_acc']:.3f} | "
               f"val_loss {val['loss']:.3f} acc {val['acc']:.3f} top5 {val['top5']:.3f} | {row['epoch_time_s']:.0f}s",
@@ -216,7 +216,7 @@ def train(cfg: dict[str, Any], out_dir: Path, use_wandb: bool = False) -> dict[s
     calib = calibrate_checkpoint(out_dir / "best.pt", num_workers=tcfg.get("num_workers", 4) // 2)
     summary = {"experiment": cfg.get("experiment"), "best_val_acc": best_acc, "best_epoch": best_epoch,
                "params": count_params(model), "num_classes": len(classes), **calib}
-    (out_dir / "summary.json").write_text(json.dumps(summary, indent=2))
+    (out_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     if run:
         run.finish()
     return summary
@@ -250,7 +250,7 @@ def main() -> None:
     ap.add_argument("--set", nargs="*", default=[], metavar="KEY=VALUE",
                     help="config overrides, e.g. --set train.num_workers=2 train.epochs=3")
     args = ap.parse_args()
-    cfg = apply_overrides(yaml.safe_load(args.config.read_text()), args.set)
+    cfg = apply_overrides(yaml.safe_load(args.config.read_text(encoding="utf-8")), args.set)
     out = args.out or ROOT / "checkpoints" / cfg["experiment"]
     print(json.dumps(train(cfg, out, args.wandb), indent=2))
 

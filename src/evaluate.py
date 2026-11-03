@@ -115,10 +115,10 @@ def evaluate(checkpoint: Path, split: str = "test", out_dir: Path | None = None,
         "params_m": round(count_params(model) / 1e6, 2),
         "cpu_latency_ms": round(measure_latency(model, img_size), 1),
     }
-    (out_dir / "metrics.json").write_text(json.dumps(metrics, indent=2))
+    (out_dir / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
 
     p, r, f, s = precision_recall_fscore_support(y, pred, labels=range(len(classes)), zero_division=0)
-    with open(out_dir / "per_class.csv", "w", newline="") as fh:
+    with open(out_dir / "per_class.csv", "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["class", "precision", "recall", "f1", "support"])
         for i, c in sorted(enumerate(classes), key=lambda t: f[t[0]]):
@@ -128,13 +128,13 @@ def evaluate(checkpoint: Path, split: str = "test", out_dir: Path | None = None,
     plot_confusion(cm, classes, out_dir / "confusion_matrix.png")
     pairs = [(cm[i, j], classes[i], classes[j]) for i in range(len(classes)) for j in range(len(classes)) if i != j and cm[i, j]]
     pairs.sort(reverse=True)
-    with open(out_dir / "confused_pairs.csv", "w", newline="") as fh:
+    with open(out_dir / "confused_pairs.csv", "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["true", "predicted", "count", "rate_of_true_class"])
         for n, a, b in pairs[:30]:
             w.writerow([a, b, int(n), f"{n / cm[classes.index(a)].sum():.3f}"])
 
-    with open(out_dir / "predictions.csv", "w", newline="") as fh:
+    with open(out_dir / "predictions.csv", "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["path", "true", "pred", "conf", "correct", "top5"])
         for (path, t), row, pr in zip(ds.samples, top5, probs):

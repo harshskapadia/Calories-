@@ -73,20 +73,20 @@ def parse_components(spec: str) -> list[tuple[str, float]]:
 def load_fndds(fndds_dir: Path, needed: set[str]) -> tuple[dict, dict, dict]:
     """Return (descriptions, nutrients per 100 g, default serving grams) for ``needed`` ids."""
     desc: dict[str, str] = {}
-    with open(fndds_dir / "food.csv", newline="") as f:
+    with open(fndds_dir / "food.csv", newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
             if row["fdc_id"] in needed:
                 desc[row["fdc_id"]] = row["description"]
 
     wanted = {v: k for k, v in NUTRIENTS.items()}
     nut: dict[str, dict[str, float]] = {fid: {} for fid in needed}
-    with open(fndds_dir / "food_nutrient.csv", newline="") as f:
+    with open(fndds_dir / "food_nutrient.csv", newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
             if row["fdc_id"] in needed and row["nutrient_id"] in wanted:
                 nut[row["fdc_id"]][wanted[row["nutrient_id"]]] = float(row["amount"])
 
     serving: dict[str, float] = {}
-    with open(fndds_dir / "food_portion.csv", newline="") as f:
+    with open(fndds_dir / "food_portion.csv", newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
             fid = row["fdc_id"]
             if fid in needed and row["portion_description"] == "Quantity not specified":
@@ -97,7 +97,7 @@ def load_fndds(fndds_dir: Path, needed: set[str]) -> tuple[dict, dict, dict]:
 
 
 def build(mapping_csv: Path, fndds_dir: Path, out_csv: Path) -> int:
-    with open(mapping_csv, newline="") as f:
+    with open(mapping_csv, newline="", encoding="utf-8") as f:
         mapping = list(csv.DictReader(f))
     needed = {fid for row in mapping for fid, _ in parse_components(row["components"])}
     desc, nut, serving = load_fndds(fndds_dir, needed)
@@ -136,7 +136,7 @@ def build(mapping_csv: Path, fndds_dir: Path, out_csv: Path) -> int:
         )
 
     out_csv.parent.mkdir(parents=True, exist_ok=True)
-    with open(out_csv, "w", newline="") as f:
+    with open(out_csv, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         writer.writeheader()
         writer.writerows(rows)
@@ -150,12 +150,12 @@ def build_search(fndds_dir: Path, out_csv: Path) -> int:
     Used by the app's "search any food" box for dishes the image model doesn't know. Serving =
     FNDDS "Quantity not specified" portion, else the first listed portion, else 100 g.
     """
-    with open(fndds_dir / "food.csv", newline="") as f:
+    with open(fndds_dir / "food.csv", newline="", encoding="utf-8") as f:
         desc = {r["fdc_id"]: r["description"] for r in csv.DictReader(f)}
     desc_ids = set(desc)
     _, nut, serving = load_fndds(fndds_dir, desc_ids)
     first_portion: dict[str, float] = {}
-    with open(fndds_dir / "food_portion.csv", newline="") as f:
+    with open(fndds_dir / "food_portion.csv", newline="", encoding="utf-8") as f:
         for r in csv.DictReader(f):
             g = float(r["gram_weight"] or 0)
             if g > 0 and r["fdc_id"] not in first_portion:
@@ -172,7 +172,7 @@ def build_search(fndds_dir: Path, out_csv: Path) -> int:
             "serving_g": serving.get(fid) or first_portion.get(fid) or 100.0,
             "match": "usda", "fdc_ids": f"{fid}:100", "fndds_description": d, "notes": "",
         })
-    with open(out_csv, "w", newline="") as f:
+    with open(out_csv, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         w.writeheader()
         w.writerows(rows)

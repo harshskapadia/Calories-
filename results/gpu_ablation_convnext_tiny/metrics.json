@@ -1,0 +1,12 @@
+{
+  "experiment": "gpu_ablation_convnext_tiny",
+  "backbone": "convnext_tiny",
+  "split": "test",
+  "num_images": 25250,
+  "num_classes": 101,
+  "top1": 0.8924356435643565,
+  "top5": 0.980990099009901,
+  "macro_f1": 0.8924440284215364,
+  "params_m": 27.9,
+  "cpu_latency_ms": 54.8
+}

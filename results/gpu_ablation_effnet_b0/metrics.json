@@ -1,0 +1,12 @@
+{
+  "experiment": "gpu_ablation_effnet_b0",
+  "backbone": "efficientnet_b0",
+  "split": "test",
+  "num_images": 25250,
+  "num_classes": 101,
+  "top1": 0.8346138613861386,
+  "top5": 0.9642376237623762,
+  "macro_f1": 0.8330500837373089,
+  "params_m": 4.14,
+  "cpu_latency_ms": 22.0
+}

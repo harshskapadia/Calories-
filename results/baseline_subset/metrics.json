@@ -4,9 +4,9 @@
   "split": "test",
   "num_images": 1000,
   "num_classes": 10,
-  "top1": 0.896,
+  "top1": 0.913,
   "top5": 0.996,
-  "macro_f1": 0.8953479788752754,
+  "macro_f1": 0.9116032079195989,
   "params_m": 4.02,
-  "cpu_latency_ms": 23.4
+  "cpu_latency_ms": 23.5
 }

@@ -2,7 +2,7 @@
 
     python run_all.py                 # everything: data -> baseline -> ablation -> final model -> eval -> analysis -> app model
     python run_all.py --steps final evaluate export          # only some steps
-    python run_all.py --final-config configs/full_gpu.yaml   # ConvNeXt-Tiny final model (default: EfficientNet-B0, faster)
+    python run_all.py --final-config configs/gpu/ablation_effnet_b0.yaml   # smaller/faster app model (default: ConvNeXt-Tiny)
     python run_all.py --quick         # smoke test: 1-epoch runs on small subsets (dataset download still happens once)
 
 Works on Windows, Linux and macOS (no `make` needed). Each step is skipped if its output
@@ -42,8 +42,8 @@ def experiment(config: str) -> str:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--steps", nargs="+", choices=STEPS, default=STEPS)
-    ap.add_argument("--final-config", default="configs/gpu/ablation_effnet_b0.yaml",
-                    help="config whose best checkpoint becomes the app model")
+    ap.add_argument("--final-config", default="configs/gpu/ablation_convnext_tiny.yaml",
+                    help="config whose best checkpoint becomes the app model (ConvNeXt-Tiny: 89%% top-1 vs 84%% for EfficientNet-B0)")
     # Windows spawns a full process per worker (high memory use), so default lower there.
     default_workers = min(4 if os.name == "nt" else 8, os.cpu_count() or 2)
     ap.add_argument("--workers", type=int, default=default_workers,

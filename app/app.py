@@ -176,7 +176,8 @@ with gr.Blocks(title="NutriSnap: food photo to calories") as demo:
     grams.release(on_grams_change, [label, grams], [card, chart])
     ref_btn.click(on_reference, [img_state, label, ref], [grams, card, chart, ref_dbg, ref_msg])
 
-    gr.Markdown("Model: EfficientNet-B0 fine-tuned on Food-101 · Nutrition: USDA FoodData Central (FNDDS) · "
+    backbone = PREDICTOR.cfg["model"]["backbone"] if PREDICTOR else "no model loaded"
+    gr.Markdown(f"Model: {backbone} fine-tuned on Food-101 ({len(PREDICTOR.classes) if PREDICTOR else 0} dishes) · Nutrition: USDA FoodData Central (FNDDS) · "
                 "[Source code](https://github.com/harshskapadia/Calories-)")
 
 if __name__ == "__main__":

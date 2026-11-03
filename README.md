@@ -33,7 +33,7 @@ nutrition and Grad-CAM for the corrected class.
 ```mermaid
 flowchart LR
     A[📷 Photo<br/>upload / camera] --> B[EXIF fix + resize 256<br/>center-crop 224]
-    B --> C[EfficientNet-B0<br/>fine-tuned on Food-101]
+    B --> C[ConvNeXt-Tiny or EfficientNet-B0<br/>fine-tuned on Food-101]
     C -->|softmax + flip TTA| D[Top-3 dishes<br/>+ confidence]
     C -->|gradients of top class| E[Grad-CAM overlay]
     D --> F{User confirms<br/>or corrects dish}
@@ -85,7 +85,7 @@ and 2 documented proxies. Typical serving weights come from FNDDS portion data. 
 
 All numbers are on **held-out test images** (official Food-101 test split, never used for training or model selection).
 
-### Development runs (CPU only, 4 cores; subsets for fast iteration)
+### Development runs (CPU only, 4 cores; small subsets for fast iteration)
 
 | Run | Classes | Train imgs | Backbone | Test top-1 | Test top-5 | Macro-F1 | CPU latency |
 |---|---|---|---|---|---|---|---|
@@ -94,20 +94,25 @@ All numbers are on **held-out test images** (official Food-101 test split, never
 
 <p align="center"><img src="results/baseline_subset/curves.png" width="640" alt="Baseline training curves"></p>
 
-### Backbone ablation: EfficientNet-B0 vs ConvNeXt-Tiny
+### Full Food-101: backbone ablation (101 classes, 68k train / 25,250 test images)
 
-Same data, schedule and augmentation; only the backbone (and its standard learning rate) changes.
+Trained with `python run_all.py` on a laptop **RTX 3050 Ti (4 GB)**: batch size 16, AMP, 6 epochs, RandAugment +
+ColorJitter + RandomErasing. Same data, schedule and augmentation for both; only the backbone (and its standard
+learning rate) changes.
 
-| Backbone | Params | CPU latency (bs 1, 224 px) | Test top-1 | Test top-5 |
-|---|---|---|---|---|
-| EfficientNet-B0 | 4.1 M | 25–32 ms | 91.0% (20-class subset) | 98.8% |
-| ConvNeXt-Tiny | 27.9 M | 59 ms | full-data GPU run → `results/ablation_gpu.md` | |
+| Backbone | Test top-1 | Test top-5 | Macro-F1 | Params | CPU latency (bs 1) | GPU train time / epoch |
+|---|---|---|---|---|---|---|
+| EfficientNet-B0 | 83.5% | 96.4% | 0.833 | 4.1 M | 23 ms | 4.9 min |
+| **ConvNeXt-Tiny** | **89.2%** | **98.1%** | **0.892** | 27.9 M | 55 ms | 8.5 min |
 
-Params and latency were measured on this machine (Intel Xeon, 4 threads, fp32). The full-data accuracy comparison
-across all 101 classes is produced by `python run_all.py` on a GPU, which writes `results/ablation_gpu.md` and
-`results/SUMMARY.md`. ConvNeXt-Tiny costs ~7× the parameters and ~2× the CPU latency, so it has to earn its place
-with accuracy. EfficientNet-B0 is the default app model because it serves in ~30 ms on a free CPU Space.
+**Takeaways**
+- ConvNeXt-Tiny is **+5.7 points top-1** (about 35% fewer errors) for 7× the parameters and 2.4× the CPU latency.
+  At 55 ms/image it is still interactive on a free CPU Space, so it is the better app model.
+- EfficientNet-B0 remains the choice for on-device or very low-latency use (4 M params, ~8 MB in fp16).
+- The most-confused pairs on the full set are sensible look-alikes: steak ↔ filet mignon, chocolate mousse ↔ chocolate cake,
+  pork chop ↔ filet mignon, ice cream ↔ frozen yogurt.
 
+Raw outputs: [`results/ablation_gpu.md`](results/ablation_gpu.md), per-model folders in [`results/`](results/).
 
 ## Error analysis
 
@@ -182,19 +187,19 @@ python run_all.py             # the real thing
 | `data` | downloads Food-101 from Hugging Face (~5 GB), pre-resizes to 256 px, builds splits | 15–25 min (network-bound) |
 | `baseline` | 10-class baseline | 2–3 min |
 | `ablation` | EfficientNet-B0 vs ConvNeXt-Tiny on **all 101 classes, full data** → `results/ablation_gpu.md` | ~1.5–3 h |
-| `final` / `evaluate` | final model (EfficientNet-B0 by default; reused from the ablation) on the 25,250-image test split | minutes |
+| `final` / `evaluate` | final model (ConvNeXt-Tiny by default; reused from the ablation) on the 25,250-image test split | minutes |
 | `analysis` | executes the error-analysis notebook for the final model | 2 min |
 | `export` | fp16 app model → `app/model/nutrisnap.pt` | seconds |
 | `summary` | `results/SUMMARY.md` | seconds |
 
 Useful flags: `--steps data ablation` (run selected steps; finished steps are skipped on re-runs),
-`--final-config configs/gpu/ablation_convnext_tiny.yaml` (ship the more accurate ConvNeXt), `--batch-size 16`
+`--final-config configs/gpu/ablation_effnet_b0.yaml` (ship the smaller, faster EfficientNet-B0 instead of the default ConvNeXt-Tiny), `--batch-size 16`
 (if you see *CUDA out of memory*), `--workers 2` (fewer DataLoader processes; use it if Windows shows error 1455 "paging file is too small").
 
 **4. Use the app and publish your results**
 
 ```bash
-python app/app.py                    # http://localhost:7860 (set GRADIO_SHARE=1 for a public link to open on your phone)
+python app/app.py                    # open http://localhost:7860 (not the printed 0.0.0.0 address); GRADIO_SHARE=1 gives a phone link
 python -m src.predict meal.jpg --portion large --cam-out cam.jpg     # CLI
 git add results app/model notebooks && git commit -m "Full Food-101 results" && git push
 ```
@@ -228,7 +233,7 @@ hf upload <your-hf-username>/nutrisnap build/space . --repo-type space
 
 The Space builds in a few minutes at `https://huggingface.co/spaces/<your-hf-username>/nutrisnap`.
 `build/space/` has its own `README.md` with the Spaces YAML header (`sdk: gradio`, `app_file: app/app.py`) and a
-slim `requirements.txt`. It runs on the free CPU tier (EfficientNet-B0 inference is ~30 ms/image on CPU).
+slim `requirements.txt`. It runs on the free CPU tier (ConvNeXt-Tiny ~55 ms/image, EfficientNet-B0 ~25 ms/image on CPU).
 
 ## Limitations
 
@@ -237,7 +242,7 @@ slim `requirements.txt`. It runs on the free CPU tier (EfficientNet-B0 inference
 - **Recipe variance.** Nutrition is a *typical US recipe*. Oil, dressing, cheese and restaurant portions can change calories by ±30–50%.
 - **Portion is the biggest error source.** A single photo has no depth. Presets are population averages, and the reference-object method assumes a typical thickness.
 - **Training-data bias.** Food-101 is scraped from foodspotting.com: mostly Western restaurant dishes, well-lit and photographed from a typical angle.
-- **Development numbers are from subsets.** The results above were produced on a CPU-only machine on 10- and 20-class subsets; full 101-class numbers come from `python run_all.py` on a GPU and land in `results/SUMMARY.md`.
+- **Benchmark vs. real world.** Test accuracy is measured on Food-101's test split, which shares the training images' style (restaurant photos from one website). Accuracy on your own phone photos will be lower; see *Future work*.
 
 ## Future work
 

@@ -5,16 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>NutriSnap</title>
   <meta name="description" content="Snap a meal or scan a barcode: on-device food recognition and calorie and macro estimates. Runs entirely in your browser.">
-  <meta name="theme-color" content="#f7f3ec" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#151a18" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f6efe6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
   <link rel="stylesheet" href="style.css">
+  <script>let p = "terracotta"; try { p = localStorage.getItem("palette") || p; } catch (e) {} if (p !== "mono") document.documentElement.dataset.palette = p;</script>
 </head>
 <body>
   <header class="topbar">
     <div class="wrap topbar-inner">
       <div class="brand"><span class="logo" aria-hidden="true">🍽️</span><span>NutriSnap</span></div>
-      <span class="privacy" title="Photos are analysed on this device and never uploaded">🔒 On-device</span>
+      <div class="topbar-right">
+        <div class="palette" role="group" aria-label="Colour theme">
+          <button type="button" data-p="mono" title="Monochrome" aria-label="Monochrome theme"></button>
+          <button type="button" data-p="terracotta" title="Terracotta" aria-label="Terracotta theme"></button>
+          <button type="button" data-p="lavender" title="Lavender" aria-label="Lavender theme"></button>
+          <button type="button" data-p="midnight" title="Midnight" aria-label="Midnight theme"></button>
+        </div>
+        <span class="privacy" title="Photos are analysed on this device and never uploaded">🔒 On-device</span>
+      </div>
     </div>
   </header>
 

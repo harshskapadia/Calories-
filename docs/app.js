@@ -55,7 +55,6 @@ async function init() {
     state.foodList.push(item);
   }
   buildDishSelect();
-  loadExamples();
   $("nutrition").hidden = false;
 
   setStatus("Downloading the model (34 MB, once; then cached)…", 0);
@@ -198,6 +197,11 @@ function render() {
     $(`b${m}`).style.width = `${(e[m] / max) * 100}%`;
     $(`k${m}`).textContent = `${Math.round(e[m])} kcal`;
   }
+  const tot = e.p + e.c + e.f;
+  const donut = $("donut");
+  donut.classList.toggle("empty", tot <= 0);
+  donut.style.setProperty("--p", tot ? (e.p / tot) * 100 : 0);
+  donut.style.setProperty("--c", tot ? (e.c / tot) * 100 : 0);
   if (typeof renderProductInfo === "function") renderProductInfo(food, state.grams);
   if (food.match === "off") { $("source").innerHTML = food.sourceHtml; return; }
   if (food.match === "approx") {
@@ -233,21 +237,20 @@ function search(q) {
 
 function escapeHtml(s) { return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 
-// ---------------------------------------------------------------- examples & events
-async function loadExamples() {
-  const names = await fetch("examples/index.json").then((r) => r.json()).catch(() => []);
-  const grid = $("examples");
-  for (const n of names) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.title = n.replace(/\.jpg$/, "").replace(/_/g, " ");
-    b.innerHTML = `<img src="examples/${n}" alt="${b.title}" loading="lazy">`;
-    b.addEventListener("click", async () => analyze(await fetch(`examples/${n}`).then((r) => r.blob())));
-    grid.append(b);
+// ---------------------------------------------------------------- events
+function showTab(which) {
+  for (const t of ["meal", "pack"]) {
+    const on = t === which;
+    $(`tab-${t}`).classList.toggle("on", on);
+    $(`tab-${t}`).setAttribute("aria-selected", on);
+    $(`panel-${t}`).hidden = !on;
   }
+  $("results").hidden = which !== "meal" || !$("top3").children.length;
 }
 
 function wire() {
+  $("tab-meal").addEventListener("click", () => showTab("meal"));
+  $("tab-pack").addEventListener("click", () => showTab("pack"));
   for (const id of ["camera", "file"]) {
     $(id).addEventListener("change", (e) => { const f = e.target.files[0]; if (f) analyze(f); e.target.value = ""; });
   }

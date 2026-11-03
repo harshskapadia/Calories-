@@ -8,7 +8,6 @@ What it writes:
                                    (dynamic quantization: ~3x smaller, ~1.7x faster on CPU, same accuracy)
 - docs/model/meta.json             classes, display names, temperature, preprocessing constants
 - docs/data/foods.json             nutrition for every dish + all USDA FNDDS foods (for search)
-- docs/examples/*.jpg              example photos
 
 The ONNX Runtime Web files in docs/ort/ are vendored from the npm package onnxruntime-web@1.30.0
 (dist/ort.wasm.min.js, ort-wasm-simd-threaded.{mjs,wasm}) so the page needs no CDN.
@@ -18,7 +17,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
 import tempfile
 from pathlib import Path
 
@@ -98,14 +96,7 @@ def main() -> None:
     (DOCS / "data" / "foods.json").write_text(json.dumps(foods, separators=(",", ":")), encoding="utf-8")
     print(f"foods.json: {len(foods)} foods")
 
-    ex = DOCS / "examples"
-    ex.mkdir(exist_ok=True)
-    names = []
-    for p in sorted((ROOT / "app" / "examples").glob("*.jpg")):
-        shutil.copy2(p, ex / p.name)
-        names.append(p.name)
-    (ex / "index.json").write_text(json.dumps(names), encoding="utf-8")
-    print(f"{len(names)} examples; site ready in {DOCS}")
+    print(f"site ready in {DOCS}")
 
 
 if __name__ == "__main__":

@@ -234,8 +234,14 @@ function renderProductInfo(food, amount) {
   const x = food.extra, k = amount / 100, u = food.unit;
   box.hidden = false;
   const img = $("prod-img");
-  img.hidden = !x.image;
-  if (x.image) img.src = x.image;
+  img.hidden = true; // shown only once it has actually loaded (no empty box)
+  if (x.image && img.dataset.src !== x.image) {
+    img.onload = () => { img.hidden = false; };
+    img.dataset.src = x.image;
+    img.src = x.image;
+  } else if (x.image && img.complete && img.naturalWidth) {
+    img.hidden = false;
+  }
   const badges = [];
   if (/^[a-e]$/.test(x.nutriscore)) badges.push(`<span class="badge ns-${x.nutriscore}">Nutri-Score ${x.nutriscore.toUpperCase()}</span>`);
   if (x.nova) badges.push(`<span class="badge" title="NOVA food-processing group (4 = ultra-processed)">NOVA ${x.nova}</span>`);

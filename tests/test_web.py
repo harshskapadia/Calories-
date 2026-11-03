@@ -23,7 +23,7 @@ def test_meta_and_foods_are_consistent() -> None:
 
 def test_site_files_present() -> None:
     for rel in ["index.html", "app.js", "style.css", "model/nutrisnap.int8.onnx", "ort/ort.wasm.min.js",
-                "ort/ort-wasm-simd-threaded.mjs", "ort/ort-wasm-simd-threaded.wasm", "examples/index.json", ".nojekyll",
+                "ort/ort-wasm-simd-threaded.mjs", "ort/ort-wasm-simd-threaded.wasm", ".nojekyll",
                 "products.js", "zxing/zxing-reader.js", "zxing/zxing_reader.wasm"]:
         assert (DOCS / rel).exists(), rel
     html = (DOCS / "index.html").read_text(encoding="utf-8")
@@ -59,3 +59,10 @@ def test_calorie_head_shape() -> None:
     dim = json.loads((DOCS / "model" / "clip_vocab.json").read_text(encoding="utf-8"))["dim"]
     assert len(head["W"]) == len(head["b"]) == 4 and all(len(r) == dim for r in head["W"])
     assert head["trained_on"] > 1000 and 0 < head["metrics_unseen"]["median_abs_pct"] < 100
+
+
+def test_new_layout_hooks() -> None:
+    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    for el in ["tab-meal", "tab-pack", "panel-meal", "panel-pack", "donut", "ov-btn", "photo-est", "scan-btn", "chip-count"]:
+        assert f'id="{el}"' in html, el
+    assert "examples" not in html and not (DOCS / "examples").exists()

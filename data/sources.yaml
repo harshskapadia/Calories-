@@ -1,0 +1,21 @@
+# Image datasets NutriSnap can train on. A config selects them with `data.sources: [food101, indian43]`.
+# Labels from different datasets are merged into one label space; `aliases` maps a dataset's
+# label onto an existing class (e.g. Indian "burger" == Food-101 "hamburger").
+# Only datasets with a clear, permissive licence are listed.
+
+food101:
+  hf: ethz/food101
+  dir: food101_256                 # data/cache/<dir>; same folder the original Food-101 export uses
+  splits: {train: train, validation: test}   # HF "validation" is the official Food-101 test split
+  license: "Research use (Food-101, Bossard et al., ECCV 2014; images from foodspotting.com)"
+  url: https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/
+  aliases: {}
+
+indian43:
+  hf: SohlHealth/enhanced-indian-food-classification
+  dir: indian43_256
+  splits: {train: train, validation: train, test: test}   # their val is folded into our train pool
+  license: CC-BY-4.0
+  url: https://huggingface.co/datasets/SohlHealth/enhanced-indian-food-classification
+  aliases:
+    burger: hamburger              # pizza, samosa, fried_rice, chicken_curry already share Food-101 names

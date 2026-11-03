@@ -144,3 +144,41 @@ def test_fp16_export_roundtrip(ckpt: Path, tmp_path: Path, photo: Image.Image) -
     full, small = Predictor(ckpt, tta=False), Predictor(out, tta=False)
     assert next(small.model.parameters()).dtype == torch.float32  # cast back on load
     assert torch.allclose(full.probabilities(photo), small.probabilities(photo), atol=1e-2)
+
+
+def test_temperature_scaling_fixes_overconfidence() -> None:
+    from src.calibrate import expected_calibration_error, fit_temperature
+
+    torch.manual_seed(0)
+    n, c = 4000, 5
+    labels = torch.randint(0, c, (n,))
+    clean = torch.randn(n, c)
+    clean[torch.arange(n), labels] += 1.5          # informative but uncertain logits
+    overconfident = clean * 4                       # same ranking, 4x too sharp
+    t = fit_temperature(overconfident, labels)
+    assert 2.5 < t < 6                              # recovers roughly the 4x scaling
+    y = labels.numpy()
+    before = expected_calibration_error(overconfident.softmax(1).numpy(), y)
+    after = expected_calibration_error((overconfident / t).softmax(1).numpy(), y)
+    assert after < before / 2
+    assert ((overconfident / t).argmax(1) == overconfident.argmax(1)).all()  # never changes the prediction
+
+
+def test_temperature_is_applied_by_predictor(ckpt: Path, tmp_path: Path, photo: Image.Image) -> None:
+    raw = torch.load(ckpt, weights_only=False)
+    raw["temperature"] = 5.0
+    hot = tmp_path / "hot.pt"
+    torch.save(raw, hot)
+    base, soft = Predictor(ckpt, tta=False), Predictor(hot, tta=False)
+    assert soft.model.temperature == 5.0
+    assert soft.probabilities(photo).max() <= base.probabilities(photo).max() + 1e-6
+    assert soft.probabilities(photo).argmax() == base.probabilities(photo).argmax()
+
+
+def test_phone_augmentations(photo: Image.Image) -> None:
+    from src.data import RandomJPEG
+
+    x = build_transforms(IMG, train=True, aug={"phone_aug": True})(photo)
+    assert x.shape == (3, IMG, IMG)
+    out = RandomJPEG(p=1.0)(photo)
+    assert out.size == photo.size and out.mode == "RGB"

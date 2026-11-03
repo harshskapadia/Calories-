@@ -65,6 +65,7 @@ class Predictor:
         logits = self.model(x)
         if self.tta:  # horizontal-flip test-time augmentation
             logits = (logits + self.model(torch.flip(x, dims=[3]))) / 2
+        logits = logits / getattr(self.model, "temperature", 1.0)  # calibrated confidence
         return logits.softmax(1)[0].float().cpu()
 
     def topk(self, image: Image.Image, k: int = 3) -> list[Prediction]:

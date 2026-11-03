@@ -24,7 +24,7 @@ import torch
 import yaml
 from torch import nn
 
-from src.data import build_loaders, image_root_for, manifest_path
+from src.data import build_loaders, manifest_path
 from src.models import count_params, create_model, save_checkpoint, set_backbone_trainable
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -107,17 +107,12 @@ def plot_history(csv_path: Path, out_png: Path) -> None:
 
 
 def ensure_splits(cfg: dict[str, Any]) -> None:
-    """Create the config's train/val/test manifests if they don't exist yet."""
+    """Create the config's train/val/test manifests if they don't exist yet (data must be exported)."""
     if all(manifest_path(cfg, s).exists() for s in ("train", "val", "test")):
         return
-    from data.prepare_food101 import make_splits  # local import: only needed once
+    from data.prepare_food101 import splits_from_config  # local import: only needed once
 
-    d = cfg["data"]
-    if not (image_root_for(cfg) / "index.csv").exists():
-        raise FileNotFoundError("Food-101 not exported yet: run `make data` first")
-    make_splits(image_root_for(cfg), d["name"], d.get("num_classes"), d.get("class_selection", "first"),
-                d.get("train_per_class"), d.get("val_per_class"), d.get("test_per_class"),
-                d.get("val_frac", 0.1), d.get("seed", 42))
+    splits_from_config(cfg["data"])
 
 
 def train(cfg: dict[str, Any], out_dir: Path, use_wandb: bool = False) -> dict[str, Any]:
@@ -216,8 +211,11 @@ def train(cfg: dict[str, Any], out_dir: Path, use_wandb: bool = False) -> dict[s
                 break
 
     plot_history(log_path, out_dir / "curves.png")
+    from src.calibrate import calibrate_checkpoint  # local import: calibrate imports from this module
+
+    calib = calibrate_checkpoint(out_dir / "best.pt", num_workers=tcfg.get("num_workers", 4) // 2)
     summary = {"experiment": cfg.get("experiment"), "best_val_acc": best_acc, "best_epoch": best_epoch,
-               "params": count_params(model), "num_classes": len(classes)}
+               "params": count_params(model), "num_classes": len(classes), **calib}
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2))
     if run:
         run.finish()

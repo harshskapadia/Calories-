@@ -11,7 +11,8 @@ from dataclasses import dataclass, asdict
 from functools import lru_cache
 from pathlib import Path
 
-DEFAULT_CSV = Path(__file__).resolve().parents[1] / "data" / "nutrition.csv"
+DEFAULT_CSV = Path(__file__).resolve().parents[1] / "data" / "nutrition.csv"   # dishes the model can recognise
+SEARCH_CSV = Path(__file__).resolve().parents[1] / "data" / "food_search.csv"  # every USDA FNDDS food (~5,400)
 
 # Portion presets expressed as a multiple of the class's typical serving weight.
 PORTION_MULTIPLIERS: dict[str, float] = {"small": 0.6, "medium": 1.0, "large": 1.5}
@@ -152,3 +153,25 @@ def total(estimates: list[NutritionEstimate]) -> dict[str, float]:
 def load_db(path: str | Path = DEFAULT_CSV) -> NutritionDB:
     """Cached loader used by the app and the prediction pipeline."""
     return NutritionDB.from_csv(path)
+
+
+@lru_cache(maxsize=1)
+def load_full_db() -> NutritionDB:
+    """Recognisable dishes + every searchable USDA food, for looking up anything the user types.
+
+    Dish entries win on name clashes; USDA entries are keyed ``fndds_<fdc_id>``.
+    """
+    foods = dict(NutritionDB.from_csv(SEARCH_CSV)._foods) if Path(SEARCH_CSV).exists() else {}
+    foods.update(load_db()._foods)
+    return NutritionDB(foods)
+
+
+def search(query: str, limit: int = 20) -> list[FoodInfo]:
+    """Case-insensitive search over dishes + USDA foods: all query words must appear in the name.
+    Recognisable dishes rank first, then shorter (more generic) USDA names."""
+    words = [w for w in query.lower().replace("_", " ").split() if w]
+    if not words:
+        return []
+    hits = [f for f in load_full_db()._foods.values() if all(w in f.display_name.lower() for w in words)]
+    hits.sort(key=lambda f: (f.match == "usda", len(f.display_name), f.display_name))
+    return hits[:limit]

@@ -32,10 +32,39 @@ def tiny_db() -> NutritionDB:
     )
 
 
+INDIAN43 = """aloo_gobi aloo_masala bhindi_masala biryani burger butter_naan chai chapati chicken_curry chole
+chole_bhature coconut_chutney dal_makhani dhokla dum_aloo fish_curry fried_rice ghevar green_chutney gulab_jamun
+idli jalebi kaathi_rolls kadai_paneer kebab kheer kulfi lassi masala_dosa modak momos mutton_curry paani_puri
+pakode palak_paneer pav_bhaji pizza poha rajma_curry ras_malai samosa shahi_paneer white_rice""".split()
+
+
 def test_table_covers_all_food101_classes(db: NutritionDB) -> None:
     classes = (ROOT / "data" / "food101_classes.txt").read_text().split()
     assert len(classes) == 101
-    assert sorted(classes) == db.classes
+    assert set(classes) <= set(db.classes)
+
+
+def test_table_covers_every_dataset_label_after_aliases(db: NutritionDB) -> None:
+    import yaml
+
+    aliases = yaml.safe_load((ROOT / "data" / "sources.yaml").read_text())["indian43"]["aliases"]
+    assert len(INDIAN43) == 43
+    mapped = {aliases.get(c, c) for c in INDIAN43}
+    assert mapped <= set(db.classes), mapped - set(db.classes)
+    food101 = set((ROOT / "data" / "food101_classes.txt").read_text().split())
+    assert len(food101 | mapped) == len(db) == 139  # 101 + 43 - 5 shared dishes
+
+
+def test_search_any_food() -> None:
+    from src.nutrition import load_full_db, search
+
+    full = load_full_db()
+    assert len(full) > 5000
+    names = [f.display_name for f in search("biryani")]
+    assert names[0] == "Biryani" and any("chicken" in n.lower() for n in names)  # dish first, then USDA
+    assert search("") == [] and search("zzzz-not-a-food") == []
+    usda = next(f for f in search("roti") if f.match == "usda")
+    assert full.estimate(usda.name, 100).kcal == usda.kcal_per_100g
 
 
 def test_values_are_physically_plausible(db: NutritionDB) -> None:

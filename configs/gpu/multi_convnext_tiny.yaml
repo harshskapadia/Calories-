@@ -1,0 +1,34 @@
+# Multi-cuisine model: Food-101 + 43 Indian dishes (5 shared) = 139 dishes, ~81k training images.
+# Robustness: phone-photo augmentation + class-balanced sampling; confidence is calibrated after training.
+# Sized for a 4 GB laptop GPU (RTX 3050 Ti): ~10 min/epoch -> ~2 h for 10 epochs.
+experiment: multi_convnext_tiny
+data:
+  name: multi139
+  sources: [food101, indian43]      # see data/sources.yaml
+  short_side: 256
+  num_classes: null
+  val_frac: 0.1
+  seed: 42
+model:
+  backbone: convnext_tiny
+  pretrained: true
+  drop_rate: 0.2
+train:
+  img_size: 224
+  epochs: 10
+  batch_size: 16
+  lr: 2.0e-4
+  weight_decay: 0.05
+  label_smoothing: 0.1
+  warmup_epochs: 1
+  freeze_backbone_epochs: 0
+  amp: true
+  patience: 3
+  num_workers: 2
+  balanced_sampling: true
+  seed: 42
+augment:
+  phone_aug: true
+  randaugment: true
+  color_jitter: 0.25
+  random_erasing: 0.25

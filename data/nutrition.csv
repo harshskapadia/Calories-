@@ -100,3 +100,41 @@ takoyaki,Takoyaki,297.7,8.08,28.72,16.5,120.0,composite,2708304:60|2706331:25|27
 tiramisu,Tiramisu,353.0,5.65,29.44,23.86,175.0,exact,2705702:100,Tiramisu,
 tuna_tartare,Tuna Tartare,143.9,20.09,1.22,6.17,120.0,composite,2706308:80|2709223:12|2707442:4|2710190:4,"Fish, tuna, raw + Avocado, raw + Soy sauce + Sesame oil",raw tuna + avocado + soy sauce + sesame oil
 waffles,Waffles,373.0,8.7,41.5,18.82,75.0,exact,2708325:100,"Waffle, plain",
+aloo_gobi,Aloo Gobi,133.1,1.71,11.95,9.03,150.0,composite,2709389:45|2710801:40|2709795:8|2710186:7,"Potato, boiled, from fresh, peel not eaten, fat added, NS as to fat type + Cauliflower, cooked, as ingredient + Onions, raw + Olive oil",potato + cauliflower + onion + oil; 1 katori (~150 g)
+aloo_masala,Aloo Masala,172.1,1.55,16.55,11.21,150.0,composite,2709389:75|2709795:12|2710186:8|2709719:5,"Potato, boiled, from fresh, peel not eaten, fat added, NS as to fat type + Onions, raw + Olive oil + Tomatoes, raw",spiced potato: potato + onion + oil + tomato
+bhindi_masala,Bhindi Masala,95.4,1.68,7.16,7.24,150.0,composite,2709947:75|2709795:12|2709719:8|2710186:5,"Okra, fresh, cooked, fat added + Onions, raw + Tomatoes, raw + Olive oil",okra cooked with fat + onion + tomato + oil
+biryani,Biryani,104.0,7.15,13.55,2.38,300.0,close,2706538:100,Biryani with chicken,FNDDS 'Biryani with chicken'; 1 plate
+butter_naan,Butter Naan,345.6,10.27,46.22,13.27,90.0,composite,2707613:92|2710154:8,"Bread, naan + Butter, NFS",FNDDS naan + butter brushed on top; 1 naan
+chai,Chai,72.0,1.49,14.39,1.01,150.0,composite,2710506:94|2710258:6,"Tea, hot, with milk + Sugar, white, granulated or lump",FNDDS tea with milk + sugar; 1 cup
+chapati,Chapati,299.0,7.85,46.13,9.2,80.0,exact,2707713:100,"Bread, chappatti or roti","FNDDS 'Bread, chappatti or roti'; 2 chapatis"
+chole,Chole,185.7,6.13,19.8,9.47,200.0,composite,2707415:72|2709719:15|2709795:10|2710186:3,"Chickpeas, from dried, fat added + Tomatoes, raw + Onions, raw + Olive oil",chickpeas cooked with fat + tomato + onion + oil
+chole_bhature,Chole Bhature,262.5,6.56,27.98,14.02,300.0,composite,2707415:45|2709719:10|2709795:5|2707714:40,"Chickpeas, from dried, fat added + Tomatoes, raw + Onions, raw + Bread, puri","chole + fried bread (FNDDS 'Bread, puri' as bhatura proxy); 1 plate"
+coconut_chutney,Coconut Chutney,238.3,2.55,10.34,22.0,50.0,composite,2707500:50|2707416:10|2710707:35|2710186:5,"Coconut, fresh + Chickpeas, from dried, no added fat + Water, tap + Olive oil",fresh coconut + roasted dal (chickpea proxy) + water + tempering oil
+dal_makhani,Dal Makhani,225.7,7.17,16.29,15.02,200.0,composite,2707424:68|2707380:15|2710154:7|2705597:10,"Lentils, from dried, fat added + Kidney beans, from dried, fat added + Butter, NFS + Cream, heavy",whole lentils + kidney beans + butter + cream
+dhokla,Dhokla,128.0,6.36,24.98,0.35,120.0,proxy,2708346:100,Idli,FNDDS 'Idli' (steamed fermented batter) as proxy for steamed gram-flour dhokla; 4 pieces
+dum_aloo,Dum Aloo,187.4,1.87,14.97,13.44,200.0,composite,2709389:65|2705418:15|2709795:10|2710186:10,"Potato, boiled, from fresh, peel not eaten, fat added, NS as to fat type + Yogurt, whole milk, plain + Onions, raw + Olive oil",potatoes + yogurt gravy + onion + oil
+fish_curry,Fish Curry,93.0,4.94,6.65,5.42,250.0,exact,2706460:100,Fish curry,
+ghevar,Ghevar,353.0,7.87,43.49,16.57,100.0,proxy,2708349:100,Funnel cake with sugar,FNDDS 'Funnel cake with sugar' (fried batter + sugar) as proxy
+gulab_jamun,Gulab Jamun,374.9,4.3,53.47,15.95,80.0,composite,2708072:70|2710258:20|2710707:10,"Doughnut, yeast type + Sugar, white, granulated or lump + Water, tap",fried dough (yeast doughnut proxy) + sugar syrup; 2 pieces
+green_chutney,Green Chutney,80.4,3.79,6.45,5.3,30.0,composite,2709782:55|2709795:15|2709180:15|2707512:10|2710707:5,"Cilantro, raw + Onions, raw + Lemon juice, 100%, NS as to form + Peanuts, NFS + Water, tap",coriander/mint + onion + lemon + peanuts + water
+idli,Idli,128.0,6.36,24.98,0.35,120.0,exact,2708346:100,Idli,3 idlis
+jalebi,Jalebi,367.4,5.51,60.32,11.7,80.0,composite,2708349:70|2710258:30,"Funnel cake with sugar + Sugar, white, granulated or lump",fried batter (funnel cake) + extra sugar syrup
+kaathi_rolls,Kaathi Rolls,232.0,12.77,23.3,9.4,180.0,close,2706881:100,"Sandwich wrap, NFS","FNDDS 'Sandwich wrap, NFS'"
+kadai_paneer,Kadai Paneer,236.7,7.5,12.7,17.06,200.0,composite,2705740:45|2709800:15|2709719:15|2709795:15|2710186:10,"Cheese, paneer + Peppers, sweet, green, raw + Tomatoes, raw + Onions, raw + Olive oil",paneer + green pepper + tomato + onion + oil
+kebab,Kebab,162.0,12.02,5.06,10.28,150.0,close,2706780:100,"Lamb shish kabob with vegetables, excluding potatoes",FNDDS 'Lamb shish kabob with vegetables'
+kheer,Kheer,144.0,3.58,25.13,3.11,150.0,close,2705686:100,"Firni, Indian pudding","FNDDS 'Firni, Indian pudding' (milk-rice pudding)"
+kulfi,Kulfi,221.0,3.57,26.36,11.3,70.0,proxy,2705629:100,"Ice cream, NFS","FNDDS 'Ice cream, NFS' (kulfi is denser; likely underestimates)"
+lassi,Lassi,108.6,3.38,14.88,3.94,250.0,composite,2705418:80|2705385:10|2710258:10,"Yogurt, whole milk, plain + Milk, whole + Sugar, white, granulated or lump",plain whole-milk yogurt + milk + sugar; 1 glass
+masala_dosa,Masala Dosa,184.0,5.46,30.8,4.27,200.0,exact,2709129:100,"Dosa, with filling","FNDDS 'Dosa, with filling'"
+modak,Modak,237.4,2.73,35.0,10.29,90.0,composite,2708344:55|2707500:25|2710258:20,"Dumpling, no meat + Coconut, fresh + Sugar, white, granulated or lump",steamed dumpling + coconut + jaggery (sugar proxy); 3 pieces
+momos,Momos,113.0,6.9,11.07,4.6,150.0,close,2708708:100,"Wonton, dumpling or pot sticker, steamed","FNDDS 'Wonton, dumpling or pot sticker, steamed'; ~6 pieces"
+mutton_curry,Mutton Curry,219.0,17.29,1.58,15.37,250.0,close,2706413:100,Lamb or mutton with gravy,FNDDS 'Lamb or mutton with gravy'
+paani_puri,Paani Puri,199.1,4.18,22.93,10.18,120.0,composite,2707714:35|2709389:25|2707416:15|2710707:25,"Bread, puri + Potato, boiled, from fresh, peel not eaten, fat added, NS as to fat type + Chickpeas, from dried, no added fat + Water, tap",puri shells + potato + chickpeas + spiced water; ~6 pieces
+pakode,Pakode,125.0,4.92,16.24,4.77,100.0,exact,2710066:100,Pakora,FNDDS 'Pakora'
+palak_paneer,Palak Paneer,101.0,5.42,4.28,7.02,200.0,exact,2709631:100,Palak Paneer,
+pav_bhaji,Pav Bhaji,205.3,4.65,23.9,10.14,300.0,composite,2710067:55|2707654:38|2710154:7,"Vegetable curry + Roll, white, soft + Butter, NFS",vegetable curry (bhaji) + soft white rolls (pav) + butter
+poha,Poha,190.5,3.87,24.17,8.7,200.0,composite,2708408:78|2707512:7|2709795:10|2710186:5,"Rice, white, cooked, no added fat + Peanuts, NFS + Onions, raw + Olive oil",flattened rice (plain cooked-rice proxy) + peanuts + onion + oil
+rajma_curry,Rajma Curry,139.6,6.25,17.34,5.28,200.0,composite,2707380:75|2709719:15|2709795:10,"Kidney beans, from dried, fat added + Tomatoes, raw + Onions, raw",kidney beans cooked with fat + tomato + onion
+ras_malai,Ras Malai,195.3,7.19,25.12,7.08,120.0,composite,2705740:35|2705385:50|2710258:15,"Cheese, paneer + Milk, whole + Sugar, white, granulated or lump",paneer discs + milk + sugar; 2 pieces
+shahi_paneer,Shahi Paneer,246.6,7.75,13.27,18.04,200.0,composite,2705740:40|2705597:15|2709719:20|2709795:15|2710154:5|2707493:5,"Cheese, paneer + Cream, heavy + Tomatoes, raw + Onions, raw + Butter, NFS + Cashews, NFS",paneer + cream + tomato + onion + butter + cashews
+white_rice,White Rice,129.0,2.67,27.99,0.28,200.0,exact,2708408:100,"Rice, white, cooked, no added fat",plain cooked white rice

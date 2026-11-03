@@ -22,6 +22,7 @@ import numpy as np
 import torch
 from sklearn.metrics import confusion_matrix, f1_score, precision_recall_fscore_support
 
+from src.calibrate import expected_calibration_error
 from src.data import ManifestDataset, build_transforms, image_root_for, manifest_path
 from src.models import count_params, load_checkpoint
 from src.train import autocast_ctx, get_device
@@ -36,7 +37,7 @@ def predict_split(model, loader, device, amp: bool) -> np.ndarray:
     for x, _ in loader:
         with autocast_ctx(device, amp):
             logits = model(x.to(device))
-        out.append(logits.float().softmax(1).cpu().numpy())
+        out.append((logits.float() / getattr(model, "temperature", 1.0)).softmax(1).cpu().numpy())
     return np.concatenate(out)
 
 
@@ -109,6 +110,8 @@ def evaluate(checkpoint: Path, split: str = "test", out_dir: Path | None = None,
         "top1": float((pred == y).mean()),
         "top5": float((top5 == y[:, None]).any(1).mean()),
         "macro_f1": float(f1_score(y, pred, average="macro")),
+        "ece": round(expected_calibration_error(probs, y), 4),
+        "temperature": round(getattr(model, "temperature", 1.0), 4),
         "params_m": round(count_params(model) / 1e6, 2),
         "cpu_latency_ms": round(measure_latency(model, img_size), 1),
     }

@@ -100,13 +100,35 @@ def main() -> None:
         "macro_mae_g": {k: round(float(np.abs(pred[k] - true[k].to_numpy()).mean()), 1) for k in TARGETS[1:]},
         "label_note": "labels are GPT-4o/Qwen estimates reviewed by crowd annotators (dataset card), not weighed food",
     }
+    # kNN over training photos (similarity-weighted geometric mean of their kcal), ensembled with the ridge head
+    K, TEMP = 10, 30.0
+    ktr = df.calories_kcal.to_numpy()[tr]
+    sims = E[te] @ E[tr].T
+    nn = np.argpartition(-sims, K, 1)[:, :K]
+    w = np.exp(np.take_along_axis(sims, nn, 1) * TEMP)
+    w /= w.sum(1, keepdims=True)
+    knn = np.exp((np.log(ktr[nn]) * w).sum(1))
+    ens = np.sqrt(knn * pred["calories_kcal"])
+    res["knn_k10"] = metrics(knn, true.calories_kcal.to_numpy())
+    res["ensemble_ridge_knn"] = metrics(ens, true.calories_kcal.to_numpy())
+    res["macro_mae_g"] = {k: round(float(np.abs(pred[k] * ens / pred["calories_kcal"] - true[k].to_numpy()).mean()), 1)
+                          for k in TARGETS[1:]}
     (ROOT / "results").mkdir(exist_ok=True)
     (ROOT / "results" / "calorie_model.json").write_text(json.dumps(res, indent=2), encoding="utf-8")
     print(json.dumps(res, indent=2))
-    # export for the browser: y = e @ W + b ; kcal = exp(y0); shares = y1..3 (clipped, renormalised)
-    out = {"W": np.round(W.T, 6).tolist(), "b": np.round(b, 6).tolist(), "trained_on": int(tr.sum()),
-           "metrics_unseen": res["photo_to_nutrition_ridge"]}
-    (ROOT / "docs" / "model" / "calorie_head.json").write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
+    # ---- deployment: refit on ALL photos (train + held-out); reported metrics stay the held-out ones above
+    W_all, b_all = fit_ridge(V.reshape(-1, V.shape[2]), np.repeat(Y, n_views, 0), lam)
+    out = {"W": np.round(W_all.T, 6).tolist(), "b": np.round(b_all, 6).tolist(), "trained_on": int(len(df)),
+           "knn": {"k": K, "temperature": TEMP}, "metrics_unseen": res["ensemble_ridge_knn"],
+           "dataset": "MM-Food-100K (Humanbased-AI, OpenRAIL); labels are reviewed GPT-4o/Qwen estimates"}
+    docs = ROOT / "docs" / "model"
+    (docs / "calorie_head.json").write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
+    # kNN bank: int8 embeddings + kcal + dish name of every photo (names shown as "looks similar to")
+    np.clip(np.round(E * 127), -127, 127).astype(np.int8).tofile(docs / "calorie_knn.bin")
+    (docs / "calorie_knn.json").write_text(json.dumps(
+        {"dim": int(E.shape[1]), "kcal": [int(round(k)) for k in df.calories_kcal], "dish": df.dish_name.str.strip().tolist()},
+        separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
+    print(f"exported head + kNN bank of {len(df)} photos ({(docs / 'calorie_knn.bin').stat().st_size / 1e6:.1f} MB)")
 
 
 if __name__ == "__main__":

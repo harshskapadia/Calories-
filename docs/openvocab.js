@@ -14,6 +14,13 @@ async function loadOpenVocab() {
       fetch("model/calorie_head.json").then((r) => (r.ok ? r.json() : null)).catch(() => null),
     ]);
     ov.head = head;
+    if (head?.knn) { // similar real meals: int8 photo embeddings + their kcal and dish names (~16 MB)
+      const [kb, kj] = await Promise.all([
+        fetch("model/calorie_knn.bin").then((r) => r.arrayBuffer()),
+        fetch("model/calorie_knn.json").then((r) => r.json()),
+      ]);
+      ov.knn = { bank: new Int8Array(kb), ...kj };
+    }
     const bytes = await fetchWithProgress("model/clip_visual.int8.onnx", (f) => st(`Downloading the open-vocabulary model… ${Math.round(f * 100)}% of 96 MB`));
     st("Starting the model…");
     ov.session = await ort.InferenceSession.create(bytes, { executionProviders: ["wasm"], graphOptimizationLevel: "all" });
@@ -86,16 +93,29 @@ function showPhotoEstimate(e) {
   const h = ov.head;
   if (!h) return;
   const y = h.b.map((bias, j) => bias + h.W[j].reduce((acc, w, d) => acc + w * e[d], 0));
-  const kcal = Math.exp(y[0]);
+  let kcal = Math.exp(y[0]);
+  let similar = [];
+  if (ov.knn && h.knn) { // ensemble: geometric mean of the linear estimate and the k most similar real meals
+    const { bank, kcal: kk, dish, dim } = ov.knn, n = kk.length, K = h.knn.k;
+    const sims = new Float32Array(n);
+    for (let i = 0; i < n; i++) { let s = 0; const o = i * dim; for (let d = 0; d < dim; d++) s += e[d] * bank[o + d]; sims[i] = s / 127; }
+    const top = Array.from(sims.keys()).sort((a, b) => sims[b] - sims[a]).slice(0, K);
+    const w = top.map((i) => Math.exp((sims[i] - sims[top[0]]) * h.knn.temperature));
+    const z = w.reduce((a, b) => a + b, 0);
+    const knnKcal = Math.exp(top.reduce((acc, i, j) => acc + (w[j] / z) * Math.log(Math.max(kk[i], 10)), 0));
+    kcal = Math.sqrt(kcal * knnKcal);
+    similar = [...new Set(top.map((i) => dish[i]))].slice(0, 3);
+  }
   let s = y.slice(1).map((v) => Math.max(v, 0.01));
   const z = s.reduce((a, b) => a + b, 0);
   s = s.map((v) => v / z);
   ov.est = { kcal, p: (kcal * s[0]) / 4, c: (kcal * s[1]) / 4, f: (kcal * s[2]) / 9 };
   $("pe-kcal").textContent = Math.round(kcal);
-  $("pe-macros").textContent = `${Math.round(ov.est.p)} g protein · ${Math.round(ov.est.c)} g carbs · ${Math.round(ov.est.f)} g fat`;
+  $("pe-macros").textContent = `${Math.round(ov.est.p)} g protein · ${Math.round(ov.est.c)} g carbs · ${Math.round(ov.est.f)} g fat` +
+    (similar.length ? ` · looks similar to: ${similar.join(", ").toLowerCase()}` : "");
   const m = h.metrics_unseen;
-  $("pe-note").textContent = `Learned from ${h.trained_on.toLocaleString()} real meal photos. On dishes it never saw, half of its estimates ` +
-    `were within ±${Math.round(m.median_abs_pct)}% (vs. labels that are themselves reviewed AI estimates). Use it as a guide.`;
+  $("pe-note").textContent = `Learned from ${h.trained_on.toLocaleString()} real meal photos. Tested on dishes it never saw: half of its ` +
+    `estimates were within ±${Math.round(m.median_abs_pct)}%, two thirds within ±25% (vs. labels that are themselves reviewed AI estimates). Use it as a guide.`;
   $("photo-est").hidden = false;
 }
 

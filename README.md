@@ -160,6 +160,46 @@ and keeps the trained classifier (88.8% on its 139 dishes) as the first opinion.
 results on 9/9 examples (~1.5 s per photo after loading). There is no licensed test set of shakes/drinks photos, so
 accuracy on those categories is not measured.
 
+### World dishes: 10,621 foods from a photo
+
+`scripts/build_world_dishes.py` adds **5,482 dishes from [Wikidata](https://www.wikidata.org)** (CC0) to the open-vocabulary
+list, each with its cuisine (19 regions: 1,176 Indian & South Asian, 735 Southeast Asian, 414 Italian & Mediterranean,
+315 African…). CLIP prompts include the Wikidata description ("a photo of bún chả, Vietnamese dish of grilled pork and
+noodles"). Wikidata has no nutrition, so each dish borrows the values of the most similar food in our table (by text
+similarity of name + description); the app labels these **approximate**, flags weak links (similarity < 0.70, ~¼ of dishes)
+and links to the Wikidata entry. Spot checks: rogan josh → beef curry, aish baladi → pita, red beans and rice → beans and
+rice are good; some are poor (a Bengali sweet linked to a sausage), hence the flag. A **cuisine filter** narrows the
+search. A photo-based accuracy test across thousands of world dishes was planned with Wikimedia Commons images, but
+Wikimedia rejects bulk thumbnail downloads (HTTP 429, robot policy), so it was not run.
+
+### Calories for food that is in no dataset: estimated straight from the photo
+
+The table lookup (dish name → per-100 g values × typical serving) fails on food it doesn't know, and real portions differ
+from "typical servings". So the app also predicts **kcal and macros directly from the photo**: a linear head plus a
+nearest-neighbour vote over the CLIP embeddings of **29,998 real meal photos** from
+[MM-Food-100K](https://huggingface.co/datasets/Humanbased-AI/MM-Food-100K) (OpenRAIL; ~99% phone photos, 8,370 dish names).
+
+Test: **5,920 photos of 1,650 dish names that never appear in training** (20% of dish names held out).
+
+| Method | Median error | Mean error | Within ±25% | Within ±50% |
+|---|---|---|---|---|
+| Constant (training median) | 41.7% | 191 kcal | 35% | 75% |
+| Name → USDA table × typical serving (previous approach) | 55.9% | 260 kcal | 17% | 41% |
+| Linear head on CLIP embedding | 19.2% | 103 kcal | 61% | 88% |
+| **Linear head + 10 most similar real meals (shipped)** | **16.7%** | **92 kcal** | **67%** | **90%** |
+
+Macro error (mean): protein 6.4 g, carbs 13.4 g, fat 5.3 g. Scaling the training set from 4.8k to 24k photos moved the
+linear head only from 19.8% to 19.2% (it has saturated); the nearest-neighbour vote is what helped.
+
+**Read these numbers carefully:** MM-Food-100K's nutrition labels were produced by GPT-4o / Qwen and then reviewed by crowd
+annotators (dataset card), so "error" means *disagreement with reviewed AI estimates*, not with weighed food.
+**Robustness:** single-image estimates moved ~10% just by changing the resize interpolation; training on 4 views per photo
+(bicubic, mirrored, bilinear, cropped) and averaging original + mirror at prediction time fixed the browser/Python
+mismatch (now within 2% on the examples). In the app, "📸 Calories estimated from the photo" shows kcal, macros and
+"looks similar to: …" (dish names of the closest real meals), and **Set portion from photo** rescales the chosen dish to
+match. The deployed head is refit on all 29,998 photos; the metrics above are from the held-out experiment
+(`scripts/calorie_model.py`, `results/calorie_model.json`).
+
 ### Packaged foods and drinks (barcode + product search)
 
 For anything in a package (biscuits, chips, shakes, lassi, protein drinks…) the page looks the product up in

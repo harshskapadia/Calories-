@@ -95,7 +95,7 @@
       </label>
       <button id="ov-btn" type="button" class="btn ov-btn">🌍 Identify anything: any cuisine, shakes, drinks…</button>
       <p class="muted small" id="ov-note">Matches the photo against <span id="ov-count">thousands of</span> dishes and foods
-        with an open-vocabulary AI model (CLIP). One-time 96 MB download, then runs on this device.</p>
+        with an open-vocabulary AI model (CLIP). One-time ~110 MB download, then runs on this device.</p>
       <div id="ov-status" class="muted small" role="status" aria-live="polite"></div>
       <ol id="ov-results" class="ov-results" hidden></ol>
       <div id="photo-est" class="photo-est" hidden>
@@ -178,7 +178,8 @@
       <p class="small">Source code, training pipeline, evaluation and the full Gradio app (with Grad-CAM heatmaps):
         <a href="https://github.com/harshskapadia/Calories-">github.com/harshskapadia/Calories-</a></p>
       <p class="muted small">Training data: Food-101 (Bossard et al., 2014; research use) and the SohlHealth Enhanced Indian Food
-        Classification dataset (CC-BY-4.0). Runtime: ONNX Runtime Web (MIT). Barcodes: zxing-wasm (MIT).
+        Classification dataset (CC-BY-4.0). Photo calorie estimates: trained on MM-Food-100K (Humanbased-AI, OpenRAIL), real meal photos whose calories are
+        GPT-4o/Qwen estimates reviewed by people. Runtime: ONNX Runtime Web (MIT). Barcodes: zxing-wasm (MIT).
         Packaged products: <a href="https://world.openfoodfacts.org">Open Food Facts</a> contributors, database under the
         <a href="https://opendatacommons.org/licenses/odbl/1-0/">ODbL</a>.</p>
     </section>

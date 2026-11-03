@@ -1,11 +1,13 @@
 # 🍽️ NutriSnap: food photo → dish → portion → calories & macros
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/harshskapadia/Calories-/blob/main/notebooks/nutrisnap_colab.ipynb) [![tests](https://img.shields.io/badge/tests-pytest-green)](tests/) ![python](https://img.shields.io/badge/python-3.11-blue) ![pytorch](https://img.shields.io/badge/PyTorch-timm-orange) ![gradio](https://img.shields.io/badge/demo-Gradio-ff7c00)
+[![Try it live](https://img.shields.io/badge/demo-try%20it%20live-2a9d8f)](https://harshskapadia.github.io/Calories-/) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/harshskapadia/Calories-/blob/main/notebooks/nutrisnap_colab.ipynb) [![tests](https://img.shields.io/badge/tests-pytest-green)](tests/) ![python](https://img.shields.io/badge/python-3.11-blue) ![pytorch](https://img.shields.io/badge/PyTorch-timm-orange) ![gradio](https://img.shields.io/badge/demo-Gradio-ff7c00)
 
 Snap or upload a photo of a meal. NutriSnap recognises the dish (**139 Western and Indian dishes**), shows
 **where the model looked** (Grad-CAM), estimates the **portion**, and returns **calories, protein, carbs and fat**,
 with every number editable, because the model will sometimes be wrong. Anything it can't recognise can be looked
 up in a **search over 5,500+ foods** (every USDA FNDDS food plus all 139 dishes).
+
+**▶ Try it: [https://harshskapadia.github.io/Calories-/](https://harshskapadia.github.io/Calories-/)** (runs entirely in your browser; photos never leave your device)
 
 <p align="center"><img src="assets/app_mobile.jpg" width="300" alt="NutriSnap on a phone"></p>
 
@@ -14,7 +16,7 @@ up in a **search over 5,500+ foods** (every USDA FNDDS food plus all 139 dishes)
 ---
 
 ## Contents
-[Problem](#problem) · [Architecture](#architecture) · [Data](#data) · [Multi-cuisine & robustness](#multi-cuisine-model-and-robustness) · [Results](#results) · [Error analysis](#error-analysis) · [Portion estimation](#portion-estimation) · [Run on your GPU](#run-on-your-own-gpu-recommended) · [Deploy to Hugging Face Spaces](#deploy-to-hugging-face-spaces) · [Limitations](#limitations) · [Future work](#future-work)
+[Problem](#problem) · [Architecture](#architecture) · [Data](#data) · [Multi-cuisine & robustness](#multi-cuisine-model-and-robustness) · [In-browser version](#in-browser-version-free-on-device) · [Results](#results) · [Error analysis](#error-analysis) · [Portion estimation](#portion-estimation) · [Run on your GPU](#run-on-your-own-gpu-recommended) · [Deploy to Hugging Face Spaces](#deploy-to-hugging-face-spaces) · [Limitations](#limitations) · [Future work](#future-work)
 
 ## Problem
 Logging food is the step most people give up on in calorie tracking: searching a database and
@@ -121,6 +123,24 @@ scaling) are in [`results/multi_convnext_tiny/`](results/multi_convnext_tiny/).
 
 A CPU smoke test of the same pipeline (12 random dishes from both datasets) showed temperature scaling cutting
 expected calibration error from 0.21 to 0.09 on validation.
+
+## In-browser version (free, on-device)
+
+The live demo is a static site in [`docs/`](docs/) (GitHub Pages) that runs the 139-dish model **inside the visitor's browser**
+with [ONNX Runtime Web](https://onnxruntime.ai/): no server, no GPU, no cost, and photos are never uploaded.
+
+| Model file | Size | Test top-1 (2,000-image sample) | Top-5 | CPU time / image |
+|---|---|---|---|---|
+| PyTorch → ONNX fp32 | 112 MB | 88.8% | 97.9% | 43 ms |
+| **ONNX, int8 weights (dynamic quantization of MatMul/Gemm)** | **34 MB** | **89.0%** | **97.8%** | **25 ms** |
+
+The quantized model agrees with fp32 on 99% of images, so quantization is free here. In the browser (single-threaded
+WebAssembly, flip test-time augmentation, calibrated softmax) the page reproduced the Python predictions on all 9
+example photos (confidence within 0.5 points) at ~1 s per photo. The page has camera input, top-3, the
+"not sure" warning, dish correction, portion presets/grams, macro breakdown and the 5,570-food search. Grad-CAM stays in the
+Gradio app (`python app/app.py`).
+
+Rebuild after retraining with `python scripts/build_web.py` (or `make web`); preview with `python -m http.server -d docs 8000`.
 
 ## Results
 
@@ -263,18 +283,20 @@ python -m src.train --config configs/full_gpu.yaml --set train.epochs=20 train.b
 
 **No GPU?** Open [`notebooks/nutrisnap_colab.ipynb`](https://colab.research.google.com/github/harshskapadia/Calories-/blob/main/notebooks/nutrisnap_colab.ipynb) in Colab (free T4): it trains on full Food-101, evaluates, and launches the app with a public link.
 
-## Deploy to Hugging Face Spaces
+## Deploy
 
-One command builds the Space (app, inference code, model, nutrition + search tables, examples) and uploads it:
+**In-browser site (free, recommended).** The site in `docs/` is served by **GitHub Pages**: repo *Settings → Pages →
+Build and deployment → Source: Deploy from a branch → Branch: `main`, folder: `/docs` → Save*. It appears at
+https://harshskapadia.github.io/Calories-/ a minute later and updates on every push. The same site can also go to a free Hugging Face *static* Space:
 
 ```bash
-hf auth login                                                  # once: paste a Hugging Face token with WRITE access
-python scripts/deploy_space.py --space <your-hf-username>/nutrisnap
+hf auth login                                                        # once: token with WRITE access
+python scripts/deploy_space.py --space <your-hf-username>/nutrisnap --static
 ```
 
-The Space builds in a few minutes at `https://huggingface.co/spaces/<your-hf-username>/nutrisnap` and runs on the
-free CPU tier (CPU-only PyTorch wheels; ~3 s per analysis including Grad-CAM). Re-run the same command after
-retraining to update it. `python scripts/build_space.py` only assembles `build/space/` without uploading.
+**Gradio app (with Grad-CAM).** `python scripts/deploy_space.py --space <your-hf-username>/nutrisnap-gradio` builds and uploads
+`build/space/`. Hugging Face now requires a PRO plan for Gradio Spaces on CPU; free accounts older than 30 days can host
+up to 2 ZeroGPU Spaces instead.
 
 ## Limitations
 

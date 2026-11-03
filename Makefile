@@ -3,7 +3,7 @@ PY      ?= .venv/bin/python
 CONFIG  ?= configs/baseline_subset.yaml
 CKPT    ?= checkpoints/best.pt
 
-.PHONY: help setup data nutrition train train-baseline evaluate ablation test run-app train-multi calibrate export-model space deploy-space clean
+.PHONY: help setup data nutrition train train-baseline evaluate ablation test run-app train-multi calibrate export-model web space deploy-space clean
 
 help:            ## list targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-16s %s\n", $$1, $$2}'
@@ -48,6 +48,9 @@ calibrate:       ## fit confidence temperature for a checkpoint: make calibrate 
 
 export-model:    ## fp16 app model from a checkpoint: make export-model CKPT=checkpoints/x/best.pt
 	$(PY) scripts/export_model.py $(CKPT)
+
+web:             ## build the in-browser site in docs/ (ONNX int8 model + data); preview: python -m http.server -d docs
+	$(PY) scripts/build_web.py
 
 space:           ## assemble a deployable Hugging Face Space in build/space/
 	$(PY) scripts/build_space.py

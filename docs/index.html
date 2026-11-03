@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>NutriSnap</title>
+  <meta name="description" content="Snap a meal: on-device dish recognition (139 Western and Indian dishes), portion and calories/macros estimate. Runs entirely in your browser.">
+  <meta name="theme-color" content="#1f6f68">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <h1><span aria-hidden="true">🍽️</span> NutriSnap</h1>
+      <p class="tagline">Snap a meal → dish → portion → calories &amp; macros</p>
+      <ul class="chips" aria-label="Highlights">
+        <li>🔒 Runs on your device</li>
+        <li>139 dishes · Western &amp; Indian</li>
+        <li>5,570 foods searchable</li>
+      </ul>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <p class="disclaimer"><strong>Estimates only.</strong> Values are based on a typical recipe (USDA FoodData Central) and an estimated
+      portion; real meals vary with ingredients, oil and sauces. Not medical or dietary advice.</p>
+
+    <!-- 1. Photo -->
+    <section class="card" aria-labelledby="photo-h">
+      <h2 id="photo-h">1 · Your meal</h2>
+      <div id="drop" class="drop" tabindex="0" role="button" aria-label="Choose or drop a meal photo">
+        <img id="preview" alt="" hidden>
+        <div id="drop-hint" class="drop-hint">
+          <div class="big-icon" aria-hidden="true">📷</div>
+          <div>Take a photo or choose one</div>
+          <div class="muted small">One dish per photo works best · photos never leave your device</div>
+        </div>
+      </div>
+      <div class="row">
+        <label class="btn primary">📷 Take photo
+          <input id="camera" type="file" accept="image/*" capture="environment" hidden>
+        </label>
+        <label class="btn">🖼️ Choose photo
+          <input id="file" type="file" accept="image/*" hidden>
+        </label>
+      </div>
+      <div class="examples" aria-label="Example photos">
+        <div class="muted small">Or try an example:</div>
+        <div id="examples" class="ex-grid"></div>
+      </div>
+      <div id="status" class="status" role="status" aria-live="polite">
+        <div class="bar"><div id="bar-fill"></div></div>
+        <span id="status-text">Loading the model…</span>
+      </div>
+    </section>
+
+    <!-- 2. Results -->
+    <section id="results" class="card" aria-labelledby="res-h" hidden>
+      <h2 id="res-h">2 · What I see</h2>
+      <div id="warn" class="warn" hidden></div>
+      <ol id="top3" class="top3"></ol>
+      <p class="muted small" id="timing"></p>
+    </section>
+
+    <!-- 3. Nutrition -->
+    <section id="nutrition" class="card" aria-labelledby="nut-h" hidden>
+      <h2 id="nut-h">3 · Nutrition</h2>
+
+      <label class="field">Dish <span class="muted">(correct it if wrong)</span>
+        <select id="dish"></select>
+      </label>
+
+      <div class="field">
+        <label for="search">Not in the list? Search any food</label>
+        <input id="search" type="search" placeholder="e.g. dal, roti, pho, oatmeal" autocomplete="off">
+        <ul id="search-results" class="search-results" hidden></ul>
+      </div>
+
+      <div class="field">
+        <span>Portion</span>
+        <div class="seg" role="radiogroup" aria-label="Portion size">
+          <button type="button" data-preset="small" role="radio">Small</button>
+          <button type="button" data-preset="medium" role="radio" class="on">Medium</button>
+          <button type="button" data-preset="large" role="radio">Large</button>
+        </div>
+        <div class="grams">
+          <input id="grams-range" type="range" min="0" max="1200" step="5" aria-label="Portion in grams">
+          <span><input id="grams" type="number" min="0" max="3000" step="5" aria-label="Grams"> g</span>
+        </div>
+      </div>
+
+      <div class="kcal-card">
+        <div id="food-name" class="food-name"></div>
+        <div class="kcal"><span id="kcal">0</span> kcal</div>
+        <div class="macros">
+          <div><b id="p">0 g</b>protein</div><div><b id="c">0 g</b>carbs</div><div><b id="f">0 g</b>fat</div>
+        </div>
+      </div>
+      <div class="macro-bars" aria-label="Energy by macronutrient">
+        <div class="mrow"><span>Protein</span><div class="track"><div id="bp" class="fill protein"></div></div><span id="kp"></span></div>
+        <div class="mrow"><span>Carbs</span><div class="track"><div id="bc" class="fill carbs"></div></div><span id="kc"></span></div>
+        <div class="mrow"><span>Fat</span><div class="track"><div id="bf" class="fill fat"></div></div><span id="kf"></span></div>
+      </div>
+      <p id="source" class="muted small"></p>
+    </section>
+
+    <section class="card about">
+      <h2>How it works</h2>
+      <ul>
+        <li><b>Model:</b> ConvNeXt-Tiny fine-tuned on Food-101 + an Indian food dataset (139 dishes),
+          <b>88.8% top-1 / 97.7% top-5</b> on 26,836 test photos. Exported to ONNX with int8 weights (34 MB) and run in your
+          browser with ONNX Runtime Web, so no photo is uploaded anywhere.</li>
+        <li><b>Confidence</b> is calibrated (temperature scaling) so "70%" means roughly 70% correct; below 40% the app says it's not sure.</li>
+        <li><b>Nutrition:</b> USDA FoodData Central (FNDDS) per-100 g values × your portion; typical servings from USDA portion data.</li>
+      </ul>
+      <p class="small">Source code, training pipeline, evaluation and the full Gradio app (with Grad-CAM heatmaps):
+        <a href="https://github.com/harshskapadia/Calories-">github.com/harshskapadia/Calories-</a></p>
+      <p class="muted small">Training data: Food-101 (Bossard et al., 2014; research use) and the SohlHealth Enhanced Indian Food
+        Classification dataset (CC-BY-4.0). Runtime: ONNX Runtime Web (MIT).</p>
+    </section>
+  </main>
+
+  <script src="ort/ort.wasm.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

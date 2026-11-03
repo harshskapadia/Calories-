@@ -17,3 +17,7 @@ requests>=2.31
 gradio>=4.40
 # Dev
 pytest>=8.0
+# In-browser export (scripts/build_web.py)
+onnx>=1.16
+onnxruntime>=1.18
+onnxscript>=0.1

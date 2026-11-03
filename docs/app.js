@@ -66,8 +66,9 @@ async function init() {
 }
 
 // ---------------------------------------------------------------- preprocessing (matches the PyTorch eval transform)
-async function toTensor(blob) {
-  const { img_size: S, resize: R, mean, std } = state.meta;
+async function toTensor(blob, opts = {}) {
+  const { size: S, resize: R, mean, std, flip } = { size: state.meta.img_size, resize: state.meta.resize,
+    mean: state.meta.mean, std: state.meta.std, flip: true, ...opts };
   const bmp = await createImageBitmap(blob, { imageOrientation: "from-image" }); // honour phone EXIF rotation
   // "Resize short side to R, then center-crop S x S" == draw the centred (S/scale)^2 square of the original into S x S
   const scale = R / Math.min(bmp.width, bmp.height);
@@ -83,7 +84,8 @@ async function toTensor(blob) {
   bmp.close?.();
   const { data } = ctx.getImageData(0, 0, S, S);
   const n = S * S;
-  const out = new Float32Array(2 * 3 * n); // batch of 2: original + horizontal flip (test-time augmentation)
+  const B = flip ? 2 : 1;
+  const out = new Float32Array(B * 3 * n); // batch of 2 = original + horizontal flip (test-time augmentation)
   for (let y = 0; y < S; y++) {
     for (let x = 0; x < S; x++) {
       const i = (y * S + x) * 4;
@@ -91,11 +93,11 @@ async function toTensor(blob) {
       for (let ch = 0; ch < 3; ch++) {
         const v = (data[i + ch] / 255 - mean[ch]) / std[ch];
         out[ch * n + o] = v;
-        out[3 * n + ch * n + of] = v;
+        if (flip) out[3 * n + ch * n + of] = v;
       }
     }
   }
-  return new ort.Tensor("float32", out, [2, 3, S, S]);
+  return new ort.Tensor("float32", out, [B, 3, S, S]);
 }
 
 function softmax(logits, T) {
@@ -108,6 +110,8 @@ function softmax(logits, T) {
 // ---------------------------------------------------------------- inference
 async function analyze(blob) {
   if (!state.session) { setStatus("The model is still loading, one moment…"); return; }
+  state.lastBlob = blob;
+  $("ov-results").hidden = true;
   $("preview").src = URL.createObjectURL(blob);
   $("preview").hidden = false;
   $("drop-hint").hidden = true;
@@ -147,7 +151,7 @@ function renderTop3(top, ms) {
   const warn = $("warn");
   warn.hidden = best >= state.meta.low_confidence;
   warn.innerHTML = `🤔 <b>Not sure</b> (best guess ${(best * 100).toFixed(0)}%). This may be a dish I wasn't trained on. ` +
-    `Tap the right dish below, pick it in the list, or <b>search any food</b>.`;
+    `Try <b>🌍 Identify anything</b> below, tap the right dish, or <b>search any food</b>.`;
   $("timing").textContent = `Recognised on this device in ${ms} ms.`;
   $("results").hidden = false;
 }

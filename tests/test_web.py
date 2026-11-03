@@ -30,3 +30,14 @@ def test_site_files_present() -> None:
     assert 'src="ort/ort.wasm.min.js"' in html and 'src="app.js"' in html and 'src="products.js"' in html
     js = (DOCS / "products.js").read_text(encoding="utf-8")
     assert "world.openfoodfacts.org" in js and "Open Food Facts" in html and "ODbL" in html  # attribution
+
+
+def test_open_vocabulary_bank() -> None:
+    meta = json.loads((DOCS / "model" / "clip_vocab.json").read_text(encoding="utf-8"))
+    foods = {row[0] for row in json.loads((DOCS / "data" / "foods.json").read_text(encoding="utf-8"))}
+    n, d = len(meta["keys"]), meta["dim"]
+    assert n == len(meta["names"]) > 5000 and d == 512
+    assert set(meta["keys"]) <= foods  # every open-vocabulary match links to nutrition
+    assert (DOCS / "model" / "clip_text.bin").stat().st_size == n * d
+    assert (DOCS / "model" / "clip_visual.int8.onnx").stat().st_size < 100e6  # GitHub file limit
+    assert any("milk shake" in x for x in meta["names"]) and any("smoothie" in x for x in meta["names"])

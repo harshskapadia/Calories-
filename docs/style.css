@@ -155,3 +155,12 @@ table.label th, table.label td { padding: 6px 4px; border-bottom: 1px solid var(
 table.label th:first-child, table.label td:first-child { text-align: left; }
 table.label tr.sub td:first-child { padding-left: 16px; color: var(--muted); }
 details { margin-top: 10px; } summary { cursor: pointer; font-weight: 600; }
+
+/* open-vocabulary */
+.ov-btn { width: 100%; margin-top: 12px; }
+.ov-results { list-style: none; padding: 0; margin: 8px 0 0; border: 1px solid var(--line); border-radius: 10px; }
+.ov-results li button { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 1fr auto; gap: 10px; width: 100%;
+                        padding: 10px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.ov-results li:last-child button { border-bottom: 0; }
+.ov-results li button:hover, .ov-results li button:focus-visible { background: var(--accent-soft); }
+.ov-results .sub { color: var(--muted); font-size: .8rem; }

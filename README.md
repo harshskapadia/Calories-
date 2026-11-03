@@ -140,6 +140,26 @@ example photos (confidence within 0.5 points) at ~1 s per photo. The page has ca
 "not sure" warning, dish correction, portion presets/grams, macro breakdown and the 5,570-food search. Grad-CAM stays in the
 Gradio app (`python app/app.py`).
 
+### Identify anything: open-vocabulary recognition (any cuisine, shakes, drinks)
+
+The 139-dish classifier can't know every dish, so the page has a second, **open-vocabulary** recogniser: a CLIP image
+encoder ([open_clip](https://github.com/mlfoundations/open_clip) ViT-B/32, DataComp-XL weights) compared against
+pre-computed text embeddings of **5,139 food names**, i.e. every dish plus every USDA FNDDS food (milkshakes, smoothies, Mexican,
+Asian, Puerto Rican… dishes), each linked to its nutrition. Only the image encoder runs in the browser (int8 ONNX, 96 MB,
+downloaded once when the user taps **🌍 Identify anything**); the text side is built offline by `scripts/build_openvocab.py`.
+
+| Zero-shot test (1,000–2,000 of our test photos, no training on them) | Top-1 | Top-5 |
+|---|---|---|
+| CLIP candidates vs. the 139 dish names: OpenAI ViT-B/32 / LAION-2B / **DataComp-XL** | 80.2% / 81.4% / **85.0%** | 95.9% / 95.4% / **96.9%** |
+| DataComp-XL, int8 ONNX (as shipped), 139 names | 83.8% | 95.9% |
+| DataComp-XL, int8, **all 5,139 names** (correct = same dish or its exact USDA food) | 46.0% | 72.6% |
+
+The last row is the honest open-world number, and a lower bound (USDA lists near-duplicates such as "onion rings" vs
+"fried onion rings", which count as wrong). So the app shows the **top-5 as suggestions to tap**, not an automatic answer,
+and keeps the trained classifier (88.8% on its 139 dishes) as the first opinion. In the browser it reproduced the Python
+results on 9/9 examples (~1.5 s per photo after loading). There is no licensed test set of shakes/drinks photos, so
+accuracy on those categories is not measured.
+
 ### Packaged foods and drinks (barcode + product search)
 
 For anything in a package (biscuits, chips, shakes, lassi, protein drinks…) the page looks the product up in

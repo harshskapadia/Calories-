@@ -74,6 +74,24 @@ def download(dst: Path) -> None:
     tmp.replace(dst)
 
 
+def safe_extract(tf: tarfile.TarFile, dst: Path) -> None:
+    """Extract without letting any member escape dst (Python >= 3.11.4 has filter="data"; older ones need a manual check)."""
+    try:
+        tf.extractall(dst, filter="data")
+        return
+    except TypeError:  # older Python without extraction filters
+        pass
+    root = dst.resolve()
+    members = []
+    for m in tf.getmembers():
+        target = (dst / m.name).resolve()
+        if not (m.isfile() or m.isdir()) or (root != target and root not in target.parents):
+            print(f"[foodrec] skipped unsafe archive entry: {m.name}", flush=True)
+            continue
+        members.append(m)
+    tf.extractall(dst, members=members)
+
+
 def bitmap_mask(obj: dict, h: int, w: int) -> np.ndarray:
     """Supervisely 'bitmap': base64(zlib(PNG)) placed at origin [x, y]."""
     png = zlib.decompress(base64.b64decode(obj["bitmap"]["data"]))
@@ -185,7 +203,7 @@ def main() -> None:
     if not already:
         print("[foodrec] extracting…", flush=True)
         with tarfile.open(tar_path) as tf:  # archive from Dataset Ninja (Supervisely project)
-            tf.extractall(project, filter="data")
+            safe_extract(tf, project)
     stats = convert(project, names, args.limit)
 
     MIX.mkdir(parents=True, exist_ok=True)

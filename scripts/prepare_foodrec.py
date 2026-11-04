@@ -1,7 +1,8 @@
-"""Food Recognition 2022 (MyFoodRepo; Dataset Ninja release, CC0 / original CC-BY-4.0) -> extra YOLO training data.
+r"""Food Recognition 2022 (MyFoodRepo; Dataset Ninja release, CC0 / original CC-BY-4.0) -> extra YOLO training data.
 
     python scripts/prepare_foodrec.py              # download (~ a few GB, once), convert, write the mixed dataset
     python scripts/prepare_foodrec.py --limit 200  # quick check on 200 images per split
+    python scripts/prepare_foodrec.py --tar "C:\Users\me\Downloads\food-recognition-2022-DatasetNinja.tar"  # browser download
 
 Real smartphone meal photos with a polygon per food item. Their 498 classes are mapped onto the app's 103 FoodSeg103 classes
 (scripts/foodrec_map.py), so the app and its nutrition table stay the same. Zero-energy items (water, ice) are dropped.
@@ -40,6 +41,17 @@ URL = ("https://www.dropbox.com/scl/fi/9esq3k4r8two9mhqizyvf/food-recognition-20
        "?rlkey=s28sauo9frx6dkdrql3i6kn10&dl=1")
 MIN_AREA = 0.0015
 MAX_SIDE = 640
+
+
+def use_system_certificates() -> None:
+    """Trust the same certificates as Windows/macOS (and the browser). Antivirus HTTPS scanning or a school/office
+    network re-signs traffic with its own root certificate, which Python's bundled list doesn't know; verification stays on."""
+    try:
+        import truststore
+
+        truststore.inject_into_ssl()
+    except ImportError:
+        print("[foodrec] tip: `pip install truststore` if the download fails with CERTIFICATE_VERIFY_FAILED", flush=True)
 
 
 def download(dst: Path) -> None:
@@ -151,6 +163,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--limit", type=int, default=None, help="max images per split folder (quick check)")
     ap.add_argument("--keep-raw", action="store_true", help="keep the downloaded archive and extracted files")
+    ap.add_argument("--tar", type=Path, default=None,
+                    help="use an archive you downloaded yourself (e.g. in the browser) instead of downloading it")
     args = ap.parse_args()
     seg_yaml = SEG / "data.yaml"
     if not seg_yaml.exists():
@@ -158,8 +172,14 @@ def main() -> None:
     names_map = yaml.safe_load(seg_yaml.read_text(encoding="utf-8"))["names"]
     names = [names_map[i] for i in range(len(names_map))]
 
-    tar_path = RAW / "food-recognition-2022.tar"
-    download(tar_path)
+    if args.tar:
+        tar_path = args.tar.expanduser().resolve()
+        if not tar_path.exists():
+            raise SystemExit(f"not found: {tar_path}")
+    else:
+        tar_path = RAW / "food-recognition-2022.tar"
+        use_system_certificates()
+        download(tar_path)
     project = RAW / "extracted"
     already = project.exists() and any(project.rglob("ann"))
     if not already:
@@ -176,7 +196,7 @@ def main() -> None:
     (OUT / "val.yaml").write_text(yaml.safe_dump(frc_val, sort_keys=False, allow_unicode=True), encoding="utf-8")
     print(json.dumps(stats), "->", MIX / "data.yaml", flush=True)
     if not args.keep_raw and not args.limit:
-        shutil.rmtree(RAW, ignore_errors=True)  # frees several GB; the converted copy is all training needs
+        shutil.rmtree(RAW, ignore_errors=True)  # only our own download/extraction, never a --tar file elsewhere  # frees several GB; the converted copy is all training needs
         print("[foodrec] removed the raw download (use --keep-raw to keep it)", flush=True)
 
 

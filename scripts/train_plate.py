@@ -1,7 +1,7 @@
 """Train the whole-plate food segmenter (Ultralytics YOLO26-seg, AGPL-3.0) on FoodSeg103 and export it for the web app.
 
     python scripts/prepare_foodseg.py                               # once: dataset (~1.2 GB download)
-    python scripts/train_plate.py                                   # GPU: yolo26s-seg, 60 epochs (~2-4 h on an RTX 3050 Ti)
+    python scripts/train_plate.py                                   # GPU: yolo26s-seg, 60 epochs (~3-5 h on a 4 GB RTX 3050 Ti)
     python scripts/train_plate.py --model yolo26n-seg --epochs 40   # faster/smaller
     python scripts/train_plate.py --smoke                           # CPU pipeline check: 1 epoch, tiny images
 
@@ -30,7 +30,7 @@ def main() -> None:
     ap.add_argument("--model", default="yolo26s-seg", help="yolo26n-seg (fast) | yolo26s-seg (default) | yolo26m-seg")
     ap.add_argument("--epochs", type=int, default=60)
     ap.add_argument("--imgsz", type=int, default=640)
-    ap.add_argument("--batch", type=int, default=8, help="8 fits a 4 GB GPU at 640 px; lower if out of memory")
+    ap.add_argument("--batch", type=int, default=4, help="4 fits a 4 GB GPU at 640 px with yolo26s-seg; lower if out of memory")
     ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--smoke", action="store_true", help="1 epoch at 256 px on CPU to test the pipeline")
     args = ap.parse_args()

@@ -149,3 +149,20 @@ def test_differentiators_wired() -> None:
     html = (DOCS / "index.html").read_text(encoding="utf-8")
     for el in ['id="ideas"', 'id="recent"', 'id="burn"', 'id="plate-balance"']:
         assert el in html, el
+
+
+def test_food_recognition_mapping() -> None:
+    import sys
+
+    sys.path.insert(0, str(DOCS.parent / "scripts"))
+    from foodrec_map import RULES, map_name
+
+    names = {p["name"] for p in json.loads((DOCS / "model" / "plate_foods.json").read_text(encoding="utf-8"))}
+    assert {t for _, t in RULES} <= names | {"skip"}  # every rule targets one of the app's 103 classes
+    expect = {"bread-wholemeal": "bread", "rice-basmati": "rice", "water-mineral": "skip", "watermelon-fresh": "watermelon",
+              "cake-chocolate": "cake", "eggplant": "eggplant", "veggie-burger": "hamburg", "pearl-onions": "onion",
+              "salad-lambs-ear": "lettuce", "pasta-in-butterfly-form-farfalle": "pasta", "coffee-with-caffeine": "coffee",
+              "chicken-curry-cream-coconut-milk-curry-spices-paste": "chicken duck", "salmon-smoked": "fish",
+              "mixed-salad-chopped-without-sauce": "lettuce", "tomato-sauce": "sauce", "butter": "cheese butter",
+              "roll-with-pieces-of-chocolate": "chocolate", "something-unknown": "other ingredients"}
+    assert {k: map_name(k) for k in expect} == expect

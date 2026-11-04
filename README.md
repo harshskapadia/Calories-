@@ -229,6 +229,21 @@ often mixed ingredients. In practice large, distinct foods (rice, bread, meat, s
 and small or blended ones (sauces, garnish, mixed stir-fries) are often missed or confused. The exported ONNX is 42 MB and
 runs in ~2 s per photo in the browser (single-threaded WebAssembly on a laptop CPU).
 
+**More data: Food Recognition 2022.** To make the plate model work better on everyday phone photos, it can be fine-tuned on
+[Food Recognition 2022](https://datasetninja.com/food-recognition) (MyFoodRepo: tens of thousands of real smartphone meal photos with a polygon
+per item; CC0 on Dataset Ninja, CC-BY-4.0 originally, [paper](https://www.frontiersin.org/journals/nutrition/articles/10.3389/fnut.2022.875143/pdf)).
+Its 498 classes are mapped onto the app's 103 by ordered keyword rules (`scripts/foodrec_map.py`, unit-tested; water and
+ice are left as background), so the app and its nutrition table stay the same. Training starts from the FoodSeg103 model,
+so it needs far fewer epochs, and `--hours` fits the schedule into a time budget:
+
+```bash
+python scripts/prepare_foodrec.py              # download + convert (once)
+python scripts/train_plate.py --mix --hours 8  # fine-tune on both datasets
+```
+
+The new model is scored on FoodSeg103 val (comparable with the first model) **and** on Food Recognition's own val set of
+phone photos, next to the old model's score. It is exported for the app only if it beats the old model on the phone photos.
+
 The section appears on the site only once `docs/model/plate_meta.json` exists and is not a `--smoke` test model.
 
 ### My day: calorie target and food log

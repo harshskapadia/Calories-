@@ -120,6 +120,8 @@
         </div>
         <ul id="log" class="list log"></ul>
         <p id="log-empty" class="muted small">Nothing logged yet. Snap a meal, scan a product or search a food, then tap <b>Add to today</b>.</p>
+        <div id="recent-wrap" class="recent-wrap" hidden><div class="mini-h">⚡ Quick add</div><div id="recent" class="chips"></div></div>
+        <div class="ideas-wrap"><div class="mini-h">💡 What can I still eat?</div><div id="ideas"></div></div>
         <div class="week" id="week" aria-label="Calories over the last 7 days"></div>
         <button id="log-clear" type="button" class="btn ghost wide" hidden>Clear today</button>
       </div>
@@ -187,6 +189,7 @@
         <div id="plate-view" hidden>
           <canvas id="plate-canvas" class="plate-canvas" role="img" aria-label="Your photo with each food outlined"></canvas>
           <ul id="plate-list" class="list plate-list"></ul>
+          <div id="plate-balance" class="plate-balance" hidden></div>
           <div id="plate-total" class="photo-est plate-total" hidden></div>
           <button id="plate-add" type="button" class="btn primary wide">➕ Add whole plate to today</button>
         </div>
@@ -248,6 +251,7 @@
         </div>
       </div>
 
+      <p id="burn" class="burn muted small"></p>
       <button id="add-today" type="button" class="btn primary wide add-today">➕ Add to today</button>
       <div id="added" class="added" role="status" aria-live="polite"></div>
 

@@ -172,7 +172,8 @@ function renderPlateTotal() {
     tot.kcal += f.kcal * k; tot.p += f.p * k; tot.c += f.c * k; tot.f += f.f * k;
   }
   $("plate-total").innerHTML = `<span>Whole plate</span><span class="pe-kcal">${Math.round(tot.kcal)} kcal</span>
-    <span class="pe-macros">Protein ${Math.round(tot.p)} g · Carbs ${Math.round(tot.c)} g · Fat ${Math.round(tot.f)} g</span>`;
+    <span class="pe-macros">Protein ${Math.round(tot.p)} g · Carbs ${Math.round(tot.c)} g · Fat ${Math.round(tot.f)} g</span>
+    <span class="pe-macros muted small">${typeof burnText === "function" ? burnText(tot.kcal) : ""}</span>`;
   $("plate-total").hidden = !plate.items.length;
 }
 
@@ -189,6 +190,56 @@ function renderPlateList() {
   }).join("");
   $("plate-list").hidden = !plate.items.length;
   renderPlateTotal();
+}
+
+
+// ---------------------------------------------------------------- plate balance (Harvard "Healthy Eating Plate":
+// half vegetables & fruit, a quarter protein, a quarter grains/starch), measured from the segmented areas
+const PLATE_GROUP = (() => {
+  const g = {};
+  const put = (group, names) => names.split(",").forEach((n) => { g[n.trim()] = group; });
+  put("veg", `apple, date, apricot, avocado, banana, strawberry, cherry, blueberry, raspberry, mango, olives, peach, lemon, pear,
+    fig, pineapple, grape, kiwi, melon, orange, watermelon, eggplant, cauliflower, tomato, kelp, seaweed, spring onion, rape, okra,
+    lettuce, pumpkin, cucumber, white radish, carrot, asparagus, bamboo shoots, broccoli, celery stick, cilantro mint, snow peas,
+    cabbage, bean sprouts, onion, pepper, green beans, French beans, king oyster mushroom, shiitake, enoki mushroom,
+    oyster mushroom, white button mushroom, salad, dried cranberries`);
+  put("protein", `egg, steak, pork, chicken duck, sausage, fried meat, lamb, crab, fish, shellfish, shrimp, tofu, red beans, soy`);
+  put("carbs", `french fries, bread, corn, pasta, noodles, rice, potato, hanamaki baozi, wonton dumplings, pizza, pie, hamburg, biscuit`);
+  return g;
+})();
+
+function plateBalance(items) {
+  const a = { veg: 0, protein: 0, carbs: 0 };
+  let other = 0;
+  for (const it of items) {
+    const grp = PLATE_GROUP[it.food.name];
+    if (grp) a[grp] += it.coverage; else other += it.coverage;
+  }
+  const tot = a.veg + a.protein + a.carbs;
+  if (tot < 0.05 || tot < other) return null; // mostly drinks/desserts/sauces: a plate score makes no sense
+  const v = a.veg / tot, p = a.protein / tot, c = a.carbs / tot;
+  const score = Math.round(100 - (100 * (Math.abs(v - 0.5) + Math.abs(p - 0.25) + Math.abs(c - 0.25))) / 1.5);
+  const gaps = [[0.5 - v, "Add vegetables or fruit: aim for half the plate."],
+    [0.25 - p, "Add some protein (egg, fish, chicken, beans, tofu): it keeps you full longer."],
+    [0.25 - c, "A small portion of grains or potato would round it out."],
+    [c - 0.25, "Carbs take up a lot of this plate: swap some for vegetables."],
+    [p - 0.25, "Lots of meat or protein here: balance it with vegetables."]].sort((x, y) => y[0] - x[0]);
+  const tip = score >= 80 ? "Nicely balanced plate. 👏" : gaps[0][1];
+  return { score, v, p, c, tip };
+}
+
+function renderBalance() {
+  const b = plateBalance(plate.items), el = $("plate-balance");
+  el.hidden = !b;
+  if (!b) return;
+  const pct = (x) => `${Math.round(x * 100)}%`;
+  const grade = b.score >= 80 ? "great" : b.score >= 55 ? "ok" : "low";
+  el.innerHTML = `<div class="bal-head"><span>🥗 Plate balance</span><b class="bal-score ${grade}">${b.score}<small>/100</small></b></div>
+    <div class="bal-bar" role="img" aria-label="Vegetables and fruit ${pct(b.v)}, protein ${pct(b.p)}, carbs ${pct(b.c)}">
+      <span class="bv" style="width:${pct(b.v)}"></span><span class="bp" style="width:${pct(b.p)}"></span><span class="bc" style="width:${pct(b.c)}"></span></div>
+    <div class="bal-legend"><span><i class="bv"></i>Veg &amp; fruit ${pct(b.v)} <em>aim 50%</em></span><span><i class="bp"></i>Protein ${pct(b.p)} <em>aim 25%</em></span>
+      <span><i class="bc"></i>Carbs ${pct(b.c)} <em>aim 25%</em></span></div>
+    <p class="small">${b.tip}</p>`;
 }
 
 async function analyzePlate() {
@@ -208,6 +259,7 @@ async function analyzePlate() {
     bmp.close?.();
     $("plate-view").hidden = false;
     renderPlateList();
+    renderBalance();
     const ms = Math.round(performance.now() - t0);
     $("plate-status").textContent = plate.items.length
       ? `${plate.items.length} food${plate.items.length > 1 ? "s" : ""} found in ${ms} ms. Portions are rough guesses from photo area: edit the grams.`
@@ -234,7 +286,7 @@ async function analyzePlate() {
   });
   $("plate-list").addEventListener("click", (e) => {
     const x = e.target.closest("[data-x]"), o = e.target.closest("[data-open]");
-    if (x) { plate.items.splice(Number(x.dataset.x), 1); renderPlateList(); return; }
+    if (x) { plate.items.splice(Number(x.dataset.x), 1); renderPlateList(); renderBalance(); return; }
     if (o) {
       const it = plate.items[Number(o.dataset.open)];
       if (!state.foods.has(it.food.key)) return;

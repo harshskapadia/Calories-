@@ -133,3 +133,19 @@ console.log(JSON.stringify(out));""")
     assert teen["target"] == round(teen["tdee"] / 10) * 10 and teen["warn"]  # under 18: no deficit
     assert male["target"] == 1630  # male BMR is 166 kcal higher, x 1.375 activity
     assert missing is None
+
+
+def test_differentiators_wired() -> None:
+    import re
+
+    foods = {row[0] for row in json.loads((DOCS / "data" / "foods.json").read_text(encoding="utf-8"))}
+    js = (DOCS / "diary.js").read_text(encoding="utf-8")
+    ideas = re.findall(r'\["([a-z0-9_]+)", \d+, "', js[js.index("const IDEAS"):js.index("function ideaList")])
+    assert len(ideas) >= 30 and set(ideas) <= foods  # every suggestion has nutrition data
+    names = {p["name"] for p in json.loads((DOCS / "model" / "plate_foods.json").read_text(encoding="utf-8"))}
+    plate = (DOCS / "plate.js").read_text(encoding="utf-8")
+    grouped = {n.strip() for block in re.findall(r'put\("\w+", `([^`]*)`', plate) for n in block.split(",")}
+    assert grouped <= names and len(grouped) > 70  # plate-balance groups use the model's own class names
+    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    for el in ['id="ideas"', 'id="recent"', 'id="burn"', 'id="plate-balance"']:
+        assert el in html, el

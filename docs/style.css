@@ -292,3 +292,30 @@ summary { cursor: pointer; font-weight: 600; }
 #panel-day { display: flex; flex-direction: column; }
 #panel-day[hidden] { display: none; }
 #panel-day.no-target #today { order: 2; }
+
+/* differentiators */
+.burn { margin: 12px 0 0; }
+.mini-h { font: 600 .92rem var(--font-display); margin: 16px 0 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 .85rem var(--font); color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px;
+        padding: 6px 12px; min-height: 34px; cursor: pointer; }
+.chip span { color: var(--muted); margin-left: 4px; font-variant-numeric: tabular-nums; }
+.chip:hover, .chip:focus-visible { background: var(--primary-soft); }
+.ideas-list li { display: grid; grid-template-columns: 1fr auto 36px; gap: 8px; align-items: center; padding: 8px 6px 8px 12px; }
+.ideas-list b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ideas-list .chip-add { all: unset; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+        background: var(--primary-soft); color: var(--primary); font-weight: 700; cursor: pointer; }
+.ideas-wrap p { margin: 0 0 6px; }
+.more-ideas { display: inline-block; margin-top: 8px; font-size: .88rem; }
+.plate-balance { margin-top: 12px; border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; }
+.bal-head { display: flex; justify-content: space-between; align-items: baseline; font-weight: 600; }
+.bal-score { font: 800 1.5rem var(--font-display); font-variant-numeric: tabular-nums; }
+.bal-score small { font-size: .8rem; color: var(--muted); font-weight: 600; }
+.bal-score.great { color: #2b9a66; } .bal-score.ok { color: #c98a1a; } .bal-score.low { color: #d0567f; }
+.bal-bar { display: flex; height: 12px; border-radius: 999px; overflow: hidden; background: var(--surface-2); margin: 8px 0; }
+.bal-bar span { display: block; height: 100%; }
+.bv { background: #3fb27f; } .bp { background: var(--protein); } .bc { background: var(--carbs); }
+.bal-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .82rem; }
+.bal-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
+.bal-legend em { color: var(--muted); font-style: normal; }
+.plate-balance p { margin: 8px 0 0; }

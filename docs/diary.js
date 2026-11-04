@@ -208,7 +208,93 @@ function renderToday() {
   const line = t ? `<span class="wk-line" style="bottom:${(t.target / max) * 100}%"></span>` : "";
   const labels = days.map((x) => `<span>${x.toLocaleDateString(undefined, { weekday: "narrow" })}</span>`).join("");
   $("week").innerHTML = `<div class="wk-bars">${bars}${line}</div><div class="wk-days">${labels}</div>`;
+  renderRecent();
+  renderIdeas();
 }
+
+// ---------------------------------------------------------------- "What can I still eat?"
+// Everyday foods from around the world, with a realistic single portion in grams (null = the database's serving).
+const IDEAS = [
+  ["fndds_2705960", 120, "Grilled chicken breast"], ["fndds_2707154", 100, "2 boiled eggs"], ["fndds_2705423", 170, "Greek yogurt, plain"],
+  ["fndds_2705748", 120, "Cottage cheese"], ["fndds_2706311", 85, "Tuna, canned"], ["grilled_salmon", 120, "Grilled salmon"],
+  ["fndds_2707425", 150, "Lentils, cooked"], ["fndds_2707418", 120, "Chickpeas"], ["edamame", 100, "Edamame"],
+  ["fndds_2705740", 80, "Paneer"], ["fndds_2707427", 200, "Dal"], ["palak_paneer", 200, "Palak paneer"], ["idli", 120, "Idli (3)"],
+  ["chapati", 40, "1 chapati / roti"], ["fndds_2708383", 240, "Oatmeal with milk"], ["fndds_2710788", 150, "Rice, cooked"],
+  ["fndds_2708400", 150, "Quinoa"], ["fndds_2707709", 72, "2 slices wholewheat bread"], ["fndds_2709383", 200, "Baked potato"],
+  ["hummus", 60, "Hummus"], ["fndds_2709215", 180, "Apple"], ["fndds_2709224", 120, "Banana"], ["fndds_2709171", 150, "Orange"],
+  ["fndds_2709283", 150, "Strawberries"], ["fndds_2709275", 100, "Blueberries"], ["fndds_2709270", 280, "Watermelon"],
+  ["fndds_2709660", 100, "Carrot sticks"], ["fndds_2709784", 150, "Cucumber"], ["fndds_2709830", 200, "Greek salad, no dressing"],
+  ["fndds_2707489", 28, "Handful of almonds"], ["fndds_2707537", 16, "1 tbsp peanut butter"], ["fndds_2705387", 250, "Glass of low-fat milk"],
+  ["fndds_2705405", 250, "Soy milk, unsweetened"], ["fndds_2709242", 150, "Mango"], ["fndds_2709223", 70, "Half an avocado"],
+];
+
+function ideaList(left, proteinLeft, skip = new Set()) {
+  const out = [];
+  for (const [key, grams, label] of IDEAS) {
+    const food = state.foods.get(key);
+    if (!food || skip.has(key)) continue;
+    const g = grams || food.serving, k = g / 100, kcal = food.kcal * k;
+    if (kcal > left * 0.9 || kcal < Math.min(60, left * 0.3)) continue;
+    const protein = food.p * k;
+    // protein still needed -> favour protein per calorie; otherwise favour light, filling foods (low energy density)
+    const score = (proteinLeft > 15 ? (protein * 4) / kcal : 1 - food.kcal / 700) + Math.random() * 0.15;
+    out.push({ key, name: label || food.name, grams: g, kcal, p: protein, c: food.c * k, f: food.f * k, score });
+  }
+  return out.sort((a, b) => b.score - a.score);
+}
+
+function renderIdeas(more = false) {
+  const box = $("ideas");
+  const t = diary.target;
+  if (!t) { box.innerHTML = `<p class="muted small">Set your target below to get ideas that fit your day.</p>`; return; }
+  const items = (loadLog()[today()] || []);
+  const eaten = items.reduce((s, e) => s + e.kcal, 0), protein = items.reduce((s, e) => s + e.p, 0);
+  const left = t.target - eaten, pLeft = t.protein - protein;
+  if (left < 60) {
+    box.innerHTML = `<p class="small">${left < 0 ? "You're over today's target. That's fine now and then: tomorrow is a new day." : "You've reached today's target. 🎉"} Water, tea or black coffee have no calories.</p>`;
+    return;
+  }
+  if (!more) diary.shown = new Set();
+  const list = ideaList(left, pLeft, diary.shown).slice(0, 5);
+  list.forEach((i) => diary.shown.add(i.key));
+  diary.ideas = list;
+  const why = pLeft > 15 ? `${kfmt(left)} kcal and ${kfmt(pLeft)} g protein to go: high-protein picks first.` : `${kfmt(left)} kcal to go.`;
+  box.innerHTML = `<p class="muted small">${why}</p>` + (list.length ? `<ul class="list ideas-list">${list.map((i, n) =>
+    `<li><span class="log-name">${escapeHtml(i.name)}<span class="sub">${Math.round(i.grams)} g · ${kfmt(i.p)} g protein</span></span>
+     <b>${kfmt(i.kcal)} kcal</b><button type="button" class="chip-add" data-idea="${n}" aria-label="Add ${escapeHtml(i.name)}">＋</button></li>`).join("")}</ul>
+     <button type="button" class="linkish more-ideas" data-more-ideas>More ideas</button>`
+    : `<p class="small">No more ideas in the list. Try search for anything else.</p>`);
+}
+
+// ---------------------------------------------------------------- quick add (recent foods)
+function renderRecent() {
+  const log = loadLog(), seen = new Set(), recent = [];
+  for (const d of Object.keys(log).sort().reverse()) {
+    for (const e of [...log[d]].reverse()) {
+      const id = `${e.name}|${e.amount}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      recent.push(e);
+      if (recent.length >= 8) break;
+    }
+    if (recent.length >= 8) break;
+  }
+  diary.recent = recent;
+  $("recent-wrap").hidden = !recent.length;
+  $("recent").innerHTML = recent.map((e, i) =>
+    `<button type="button" class="chip" data-recent="${i}" title="Add ${escapeHtml(e.amount)} again">＋ ${escapeHtml(e.name)} <span>${kfmt(e.kcal)}</span></button>`).join("");
+}
+
+// ---------------------------------------------------------------- energy equivalent
+const METS = [["🚶", "brisk walk", 4.3], ["🚴", "cycling", 6.8], ["🏃", "running", 9.8]]; // Compendium of Physical Activities
+function burnText(kcal) {
+  if (!(kcal > 0)) return "";
+  const kg = store(DIARY_PROFILE)?.kg || 70;
+  const mins = METS.map(([icon, what, met]) => `${icon} ${Math.max(1, Math.round(kcal / ((met * 3.5 * kg) / 200)))} min ${what}`);
+  return `Same energy as ≈ ${mins.join(" · ")}`;
+}
+function renderBurn(kcal) { const el = $("burn"); if (el) el.textContent = burnText(kcal); }
+
 function renderDay() { renderTarget(); }
 
 // ---------------------------------------------------------------- wiring
@@ -237,6 +323,19 @@ function renderDay() { renderTarget(); }
   });
   document.addEventListener("click", (e) => {
     if (e.target.closest("[data-goto-day]")) { showTab("day"); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  });
+  $("ideas").addEventListener("click", (e) => {
+    if (e.target.closest("[data-more-ideas]")) { renderIdeas(true); return; }
+    const b = e.target.closest("[data-idea]");
+    if (!b) return;
+    const i = diary.ideas[Number(b.dataset.idea)];
+    addEntries([{ name: i.name, amount: `${Math.round(i.grams)} g`, kcal: i.kcal, p: i.p, c: i.c, f: i.f }]);
+  });
+  $("recent").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-recent]");
+    if (!b) return;
+    const { name, amount, kcal, p, c, f } = diary.recent[Number(b.dataset.recent)];
+    addEntries([{ name, amount, kcal, p, c, f }]);
   });
   $("log").addEventListener("click", (e) => {
     const b = e.target.closest("[data-del]");

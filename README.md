@@ -247,6 +247,13 @@ The **📊 My day** tab turns the app into a calorie-deficit tracker:
 - **Food log.** **➕ Add to today** on any food, product or search result, and **Add whole plate to today** after
   *Split the plate*. The ring shows kcal left (or over); there are protein/carb/fat totals, a 7-day bar chart against
   the target, and delete/clear.
+- **🥗 Plate balance score** (after *Split the plate*): the segmented areas are grouped into vegetables & fruit, protein
+  and carbs and compared with the Harvard *Healthy Eating Plate* (½ / ¼ / ¼). You get a 0–100 score and one concrete tip.
+  Because it uses the measured share of each food, it needs the segmentation model; it isn't a guess from a dish name.
+- **💡 What can I still eat?** From 35 everyday foods from many cuisines (eggs, Greek yogurt, dal, idli, salmon, fruit…),
+  suggests portions that fit the calories left today, high-protein first while the protein aim isn't met. One tap logs them.
+- **⚡ Quick add** chips for the last foods you logged, and **🔥 energy equivalents** ("≈ 42 min brisk walk") on every food
+  and plate, from the user's own weight and MET values from the Compendium of Physical Activities.
 - **Private by design.** Profile and log are stored only in the browser (`localStorage`, last 60 days); nothing is uploaded.
 
 ### Packaged foods and drinks (barcode + product search)

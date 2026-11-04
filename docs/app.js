@@ -204,6 +204,7 @@ function render() {
   donut.style.setProperty("--p", tot ? (e.p / tot) * 100 : 0);
   donut.style.setProperty("--c", tot ? (e.c / tot) * 100 : 0);
   if (typeof renderProductInfo === "function") renderProductInfo(food, state.grams);
+  if (typeof renderBurn === "function") renderBurn(kcal);
   if (food.match === "off") { $("source").innerHTML = food.sourceHtml; return; }
   if (food.match === "approx") {
     const [src, desc, qid, sim] = food.source.split("|");

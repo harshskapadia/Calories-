@@ -89,3 +89,20 @@ def test_installable_app() -> None:
             assert (DOCS / url).exists(), url
     html = (DOCS / "index.html").read_text(encoding="utf-8")
     assert 'rel="manifest"' in html and "sw.js" in (DOCS / "app.js").read_text(encoding="utf-8")
+
+
+def test_whole_plate_mode() -> None:
+    foods = {row[0] for row in json.loads((DOCS / "data" / "foods.json").read_text(encoding="utf-8"))}
+    plate = json.loads((DOCS / "model" / "plate_foods.json").read_text(encoding="utf-8"))
+    names = json.loads((DOCS.parent / "data" / "foodseg103_classes.json").read_text(encoding="utf-8"))
+    assert [p["name"] for p in plate] == [names[str(k)] for k in range(1, 104)]  # YOLO id i -> FoodSeg class i+1
+    assert all(p["key"] in foods and p["kcal"] >= 0 and 0 < p["thick"] <= 3 for p in plate)
+    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    assert 'src="plate.js"' in html and 'id="plate-btn"' in html and "AGPL-3.0" in html and "FoodSeg103" in html
+    assert '"plate.js"' in (DOCS / "sw.js").read_text(encoding="utf-8")
+    meta_path = DOCS / "model" / "plate_meta.json"
+    if meta_path.exists():  # only after the model was trained (scripts/train_plate.py)
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        assert not meta.get("smoke"), "pipeline-test model must not be published"
+        assert len(meta["names"]) == 103 and (DOCS / "model" / "plate_seg.onnx").exists()
+    assert "GNU AFFERO GENERAL PUBLIC LICENSE" in (DOCS.parent / "LICENSE").read_text(encoding="utf-8")

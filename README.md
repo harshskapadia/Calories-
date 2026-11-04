@@ -1,6 +1,6 @@
 # 🍽️ NutriSnap: food photo → dish → portion → calories & macros
 
-[![Try it live](https://img.shields.io/badge/demo-try%20it%20live-2a9d8f)](https://harshskapadia.github.io/Calories-/) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/harshskapadia/Calories-/blob/main/notebooks/nutrisnap_colab.ipynb) [![tests](https://img.shields.io/badge/tests-pytest-green)](tests/) ![python](https://img.shields.io/badge/python-3.11-blue) ![pytorch](https://img.shields.io/badge/PyTorch-timm-orange) ![gradio](https://img.shields.io/badge/demo-Gradio-ff7c00)
+[![Try it live](https://img.shields.io/badge/demo-try%20it%20live-2a9d8f)](https://harshskapadia.github.io/Calories-/) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/harshskapadia/Calories-/blob/main/notebooks/nutrisnap_colab.ipynb) [![tests](https://img.shields.io/badge/tests-pytest-green)](tests/) ![python](https://img.shields.io/badge/python-3.11-blue) ![pytorch](https://img.shields.io/badge/PyTorch-timm-orange) ![gradio](https://img.shields.io/badge/demo-Gradio-ff7c00) [![license](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 
 Snap or upload a photo of a meal. NutriSnap recognises the dish (**139 Western and Indian dishes**), shows
 **where the model looked** (Grad-CAM), estimates the **portion**, and returns **calories, protein, carbs and fat**,
@@ -16,7 +16,7 @@ up in a **search over 5,500+ foods** (every USDA FNDDS food plus all 139 dishes)
 ---
 
 ## Contents
-[Problem](#problem) · [Architecture](#architecture) · [Data](#data) · [Multi-cuisine & robustness](#multi-cuisine-model-and-robustness) · [In-browser version](#in-browser-version-free-on-device) · [Results](#results) · [Error analysis](#error-analysis) · [Portion estimation](#portion-estimation) · [Run on your GPU](#run-on-your-own-gpu-recommended) · [Deploy to Hugging Face Spaces](#deploy-to-hugging-face-spaces) · [Limitations](#limitations) · [Future work](#future-work)
+[Problem](#problem) · [Architecture](#architecture) · [Data](#data) · [Multi-cuisine & robustness](#multi-cuisine-model-and-robustness) · [In-browser version](#in-browser-version-free-on-device) · [Results](#results) · [Error analysis](#error-analysis) · [Portion estimation](#portion-estimation) · [Run on your GPU](#run-on-your-own-gpu-recommended) · [Deploy to Hugging Face Spaces](#deploy-to-hugging-face-spaces) · [Limitations](#limitations) · [Future work](#future-work) · [License](#license)
 
 ## Problem
 Logging food is the step most people give up on in calorie tracking: searching a database and
@@ -200,6 +200,32 @@ mismatch (now within 2% on the examples). In the app, "📸 Calories estimated f
 match. The deployed head is refit on all 29,998 photos; the metrics above are from the held-out experiment
 (`scripts/calorie_model.py`, `results/calorie_model.json`).
 
+### Whole plate: every food on the plate (YOLO26 segmentation)
+
+Real meals are rarely one dish. **"Split the plate"** runs an [Ultralytics YOLO26](https://docs.ultralytics.com) instance
+segmentation model, trained on [FoodSeg103](https://xiongweiwu.github.io/foodseg103.html) (7,118 photos with pixel masks
+for 103 foods and ingredients from many cuisines: rice, noodles, bread, egg, steak, tofu, broccoli, sauces…), in the browser:
+
+1. **Segment**: the photo is letterboxed to 640 px; YOLO returns boxes, class scores and 32 mask coefficients per candidate;
+   JavaScript does the NMS and builds each mask from the 32 prototypes (`docs/plate.js`).
+2. **Portion**: each food's share of the photo × a per-food thickness factor (soup/drinks 2.5, dense mains 1.2, leafy
+   greens 0.4…) × 800 g gives a rough weight, capped at ~600 kcal per food. Overlapping masks count each pixel once.
+   **This is a rough guess with no depth or scale; every gram value is editable.**
+3. **Nutrition**: each of the 103 classes is mapped to a USDA FNDDS food (CLIP text matching + 27 hand corrections,
+   `scripts/build_plate_nutrition.py` → `docs/model/plate_foods.json`); the page shows an outlined photo, one editable row per
+   food and the whole-plate total. Tapping a food opens its full nutrition card.
+
+Train it on your GPU (dataset ~1.2 GB; 2–4 h for `yolo26s-seg` on a 4 GB RTX 3050 Ti):
+
+```bash
+python scripts/prepare_foodseg.py          # FoodSeg103 masks -> YOLO polygons (data/cache/foodseg103)
+python scripts/train_plate.py              # trains, validates (box/mask mAP), exports docs/model/plate_seg.onnx + plate_meta.json
+python scripts/stamp_sw.py                 # tell installed apps to fetch the new model
+```
+
+The section appears on the site only once `docs/model/plate_meta.json` exists and is not a `--smoke` test model.
+Validation mask mAP is written to `runs/plate/<model>/summary.json` and shown in `plate_meta.json`.
+
 ### Packaged foods and drinks (barcode + product search)
 
 For anything in a package (biscuits, chips, shakes, lassi, protein drinks…) the page looks the product up in
@@ -377,7 +403,7 @@ up to 2 ZeroGPU Spaces instead.
 
 ## Limitations
 
-- **One dish per photo.** Food-101 is single-label, so a plate with steak *and* fries gets one label.
+- **One dish per photo (dish model).** Food-101 is single-label, so a plate with steak *and* fries gets one label; use *Split the plate* for mixed plates. Its 103 FoodSeg classes are ingredients and simple foods, not composed dishes, and its portions come from photo area only.
 - **Closed set of dishes.** A photo of a dish the model wasn't trained on is forced into the nearest known class, sometimes *confidently* (in testing, a 12-dish model called a biryani "bhindi masala" at 83%). Calibration, the "not sure" message and the search-any-food box mitigate this; they don't solve it.
 - **Recipe variance.** Nutrition is a *typical US recipe*. Oil, dressing, cheese and restaurant portions can change calories by ±30–50%.
 - **Portion is the biggest error source.** A single photo has no depth. Presets are population averages, and the reference-object method assumes a typical thickness.
@@ -386,14 +412,21 @@ up to 2 ZeroGPU Spaces instead.
 
 ## Future work
 
-- **Multiple items per plate**: YOLO detection or SAM segmentation, then classify each crop and sum the nutrition.
+- **Better plate portions**: calibrate the area→grams factor on photos with weighed portions (e.g. Nutrition5k), add depth.
 - **Depth-aware portions**: monocular depth (e.g. Depth Anything) or phone LiDAR to estimate volume instead of area.
 - **Larger and more diverse label space**: Food-2K, UECFood-256 or ISIA Food-500 for non-Western dishes; open-vocabulary recognition with CLIP-style models.
 - **Calibration**: temperature scaling so the low-confidence threshold maps to a known error rate.
 - **On-device inference**: export to ONNX or Core ML, int8 quantisation.
 - **Learn from corrections**: log user corrections (opt-in) as hard examples for re-training.
 
+## License
+
+**AGPL-3.0** ([LICENSE](LICENSE)). The whole-plate model is trained with [Ultralytics](https://github.com/ultralytics/ultralytics)
+YOLO, which is AGPL-3.0, so this project and the models exported from it are AGPL-3.0 too: if you run a modified
+version as a public service you must publish its source. Datasets keep their own terms (Food-101: research use; SohlHealth:
+CC-BY-4.0; FoodSeg103: Apache-2.0; MM-Food-100K: OpenRAIL; Open Food Facts: ODbL).
+
 ## Acknowledgements
-Food-101 (Bossard, Guillaumin & Van Gool, 2014) · Enhanced Indian Food Classification dataset (SohlHealth, CC-BY-4.0) · USDA FoodData Central · timm (Ross Wightman) · Grad-CAM (Selvaraju et al., 2017) · Gradio.
+Ultralytics YOLO26 (AGPL-3.0) · FoodSeg103 (Wu et al., 2021, Apache-2.0) · Food-101 (Bossard, Guillaumin & Van Gool, 2014) · Enhanced Indian Food Classification dataset (SohlHealth, CC-BY-4.0) · USDA FoodData Central · timm (Ross Wightman) · Grad-CAM (Selvaraju et al., 2017) · Gradio.
 
 Example photos in `app/examples/` are held-out test images from Food-101 (research use) and the SohlHealth Indian dataset (CC-BY-4.0).

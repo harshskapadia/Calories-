@@ -22,3 +22,5 @@ onnx>=1.16
 onnxruntime>=1.18
 onnxscript>=0.1
 open_clip_torch>=3.0   # scripts/build_openvocab.py
+ultralytics==8.4.202   # whole-plate segmenter (AGPL-3.0)
+onnxslim>=0.1.82

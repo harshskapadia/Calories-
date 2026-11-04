@@ -17,3 +17,5 @@ flagged/
 data/splits/*.csv
 logs/
 build/
+runs/
+yolo26*.pt

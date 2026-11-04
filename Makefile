@@ -3,7 +3,7 @@ PY      ?= .venv/bin/python
 CONFIG  ?= configs/baseline_subset.yaml
 CKPT    ?= checkpoints/best.pt
 
-.PHONY: help setup data nutrition train train-baseline evaluate ablation test run-app train-multi calibrate export-model web space deploy-space clean
+.PHONY: help setup data nutrition train train-baseline evaluate ablation test run-app train-multi calibrate export-model web space deploy-space plate-data plate clean
 
 help:            ## list targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-16s %s\n", $$1, $$2}'
@@ -36,6 +36,13 @@ test:            ## run unit tests
 
 run-app:         ## launch the Gradio demo on http://localhost:7860
 	$(PY) app/app.py
+
+plate-data:      ## FoodSeg103 -> YOLO segmentation dataset (~1.2 GB download)
+	$(PY) scripts/prepare_foodseg.py
+
+plate:           ## train the whole-plate YOLO26-seg model and export it to docs/model
+	$(PY) scripts/train_plate.py
+	$(PY) scripts/stamp_sw.py
 
 clean:           ## remove caches (keeps data and checkpoints)
 	rm -rf .pytest_cache **/__pycache__

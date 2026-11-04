@@ -228,3 +228,19 @@ summary { cursor: pointer; font-weight: 600; }
 .ios-hint { display: flex; gap: 8px; align-items: flex-start; }
 .ios-hint button { margin-left: auto; border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 1rem; }
 @media (display-mode: standalone) { .privacy { display: none; } }
+
+/* whole plate */
+.plate .ov-title { margin-bottom: 2px; }
+.plate p { margin: 2px 0 10px; }
+.plate-canvas { display: block; width: 100%; height: auto; margin-top: 12px; border-radius: var(--radius-sm); }
+.plate-item { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto auto auto; align-items: center; gap: 6px; padding: 8px 6px 8px 10px; }
+.plate-item .dot { width: 12px; height: 12px; border-radius: 50%; }
+.plate-list .plate-name { display: block; width: 100%; text-align: left; font: 600 .95rem var(--font); color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; min-width: 0; }
+.plate-list .plate-name .sub { display: block; font-weight: 400; line-height: 1.25; overflow-wrap: anywhere; }
+.plate-g { display: inline-flex; align-items: center; gap: 2px; color: var(--muted); font-size: .85rem; }
+.plate-g input { width: 60px; padding: 6px; text-align: right; }
+.plate-kcal { font-variant-numeric: tabular-nums; min-width: 76px; text-align: right; }
+.plate-kcal::after { content: " kcal"; font-weight: 400; color: var(--muted); font-size: .8rem; }
+.plate-list .plate-x { display: grid; place-items: center; width: 32px; border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 1rem; min-width: 32px; min-height: 32px; }
+.plate-total { display: grid; grid-template-columns: 1fr auto; align-items: baseline; font-weight: 600; }
+.plate-total .pe-macros { grid-column: 1 / -1; font-weight: 400; }

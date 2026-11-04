@@ -107,6 +107,19 @@
       <div id="warn" class="warn" hidden></div>
       <ol id="top3" class="top3"></ol>
 
+      <div id="plate" class="plate" hidden>
+        <div class="divider"></div>
+        <div class="ov-title">🍱 More than one food?</div>
+        <p class="muted small">Outline every food on the plate (rice, curry, salad, bread…) and add them up. One-time ~11 MB download.</p>
+        <button id="plate-btn" type="button" class="btn soft wide">Split the plate</button>
+        <div id="plate-status" class="hint" role="status" aria-live="polite"></div>
+        <div id="plate-view" hidden>
+          <canvas id="plate-canvas" class="plate-canvas" role="img" aria-label="Your photo with each food outlined"></canvas>
+          <ul id="plate-list" class="list plate-list"></ul>
+          <div id="plate-total" class="photo-est plate-total" hidden></div>
+        </div>
+      </div>
+
       <div class="divider"></div>
       <div class="ov">
         <div class="ov-text">
@@ -201,16 +214,18 @@
             on 26,836 test photos; int8 ONNX (34 MB) running in your browser with ONNX Runtime Web, so no photo is uploaded.</li>
           <li><b>Identify anything:</b> CLIP (open_clip ViT-B/32, DataComp-XL) against every USDA food plus world dishes from Wikidata;
             world-dish nutrition is approximate (borrowed from the most similar USDA food).</li>
+          <li><b>Whole plate:</b> Ultralytics YOLO26 instance segmentation (AGPL-3.0) trained on FoodSeg103 (103 foods and
+            ingredients) outlines each food; its portion is a rough guess from the share of the photo it covers.</li>
           <li><b>Calories from the photo:</b> trained on MM-Food-100K (Humanbased-AI, OpenRAIL) real meal photos, whose calories are
             GPT-4o/Qwen estimates reviewed by people.</li>
           <li><b>Confidence</b> is calibrated, so "70%" means roughly 70% correct; below 40% the app says it isn't sure.</li>
         </ul>
         <p>Training data: Food-101 (Bossard et al., 2014; research use) and SohlHealth Enhanced Indian Food Classification (CC-BY-4.0).
-          Runtime: ONNX Runtime Web (MIT). Barcodes: zxing-wasm (MIT). Packaged products:
+          FoodSeg103 (Wu et al., 2021; Apache-2.0). Runtime: ONNX Runtime Web (MIT). Barcodes: zxing-wasm (MIT). Packaged products:
           <a href="https://world.openfoodfacts.org">Open Food Facts</a> contributors, under the
           <a href="https://opendatacommons.org/licenses/odbl/1-0/">ODbL</a>.</p>
       </details>
-      <p><a href="https://github.com/harshskapadia/Calories-">Source code, training &amp; evaluation on GitHub</a></p>
+      <p><a href="https://github.com/harshskapadia/Calories-">Source code, training &amp; evaluation on GitHub</a> (AGPL-3.0)</p>
     </footer>
   </main>
 
@@ -218,5 +233,6 @@
   <script src="app.js"></script>
   <script src="products.js"></script>
   <script src="openvocab.js"></script>
+  <script src="plate.js"></script>
 </body>
 </html>

@@ -26,7 +26,7 @@ colorTo: yellow
 sdk: static
 app_file: index.html
 pinned: false
-license: mit
+license: agpl-3.0
 short_description: On-device food photo to dish, calories and macros
 ---
 

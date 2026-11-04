@@ -27,7 +27,7 @@ sdk: gradio
 sdk_version: {gradio_version}
 app_file: app/app.py
 pinned: false
-license: mit
+license: agpl-3.0
 short_description: Food photo to dish, portion, calories and macros
 ---
 

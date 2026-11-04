@@ -112,6 +112,7 @@ async function analyze(blob) {
   state.lastBlob = blob;
   $("ov-results").hidden = true;
   $("photo-est").hidden = true;
+  if ($("plate-view")) { $("plate-view").hidden = true; $("plate-status").textContent = ""; }
   $("preview").src = URL.createObjectURL(blob);
   $("preview").hidden = false;
   $("drop-hint").hidden = true;

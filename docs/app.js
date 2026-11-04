@@ -261,18 +261,21 @@ function escapeHtml(s) { return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<
 
 // ---------------------------------------------------------------- events
 function showTab(which) {
-  for (const t of ["meal", "pack"]) {
+  for (const t of ["meal", "pack", "day"]) {
     const on = t === which;
     $(`tab-${t}`).classList.toggle("on", on);
     $(`tab-${t}`).setAttribute("aria-selected", on);
     $(`panel-${t}`).hidden = !on;
   }
   $("results").hidden = which !== "meal" || !$("top3").children.length;
+  $("nutrition").hidden = which === "day";
+  if (which === "day" && typeof renderDay === "function") renderDay();
 }
 
 function wire() {
   $("tab-meal").addEventListener("click", () => showTab("meal"));
   $("tab-pack").addEventListener("click", () => showTab("pack"));
+  $("tab-day").addEventListener("click", () => showTab("day"));
   for (const id of ["camera", "file"]) {
     $(id).addEventListener("change", (e) => { const f = e.target.files[0]; if (f) analyze(f); e.target.value = ""; });
   }
@@ -285,8 +288,8 @@ function wire() {
     e.preventDefault(); drop.classList.remove("drag");
     const f = e.dataTransfer.files[0]; if (f && f.type.startsWith("image/")) analyze(f);
   });
-  document.querySelectorAll(".seg button").forEach((b) => b.addEventListener("click", () => {
-    document.querySelectorAll(".seg button").forEach((x) => { x.classList.toggle("on", x === b); x.setAttribute("aria-checked", x === b); });
+  document.querySelectorAll(".seg button[data-preset]").forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll(".seg button[data-preset]").forEach((x) => { x.classList.toggle("on", x === b); x.setAttribute("aria-checked", x === b); });
     state.preset = b.dataset.preset;
     if (state.key) selectFood(state.key);
   }));

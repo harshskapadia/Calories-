@@ -2,7 +2,7 @@
 
 [![Try it live](https://img.shields.io/badge/demo-try%20it%20live-2a9d8f)](https://harshskapadia.github.io/Calories-/) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/harshskapadia/Calories-/blob/main/notebooks/nutrisnap_colab.ipynb) [![tests](https://img.shields.io/badge/tests-pytest-green)](tests/) ![python](https://img.shields.io/badge/python-3.11-blue) ![pytorch](https://img.shields.io/badge/PyTorch-timm-orange) ![gradio](https://img.shields.io/badge/demo-Gradio-ff7c00) [![license](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 
-Snap or upload a photo of a meal. NutriSnap recognises the dish (**139 Western and Indian dishes**), shows
+Snap or upload a photo of a meal, or a whole plate, and track it against your own daily calorie target. NutriSnap recognises the dish (**139 Western and Indian dishes**), shows
 **where the model looked** (Grad-CAM), estimates the **portion**, and returns **calories, protein, carbs and fat**,
 with every number editable, because the model will sometimes be wrong. Anything it can't recognise can be looked
 up in a **search over 5,500+ foods** (every USDA FNDDS food plus all 139 dishes).
@@ -230,6 +230,24 @@ and small or blended ones (sauces, garnish, mixed stir-fries) are often missed o
 runs in ~2 s per photo in the browser (single-threaded WebAssembly on a laptop CPU).
 
 The section appears on the site only once `docs/model/plate_meta.json` exists and is not a `--smoke` test model.
+
+### My day: calorie target and food log
+
+The **📊 My day** tab turns the app into a calorie-deficit tracker:
+
+- **Daily target.** Enter sex, age, height, weight, activity level and goal (kg·cm or lb·ft; US English browsers start in
+  lb·ft). Resting energy uses the **Mifflin-St Jeor** equation (the one dietitians default to), × an activity factor
+  (1.2–1.9) = maintenance calories. The goal sets the deficit: 0.25 / 0.5 / 0.75 kg a week ≈ 275 / 550 / 825 kcal a day
+  (7,700 kcal per kg of fat). It also shows BMI, a protein aim (1.6 g/kg while losing, at a BMI-25 reference weight
+  for higher BMIs) and the date the optional goal weight would be reached.
+- **Safety limits.** No deficit for under-18s or when BMI is already under 18.5 (target = maintenance, with a message
+  to see a doctor). Targets never go below 1,200 kcal (women / unspecified) or 1,500 kcal (men), and the slower
+  resulting rate is shown. It warns if the goal weight would be underweight. Not for pregnancy, breastfeeding, eating
+  disorders or medical diets.
+- **Food log.** **➕ Add to today** on any food, product or search result, and **Add whole plate to today** after
+  *Split the plate*. The ring shows kcal left (or over); there are protein/carb/fat totals, a 7-day bar chart against
+  the target, and delete/clear.
+- **Private by design.** Profile and log are stored only in the browser (`localStorage`, last 60 days); nothing is uploaded.
 
 ### Packaged foods and drinks (barcode + product search)
 

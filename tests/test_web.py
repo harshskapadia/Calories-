@@ -106,3 +106,30 @@ def test_whole_plate_mode() -> None:
         assert not meta.get("smoke"), "pipeline-test model must not be published"
         assert len(meta["names"]) == 103 and (DOCS / "model" / "plate_seg.onnx").exists()
     assert "GNU AFFERO GENERAL PUBLIC LICENSE" in (DOCS.parent / "LICENSE").read_text(encoding="utf-8")
+
+
+def test_my_day_calorie_target() -> None:
+    import shutil
+    import subprocess
+
+    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    assert 'src="diary.js"' in html and 'id="tab-day"' in html and 'id="add-today"' in html and 'id="plate-add"' in html
+    assert '"diary.js"' in (DOCS / "sw.js").read_text(encoding="utf-8")
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node not installed")
+    js = (DOCS / "diary.js").read_text(encoding="utf-8")
+    fn = js[js.index("function calorieTarget"):js.index("// ---------------------------------------------------------------- profile form")]
+    script = ("const KCAL_PER_KG = 7700; const kfmt = (n) => Math.round(n).toLocaleString();\n" + fn + """
+const base = { sex: "female", age: 30, cm: 165, kg: 70, act: 1.375, rate: -0.5, goalKg: 62 };
+const out = [calorieTarget(base), calorieTarget({ ...base, kg: 48 }), calorieTarget({ ...base, kg: 58, rate: -0.75 }),
+  calorieTarget({ ...base, age: 16 }), calorieTarget({ ...base, sex: "male" }), calorieTarget({ ...base, cm: 0 })];
+console.log(JSON.stringify(out));""")
+    res = json.loads(subprocess.run([node, "-e", script], capture_output=True, text=True, check=True).stdout)
+    ok, under, floor, teen, male, missing = res
+    assert ok["target"] == 1400 and round(ok["tdee"]) == 1953 and round(ok["weeks"]) == 16 and not ok["warn"]  # Mifflin-St Jeor
+    assert under["target"] == round(under["tdee"] / 10) * 10 and under["warn"]  # BMI < 18.5: no deficit
+    assert floor["target"] == 1200 and floor["warn"]  # never below the 1,200 kcal floor for women
+    assert teen["target"] == round(teen["tdee"] / 10) * 10 and teen["warn"]  # under 18: no deficit
+    assert male["target"] == 1630  # male BMR is 166 kcal higher, x 1.375 activity
+    assert missing is None

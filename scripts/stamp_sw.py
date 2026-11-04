@@ -18,7 +18,10 @@ def asset_hash() -> str:
     for p in sorted([*(DOCS / "model").glob("*"), *(DOCS / "ort").glob("*")]):
         if p.suffix in {".onnx", ".wasm", ".bin", ".json", ".mjs", ".js"}:
             h.update(p.name.encode())
-            h.update(hashlib.sha256(p.read_bytes()).digest())
+            data = p.read_bytes()
+            if p.suffix in {".json", ".mjs", ".js"}:  # same hash on Windows (CRLF) and Linux/GitHub (LF)
+                data = data.replace(b"\r\n", b"\n")
+            h.update(hashlib.sha256(data).digest())
     return h.hexdigest()[:10]
 
 

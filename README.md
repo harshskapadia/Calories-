@@ -215,7 +215,7 @@ for 103 foods and ingredients from many cuisines: rice, noodles, bread, egg, ste
    `scripts/build_plate_nutrition.py` → `docs/model/plate_foods.json`); the page shows an outlined photo, one editable row per
    food and the whole-plate total. Tapping a food opens its full nutrition card.
 
-Train it on your GPU (dataset ~1.2 GB; 2–4 h for `yolo26s-seg` on a 4 GB RTX 3050 Ti):
+Train it on your GPU (dataset ~1.2 GB; ~5 h for `yolo26s-seg` on a 4 GB RTX 3050 Ti; `--resume` continues a stopped run):
 
 ```bash
 python scripts/prepare_foodseg.py          # FoodSeg103 masks -> YOLO polygons (data/cache/foodseg103)
@@ -223,8 +223,13 @@ python scripts/train_plate.py              # trains, validates (box/mask mAP), e
 python scripts/stamp_sw.py                 # tell installed apps to fetch the new model
 ```
 
+**Results** (`yolo26s-seg`, 60 epochs at 640 px on an RTX 3050 Ti 4 GB, ~5 h; FoodSeg103 validation split, 2,135 photos,
+11,781 food regions): **mask mAP50 0.368, mask mAP50-95 0.292** (box mAP50 0.368). FoodSeg103 is hard: 103 fine-grained,
+often mixed ingredients. In practice large, distinct foods (rice, bread, meat, shrimp, broccoli, fries) are found reliably
+and small or blended ones (sauces, garnish, mixed stir-fries) are often missed or confused. The exported ONNX is 42 MB and
+runs in ~2 s per photo in the browser (single-threaded WebAssembly on a laptop CPU).
+
 The section appears on the site only once `docs/model/plate_meta.json` exists and is not a `--smoke` test model.
-Validation mask mAP is written to `runs/plate/<model>/summary.json` and shown in `plate_meta.json`.
 
 ### Packaged foods and drinks (barcode + product search)
 

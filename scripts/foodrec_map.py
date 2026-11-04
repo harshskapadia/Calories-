@@ -18,7 +18,7 @@ RULES: list[tuple[str, str]] = [
     (r"^soup|bouillon|broth", "soup"),
     (r"tofu|tempeh|meat-substitute|seitan|quorn", "tofu"),
     # ---- drinks
-    (r"wine|prosecco|champagne|aperitif|cocktail|beer|cider", "wine"),
+    (r"wine|prosecco|champagne|sekt|aperitif|cocktail|beer|cider", "wine"),
     (r"coffee|espresso|ristretto|cappuccino|latte|macchiato", "coffee"),
     (r"^tea|-tea|herbal", "tea"),
     (r"juice|coca-cola|^cola|lemonade|soft-drink|syrup|glucose", "juice"),
@@ -74,7 +74,7 @@ RULES: list[tuple[str, str]] = [
     (r"corn|maize", "corn"),
     (r"curry|ratatouille|stew$", "soup"),
     # ---- dairy (after dishes, so "butterfly pasta" or "risotto without cheese" are not dairy)
-    (r"butter|cheese|brie|cheddar|gruyere|emmental|mozzarella|parmesan|feta|halloumi|raclette|fondue|philadelphia|tomme|"
+    (r"butter|margarine|cheese|brie|cheddar|gruyere|emmental|mozzarella|parmesan|feta|halloumi|raclette|fondue|philadelphia|tomme|"
      r"tete-de-moine|curd|quark|cream|yaourt|yogurt|yoghurt|faux-mage|tzatziki", "cheese butter"),
     (r"jam|honey|spread|cenovis|marmite|oil$|sauce", "sauce"),
     # ---- vegetables

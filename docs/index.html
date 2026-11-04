@@ -7,18 +7,30 @@
   <meta name="description" content="Snap a meal or scan a barcode: on-device food recognition and calorie and macro estimates. Runs entirely in your browser.">
   <meta name="theme-color" content="#f4f2fb" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#110f20" media="(prefers-color-scheme: dark)">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="NutriSnap">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="topbar">
     <div class="wrap topbar-inner">
       <div class="brand"><span class="logo" aria-hidden="true">🍽️</span><span>NutriSnap</span></div>
-      <span class="privacy" title="Photos are analysed on this device and never uploaded">🔒 On-device</span>
+      <div class="topbar-right">
+        <button id="install-btn" type="button" class="btn primary install-btn" hidden>Install app</button>
+        <span class="privacy" title="Photos are analysed on this device and never uploaded">🔒 On-device</span>
+      </div>
     </div>
   </header>
 
   <main class="wrap">
+    <div id="offline-bar" class="offline-bar" hidden>📴 You're offline. Meal photos and nutrition still work; product lookup needs internet.</div>
+    <div id="ios-hint" class="ios-hint" hidden>Install NutriSnap: tap <b>Share</b> <span aria-hidden="true">⎋</span> then <b>Add to Home Screen</b>.
+      <button type="button" id="ios-hint-close" aria-label="Dismiss">✕</button></div>
     <section class="hero">
       <h1>What's on your plate?</h1>
       <p class="lede">Snap a meal or scan a barcode for an instant calorie and macro estimate.</p>

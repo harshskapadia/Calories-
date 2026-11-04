@@ -219,15 +219,36 @@ function render() {
 }
 
 // ---------------------------------------------------------------- search
+// Everyday names -> the dish they usually mean (ranked first when the query matches)
+const ALIASES = {
+  roti: "chapati", phulka: "chapati", fulka: "chapati", rice: "white_rice", chawal: "white_rice",
+  dahi: "lassi", chai: "chai", tea: "chai", golgappa: "paani_puri", panipuri: "paani_puri", puchka: "paani_puri",
+  pakora: "pakode", bhajji: "pakode", burger: "hamburger", fries: "french_fries", chips: "french_fries",
+  momo: "momos", dosa: "masala_dosa", kebab: "kebab", rajma: "rajma_curry", chole: "chole", chana: "chole",
+};
+
 function search(q) {
   const words = q.toLowerCase().split(/\s+/).filter(Boolean);
   const box = $("search-results");
   if (!words.length) { box.hidden = true; return; }
   const hits = [];
   for (const f of state.foodList) {
-    if (words.every((w) => f.lower.includes(w))) { hits.push(f); if (hits.length >= 40) break; }
+    if (words.every((w) => f.lower.includes(w))) hits.push(f);
   }
-  hits.sort((a, b) => (a.match === "usda") - (b.match === "usda") || a.name.length - b.name.length);
+  // rank: exact name > name starts with the query > a word starts with it > anywhere;
+  // then recognised dishes > USDA foods > approximate world dishes; then shorter names
+  const phrase = words.join(" ");
+  const alias = ALIASES[phrase];
+  if (alias && state.foods.has(alias) && !hits.some((f) => f.key === alias)) hits.push(state.foods.get(alias));
+  const wordStart = new RegExp(`\\b${phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`);
+  const rank = (f) => {
+    const n = f.lower;
+    const pos = n === phrase ? 0 : n.startsWith(phrase) ? 1 : wordStart.test(n) ? 2 : 3;
+    const kind = f.match === "usda" ? 1 : f.match === "approx" ? 2 : 0;
+    if (alias && f.key === alias) return -1;
+    return pos * 10 + kind;
+  };
+  hits.sort((a, b) => rank(a) - rank(b) || a.name.length - b.name.length);
   box.innerHTML = hits.length
     ? hits.slice(0, 25).map((f) => `<li><button type="button" data-key="${f.key}">${escapeHtml(f.name)}` +
         `<span class="tag">${f.match === "usda" ? "USDA" : f.match === "approx" ? "world dish" : "dish"} · ${Math.round(f.kcal)} kcal/100 g</span></button></li>`).join("")
@@ -282,5 +303,37 @@ function wire() {
   });
 }
 
+// ---------------------------------------------------------------- installable app (PWA)
+function setupPwa() {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").then(() => navigator.storage?.persist?.()).catch((e) => console.warn("SW", e));
+  }
+  let deferred = null;
+  window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e; $("install-btn").hidden = false; });
+  $("install-btn").addEventListener("click", async () => {
+    if (!deferred) return;
+    deferred.prompt();
+    await deferred.userChoice;
+    deferred = null;
+    $("install-btn").hidden = true;
+  });
+  window.addEventListener("appinstalled", () => { $("install-btn").hidden = true; });
+  // iPhone/iPad Safari has no install prompt: show a one-time hint
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  let dismissed = false;
+  try { dismissed = localStorage.getItem("iosHintDismissed") === "1"; } catch (e) { /* ignore */ }
+  if (ios && !standalone && !dismissed) $("ios-hint").hidden = false;
+  $("ios-hint-close").addEventListener("click", () => {
+    $("ios-hint").hidden = true;
+    try { localStorage.setItem("iosHintDismissed", "1"); } catch (e) { /* ignore */ }
+  });
+  const net = () => { $("offline-bar").hidden = navigator.onLine; };
+  window.addEventListener("online", net);
+  window.addEventListener("offline", net);
+  net();
+}
+
+setupPwa();
 wire();
 init().catch((err) => { console.error(err); setStatus(`Couldn't load the model: ${err.message}. Try reloading the page.`); });

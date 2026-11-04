@@ -66,3 +66,26 @@ def test_new_layout_hooks() -> None:
     for el in ["tab-meal", "tab-pack", "panel-meal", "panel-pack", "donut", "ov-btn", "photo-est", "scan-btn", "chip-count"]:
         assert f'id="{el}"' in html, el
     assert "examples" not in html and not (DOCS / "examples").exists()
+
+
+def test_installable_app() -> None:
+    import re
+    import sys
+
+    sys.path.insert(0, str(DOCS.parent))
+    from scripts.stamp_sw import asset_hash
+
+    manifest = json.loads((DOCS / "manifest.webmanifest").read_text(encoding="utf-8"))
+    assert manifest["display"] == "standalone" and manifest["start_url"] == "./"
+    for icon in manifest["icons"]:
+        assert (DOCS / icon["src"]).exists(), icon["src"]
+    assert {i["purpose"] for i in manifest["icons"]} == {"any", "maskable"}
+    sw = (DOCS / "sw.js").read_text(encoding="utf-8")
+    # model files changed without re-stamping would leave installed apps on stale models
+    assert re.search(r'ASSET_VERSION = "assets-([0-9a-f]+)"', sw).group(1) == asset_hash(), "run scripts/stamp_sw.py"
+    for url in re.search(r"const CORE = \[(.*?)\];", sw, re.S).group(1).replace("\n", "").split(","):
+        url = url.strip().strip('"')
+        if url and url != "./":
+            assert (DOCS / url).exists(), url
+    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    assert 'rel="manifest"' in html and "sw.js" in (DOCS / "app.js").read_text(encoding="utf-8")

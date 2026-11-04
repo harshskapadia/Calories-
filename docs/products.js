@@ -94,7 +94,8 @@ async function lookupBarcode(code) {
     }
     useProduct(j.product);
   } catch (e) {
-    pStatus("Couldn't reach Open Food Facts (busy or offline). Try again in a minute.");
+    pStatus(navigator.onLine ? "Couldn't reach Open Food Facts (it may be busy). Try again in a minute."
+      : "You're offline. Product lookup needs internet; meal photos still work.");
   }
 }
 
@@ -124,7 +125,8 @@ async function searchProducts(q) {
     }
     box.hidden = false;
   } catch (e) {
-    pStatus("Open Food Facts search is busy right now (it limits searches to ~10 a minute). Try again in a minute, or scan the barcode instead.");
+    pStatus(navigator.onLine ? "Open Food Facts search is busy right now (it limits searches to ~10 a minute). Try again in a minute, or scan the barcode instead."
+      : "You're offline. Product search needs internet; meal photos still work.");
   }
 }
 

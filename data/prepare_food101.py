@@ -33,6 +33,11 @@ from pathlib import Path
 import yaml
 from PIL import Image
 
+# Must be set before huggingface_hub is imported. The Xet transfer backend has a large per-file cost: for the tens of
+# thousands of tiny files of the Central Asian dataset, plain HTTP downloads measured ~4.5x faster (58 vs 13 files/s).
+os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
+os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")  # harmless Windows warning, printed once per file
+
 ROOT = Path(__file__).resolve().parents[1]
 CACHE = ROOT / "data" / "cache"
 SPLITS = ROOT / "data" / "splits"
@@ -120,7 +125,6 @@ def export_yolo_crops(spec: dict, out_root: Path, short_side: int) -> Path:
     ``<split>/<our label>/``. Small boxes (side < min_box of the photo) are skipped; dishes with fewer than
     ``min_images`` crops are dropped.
     """
-    os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
     from concurrent.futures import ThreadPoolExecutor
 
     from huggingface_hub import hf_hub_download, snapshot_download

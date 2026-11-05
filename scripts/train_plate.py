@@ -46,6 +46,8 @@ def main() -> None:
     ap.add_argument("--hours", type=float, default=None,
                     help="time budget: the learning-rate schedule is fitted so training ends within this many hours")
     ap.add_argument("--force-export", action="store_true", help="export even if the new model scores lower")
+    ap.add_argument("--finish", action="store_true",
+                    help="stop training here: score the best model saved so far (with --mix: on phone photos too) and export it")
     args = ap.parse_args()
     if not DATA.exists():
         raise SystemExit("dataset missing: run `python scripts/prepare_foodseg.py` first")
@@ -64,7 +66,11 @@ def main() -> None:
         torch.cuda.set_per_process_memory_fraction(args.mem_frac, 0)
         print(f"GPU: {torch.cuda.get_device_name(0)}, using at most {args.mem_frac:.0%} of its memory")
     last = ROOT / "runs" / "plate" / name / "weights" / "last.pt"
-    if args.resume:
+    if args.finish:
+        if not (ROOT / "runs" / "plate" / name / "weights" / "best.pt").exists():
+            raise SystemExit(f"no saved model to finish in runs/plate/{name}")
+        print(f"finishing with the best model saved so far in runs/plate/{name}")
+    elif args.resume:
         if not last.exists():
             raise SystemExit(f"nothing to resume: {last} not found")
         model = YOLO(str(last))

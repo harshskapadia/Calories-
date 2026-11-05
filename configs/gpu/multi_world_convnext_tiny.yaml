@@ -1,0 +1,37 @@
+# World dishes: the 139-dish model + Indian Foods (CC0, 15 dishes) + Central Asian Food Scenes (CC-BY, dish crops)
+# = 155 dishes. Starts from the current app model (init_from): the 139 known dishes keep what they learned, the 16 new
+# ones (vada pav, dabeli, malai kofta, dal tadka, plov, lagman, beshbarmak, samsa, borscht, cheburek, khachapuri,
+# vareniki, syrniki, olivier salad, shorpa, doner kebab) start fresh, so a few epochs are enough.
+# Sized for a 4 GB laptop GPU (RTX 3050 Ti): ~13 min/epoch -> ~1.5 h for 6 epochs.
+experiment: multi_world_convnext_tiny
+data:
+  name: multiworld
+  sources: [food101, indian43, indianfoods15, cafsd]   # see data/sources.yaml
+  short_side: 256
+  num_classes: null
+  val_frac: 0.1
+  seed: 42
+model:
+  backbone: convnext_tiny
+  pretrained: false                 # weights come from init_from
+  init_from: app/model/nutrisnap.pt
+  drop_rate: 0.2
+train:
+  img_size: 224
+  epochs: 6
+  batch_size: 16
+  lr: 1.0e-4                        # half the from-scratch rate: fine-tuning
+  weight_decay: 0.05
+  label_smoothing: 0.1
+  warmup_epochs: 1
+  freeze_backbone_epochs: 0
+  amp: true
+  patience: 3
+  num_workers: 2
+  balanced_sampling: true           # new dishes have fewer photos: sample classes evenly
+  seed: 42
+augment:
+  phone_aug: true
+  randaugment: true
+  color_jitter: 0.25
+  random_erasing: 0.25

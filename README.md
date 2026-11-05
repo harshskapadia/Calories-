@@ -124,6 +124,25 @@ scaling) are in [`results/multi_convnext_tiny/`](results/multi_convnext_tiny/).
 A CPU smoke test of the same pipeline (12 random dishes from both datasets) showed temperature scaling cutting
 expected calibration error from 0.21 to 0.09 on validation.
 
+### More world dishes (155): Indian Foods + Central Asian Food Scenes
+
+`configs/gpu/multi_world_convnext_tiny.yaml` adds two openly licensed datasets to the 139-dish model:
+
+| Source | License | What it adds |
+|---|---|---|
+| [Indian Foods Dataset](https://huggingface.co/datasets/bharat-raghunathan/indian-foods-dataset) (4,770 photos, 15 dishes) | CC0 | new: vada pav, dabeli, malai kofta, dal tadka; more photos for biryani, chole bhature, dosa, pav bhaji, pani puri, naan… |
+| [Central Asian Food Scenes](https://huggingface.co/datasets/issai/Central_Asian_Food_Scenes_Dataset) (21,306 table photos, boxes) | CC-BY-4.0 | each named dish's box is cropped into a training photo: plov, lagman, beshbarmak, samsa, borscht, cheburek, khachapuri, vareniki, syrniki, Olivier salad, shorpa, doner kebab; manti/khinkali → dumplings, shashlik → kebab, plus pizza, sushi, burgers… |
+
+The 16 new dishes have USDA-based nutrition in `data/nutrition_mapping.csv` (single foods or recipe mixes, tested).
+Training **warm-starts from the current app model** (`model.init_from`): the backbone and the 139 known dishes' classifier
+rows are copied by name, so only the new dishes start from scratch; in a CPU check one short epoch already reached 94%
+validation accuracy on a small sample. 6 epochs ≈ 1.5 h on an RTX 3050 Ti:
+
+```bash
+python run_all.py --final-config configs/gpu/multi_world_convnext_tiny.yaml --steps data final evaluate export --batch-size 16 --workers 2
+python scripts/build_web.py && python scripts/stamp_sw.py
+```
+
 ## In-browser version (free, on-device)
 
 The live demo is a static site in [`docs/`](docs/) (GitHub Pages) that runs the 139-dish model **inside the visitor's browser**

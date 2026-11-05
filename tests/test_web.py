@@ -15,7 +15,7 @@ def test_meta_and_foods_are_consistent() -> None:
     meta = json.loads((DOCS / "model" / "meta.json").read_text(encoding="utf-8"))
     foods = json.loads((DOCS / "data" / "foods.json").read_text(encoding="utf-8"))
     keys = {row[0] for row in foods}
-    assert len(meta["classes"]) == len(meta["display_names"]) == 139
+    assert len(meta["classes"]) == len(meta["display_names"]) >= 139  # 139, or 155 after the world-dish retrain
     assert set(meta["classes"]) <= keys  # every recognisable dish has nutrition in the browser
     assert len(foods) > 5000 and all(len(r) == 9 and r[6] > 0 for r in foods)
     assert 0.3 < meta["temperature"] < 5 and meta["img_size"] == 224 and meta["resize"] == 256

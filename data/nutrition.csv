@@ -138,3 +138,19 @@ rajma_curry,Rajma Curry,139.6,6.25,17.34,5.28,200.0,composite,2707380:75|2709719
 ras_malai,Ras Malai,195.3,7.19,25.12,7.08,120.0,composite,2705740:35|2705385:50|2710258:15,"Cheese, paneer + Milk, whole + Sugar, white, granulated or lump",paneer discs + milk + sugar; 2 pieces
 shahi_paneer,Shahi Paneer,246.6,7.75,13.27,18.04,200.0,composite,2705740:40|2705597:15|2709719:20|2709795:15|2710154:5|2707493:5,"Cheese, paneer + Cream, heavy + Tomatoes, raw + Onions, raw + Butter, NFS + Cashews, NFS",paneer + cream + tomato + onion + butter + cashews
 white_rice,White Rice,129.0,2.67,27.99,0.28,200.0,exact,2708408:100,"Rice, white, cooked, no added fat",plain cooked white rice
+vada_pav,Vada Pav,218.0,6.06,30.5,7.79,150.0,composite,2709510:55|2707654:40|2709309:5,"Potato patty + Roll, white, soft + Chutney",spiced potato patty (FNDDS potato patty) in a soft white roll + chutney; 1 vada pav
+dabeli,Dabeli,242.2,7.36,30.34,10.3,150.0,composite,2709510:50|2707654:38|2707515:6|2709309:6,"Potato patty + Roll, white, soft + Peanuts, roasted, salted + Chutney",spiced potato filling in a soft roll + roasted peanuts + tamarind-date chutney; 1 dabeli
+malai_kofta,Malai Kofta,213.5,4.3,9.81,17.57,250.0,composite,2709510:30|2705740:15|2710178:40|2705597:10|2710186:5,"Potato patty + Cheese, paneer + Curry sauce + Cream, heavy + Olive oil",fried potato-paneer balls in creamy curry gravy (curry sauce + cream + oil); 1 bowl
+dal_tadka,Dal Tadka,145.0,8.6,19.17,4.31,200.0,close,2707427:100,Dal,FNDDS 'Dal' (cooked lentils with tempering); 1 katori
+plov,Plov,140.2,5.37,19.32,4.53,300.0,composite,2709077:60|2706490:40,Rice pilaf + Biryani with meat,rice pilaf with meat (Central Asian plov): pilaf + biryani-with-meat as meat/oil proxy; 1 plate
+lagman,Lagman,173.0,13.19,7.54,10.05,350.0,close,2706488:100,Beef and noodles with soy-based sauce,FNDDS 'Beef and noodles with soy-based sauce' for hand-pulled noodles with beef and vegetables
+beshbarmak,Beshbarmak,189.0,11.37,16.24,8.41,350.0,close,2706480:100,"Beef and noodles, no sauce","FNDDS 'Beef and noodles, no sauce' for boiled meat over flat noodles"
+samsa,Samsa,341.0,11.46,30.89,19.18,120.0,close,2708728:100,"Pastry, meat / poultry-filled","FNDDS 'Pastry, meat / poultry-filled' for baked meat samsa; 1 piece"
+borscht,Borscht,20.0,0.52,3.9,0.37,300.0,exact,2710105:100,"Soup, borscht",
+cheburek,Cheburek,333.0,12.09,27.45,19.2,130.0,close,2708711:100,"Empanada, beef","FNDDS 'Empanada, beef' for the fried meat turnover; 1 piece"
+khachapuri,Khachapuri,408.0,10.42,44.83,20.83,200.0,close,2707618:100,"Bread, cheese","FNDDS 'Bread, cheese' for cheese-filled bread; 1 boat"
+vareniki,Vareniki,195.0,5.26,29.64,6.14,200.0,close,2708720:100,Pierogi,FNDDS 'Pierogi' (filled boiled dumplings); ~8 pieces
+syrniki,Syrniki,183.6,9.73,18.42,7.75,150.0,composite,2705748:55|2708304:45,"Cheese, cottage, creamed, large or small curd + Pancakes, plain",cottage-cheese pancakes: cottage cheese + pancake batter; 3 pieces
+olivier_salad,Olivier Salad,142.0,2.93,14.89,7.91,200.0,close,2709536:100,"Potato salad with egg, made with creamy dressing","FNDDS 'Potato salad with egg, made with creamy dressing' for Olivier salad"
+shorpa,Shorpa,47.0,3.28,4.04,2.05,400.0,close,2710115:100,"Soup, beef","FNDDS 'Soup, beef' for meat-and-vegetable broth soup; 1 bowl"
+doner_kebab,Doner Kebab,184.0,11.24,18.78,6.76,250.0,close,2706962:100,Gyro sandwich,FNDDS 'Gyro sandwich' for doner in flatbread

@@ -70,6 +70,8 @@ def export(short_side: int = 256, workers: int = os.cpu_count() or 2, source: st
     if index_path.exists():
         print(f"[export] {source}: already done ({index_path})")
         return out_root
+    if spec.get("type") == "yolo_crops":
+        return export_yolo_crops(spec, out_root, short_side)
 
     rows: list[tuple[str, str, str]] = []
     with ProcessPoolExecutor(workers) as pool:
@@ -111,6 +113,65 @@ def export(short_side: int = 256, workers: int = os.cpu_count() or 2, source: st
     return out_root
 
 
+def export_yolo_crops(spec: dict, out_root: Path, short_side: int) -> Path:
+    """Detection dataset (YOLO txt boxes, Roboflow layout) -> one classification image per kept box.
+
+    Each box of a class listed in ``spec["keep"]`` is cropped with a 10% margin, resized and saved under
+    ``<split>/<our label>/``. Small boxes (side < min_box of the photo) are skipped; dishes with fewer than
+    ``min_images`` crops are dropped.
+    """
+    from huggingface_hub import hf_hub_download, snapshot_download
+
+    keep, min_box = spec["keep"], spec.get("min_box", 0.12)
+    names = yaml.safe_load(Path(hf_hub_download(spec["hf"], "data.yaml", repo_type="dataset")).read_text(encoding="utf-8"))["names"]
+    print(f"[export] {spec['hf']}: downloading images and boxes (~1-2 GB, once)…", flush=True)
+    root = Path(snapshot_download(spec["hf"], repo_type="dataset", allow_patterns=["*/labels*/*.txt", "*/images*/*.jpg"],
+                                  max_workers=8))
+    rows: list[tuple[str, str, str]] = []
+    for split_dir, local_split in spec["splits"].items():
+        for label_file in sorted(root.glob(f"*/{split_dir}/labels*/*.txt")):
+            lines = [ln.split() for ln in label_file.read_text(encoding="utf-8").splitlines() if ln.strip()]
+            wanted = [ln for ln in lines if len(ln) >= 5 and names[int(ln[0])] in keep]
+            if not wanted:
+                continue
+            img_path = Path(str(label_file.parent).replace("labels", "images")) / (label_file.stem + ".jpg")
+            if not img_path.exists():
+                continue
+            img = Image.open(img_path).convert("RGB")
+            W, H = img.size
+            for k, (c, cx, cy, bw, bh, *_) in enumerate(wanted):
+                cx, cy, bw, bh = float(cx), float(cy), float(bw), float(bh)
+                if bw < min_box or bh < min_box:
+                    continue
+                m = 0.1 * max(bw * W, bh * H)
+                box = (max(0, (cx - bw / 2) * W - m), max(0, (cy - bh / 2) * H - m),
+                       min(W, (cx + bw / 2) * W + m), min(H, (cy + bh / 2) * H + m))
+                crop = img.crop(tuple(round(v) for v in box))
+                s = short_side / min(crop.size)
+                if s < 1:
+                    crop = crop.resize((round(crop.width * s), round(crop.height * s)), Image.BICUBIC)
+                label = keep[names[int(c)]]
+                rel = f"{local_split}/{label}/{split_dir}_{label_file.stem[:40]}_{k}.jpg"
+                (out_root / rel).parent.mkdir(parents=True, exist_ok=True)
+                crop.save(out_root / rel, "JPEG", quality=90)
+                rows.append((rel, label, local_split))
+        print(f"[export] {spec['hf']}/{split_dir}: {len(rows)} crops so far", flush=True)
+    counts: dict[str, int] = defaultdict(int)
+    for _, label, _ in rows:
+        counts[label] += 1
+    small = {c for c, n in counts.items() if n < spec.get("min_images", 40)}
+    rows = [r for r in rows if r[1] not in small]
+    print(f"[export] crops per dish: {dict(sorted(counts.items(), key=lambda kv: -kv[1]))}"
+          + (f"; dropped (too few): {sorted(small)}" if small else ""), flush=True)
+    out_root.mkdir(parents=True, exist_ok=True)
+    with open(out_root / "index.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["path", "label", "split"])
+        w.writerows(rows)
+    print(f"[export] {spec['hf']}: wrote {len(rows)} crops -> {out_root / 'index.csv'}")
+    return out_root
+
+
 def build_combined_index(sources: list[str], short_side: int, name: str) -> Path:
     """Merge several exported sources into data/cache/index_<name>.csv (paths relative to data/cache),
     mapping labels through each source's aliases so shared dishes become one class."""
@@ -123,8 +184,11 @@ def build_combined_index(sources: list[str], short_side: int, name: str) -> Path
         for src in sources:
             d = specs[src]["dir"].replace("_256", f"_{short_side}")
             aliases = specs[src].get("aliases") or {}
+            drop = set(specs[src].get("drop") or [])
             with open(CACHE / d / "index.csv", newline="", encoding="utf-8") as fi:
                 for row in csv.DictReader(fi):
+                    if row["label"] in drop:
+                        continue
                     w.writerow([f"{d}/{row['path']}", aliases.get(row["label"], row["label"]), row["split"], src])
                     n += 1
     print(f"[index] {'+'.join(sources)}: {n} images -> {out}")

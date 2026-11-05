@@ -52,7 +52,23 @@ def test_table_covers_every_dataset_label_after_aliases(db: NutritionDB) -> None
     mapped = {aliases.get(c, c) for c in INDIAN43}
     assert mapped <= set(db.classes), mapped - set(db.classes)
     food101 = set((ROOT / "data" / "food101_classes.txt").read_text().split())
-    assert len(food101 | mapped) == len(db) == 139  # 101 + 43 - 5 shared dishes
+    assert len(food101 | mapped) == 139  # 101 + 43 - 5 shared dishes
+
+
+INDIAN_FOODS15 = ["biryani", "cholebhature", "dabeli", "dal", "dhokla", "dosa", "jalebi", "kathiroll", "kofta", "naan",
+                  "pakora", "paneer", "panipuri", "pavbhaji", "vadapav"]
+
+
+def test_new_world_sources_have_nutrition(db: NutritionDB) -> None:
+    """Every dish the extra datasets (Indian Foods CC0, Central Asian Food Scenes CC-BY) can produce has nutrition."""
+    import yaml
+
+    src = yaml.safe_load((ROOT / "data" / "sources.yaml").read_text())
+    ind = src["indianfoods15"]
+    labels = {ind["aliases"].get(c, c) for c in INDIAN_FOODS15 if c not in ind.get("drop", [])}
+    labels |= set(src["cafsd"]["keep"].values())
+    assert labels <= set(db.classes), labels - set(db.classes)
+    assert len(db) == 155  # 139 + 16 new dishes (vada pav, dabeli, malai kofta, dal tadka, plov, lagman, ...)
 
 
 def test_search_any_food() -> None:

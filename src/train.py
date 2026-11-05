@@ -126,6 +126,11 @@ def train(cfg: dict[str, Any], out_dir: Path, use_wandb: bool = False) -> dict[s
 
     loaders, classes = build_loaders(cfg)
     model = create_model(mcfg["backbone"], len(classes), mcfg.get("pretrained", True), mcfg.get("drop_rate", 0.0))
+    if mcfg.get("init_from"):  # continue from an earlier model: known dishes keep their weights, new ones start fresh
+        from src.models import warm_start
+
+        ws = warm_start(model, ROOT / mcfg["init_from"], classes)
+        print(f"warm start from {mcfg['init_from']}: {ws['known']}/{len(classes)} dishes already known")
     model.to(device)
     print(f"device={device} backbone={mcfg['backbone']} params={count_params(model)/1e6:.2f}M "
           f"classes={len(classes)} train={len(loaders['train'].dataset)} val={len(loaders['val'].dataset)}")

@@ -51,3 +51,34 @@ def load_checkpoint(path: str | Path, device: str | torch.device = "cpu") -> tup
     model.temperature = float(ckpt.get("temperature", 1.0))  # set by src/calibrate.py; 1.0 = uncalibrated
     model.to(device).eval()
     return model, ckpt["classes"], cfg
+
+
+def warm_start(model: nn.Module, checkpoint: str | Path, classes: list[str]) -> dict:
+    """Initialise ``model`` from an earlier NutriSnap checkpoint whose class list may differ.
+
+    The backbone is copied as is. Classifier rows are copied *by class name*, so dishes the old model knew keep
+    what they learned and only new dishes start from scratch. Returns {"copied": n_tensors, "known": n_classes}.
+    """
+    import torch
+
+    ckpt = torch.load(checkpoint, map_location="cpu", weights_only=False)
+    old_classes, old = ckpt["classes"], ckpt["state_dict"]
+    own = model.state_dict()
+    head = (getattr(model, "pretrained_cfg", None) or {}).get("classifier", "head.fc")
+    pos = {c: i for i, c in enumerate(old_classes)}
+    copied = 0
+    with torch.no_grad():
+        for k, v in old.items():
+            if k not in own:
+                continue
+            v = v.to(own[k].dtype)
+            if k.startswith(head + "."):  # classifier: match rows by dish name
+                for j, c in enumerate(classes):
+                    if c in pos:
+                        own[k][j] = v[pos[c]]
+                copied += 1
+            elif own[k].shape == v.shape:
+                own[k] = v
+                copied += 1
+    model.load_state_dict(own)
+    return {"copied": copied, "known": sum(c in pos for c in classes)}

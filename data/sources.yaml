@@ -19,3 +19,68 @@ indian43:
   url: https://huggingface.co/datasets/SohlHealth/enhanced-indian-food-classification
   aliases:
     burger: hamburger              # pizza, samosa, fried_rice, chicken_curry already share Food-101 names
+
+indianfoods15:
+  hf: bharat-raghunathan/indian-foods-dataset
+  dir: indianfoods15_256
+  splits: {train: train, test: test}
+  license: CC0-1.0
+  url: https://huggingface.co/datasets/bharat-raghunathan/indian-foods-dataset
+  aliases:                         # 10 of its 15 dishes already exist under our names
+    cholebhature: chole_bhature
+    dal: dal_tadka
+    dosa: masala_dosa
+    kathiroll: kaathi_rolls
+    kofta: malai_kofta
+    naan: butter_naan
+    pakora: pakode
+    panipuri: paani_puri
+    pavbhaji: pav_bhaji
+    vadapav: vada_pav
+  drop: [paneer]                   # "paneer" mixes several different paneer dishes
+
+cafsd:
+  # Central Asian Food Scenes: photos of whole tables with a box per item. We crop the named dishes.
+  type: yolo_crops
+  hf: issai/Central_Asian_Food_Scenes_Dataset
+  dir: cafsd_256
+  splits: {train: train, valid: train, test: test}
+  license: CC-BY-4.0
+  url: https://huggingface.co/datasets/issai/Central_Asian_Food_Scenes_Dataset
+  min_box: 0.12                    # crop only boxes at least 12% of the photo's width and height
+  min_images: 40                   # drop a dish with fewer crops than this
+  keep:                            # their class -> our dish (anything not listed is ignored)
+    plov: plov
+    manty: dumplings
+    hinkali: dumplings
+    lagman-fried: lagman
+    lagman-w-soup: lagman
+    beshbarmak: beshbarmak
+    samsa: samsa
+    borsch: borscht
+    cheburek: cheburek
+    hachapuri: khachapuri
+    vareniki: vareniki
+    syrniki: syrniki
+    olivie: olivier_salad
+    shorpa: shorpa
+    shorpa chicken: shorpa
+    doner-lavash: doner_kebab
+    doner-nan: doner_kebab
+    beef shashlyk: kebab
+    beef shashlyk-v: kebab
+    chicken shashlyk: kebab
+    chicken shashlyk-v: kebab
+    minced meat shashlyk: kebab
+    pizza: pizza
+    sushi: sushi
+    hamburger: hamburger
+    hot dog: hot_dog
+    french fries: french_fries
+    baklava: baklava
+    hummus: hummus
+    waffles: waffles
+    pancakes: pancakes
+    onion rings: onion_rings
+    wings: chicken_wings
+    ice-cream: ice_cream

@@ -223,8 +223,9 @@ python scripts/train_plate.py              # trains, validates (box/mask mAP), e
 python scripts/stamp_sw.py                 # tell installed apps to fetch the new model
 ```
 
-**Results** (`yolo26s-seg`, 60 epochs at 640 px on an RTX 3050 Ti 4 GB, ~5 h; FoodSeg103 validation split, 2,135 photos,
-11,781 food regions): **mask mAP50 0.368, mask mAP50-95 0.292** (box mAP50 0.368). FoodSeg103 is hard: 103 fine-grained,
+**Results, first model** (`yolo26s-seg`, 60 epochs at 640 px on an RTX 3050 Ti 4 GB, ~5 h; FoodSeg103 validation split,
+2,135 photos, 11,781 food regions): **mask mAP50 0.368, mask mAP50-95 0.292** (box mAP50 0.368). It was then fine-tuned on
+real phone photos (below). FoodSeg103 is hard: 103 fine-grained,
 often mixed ingredients. In practice large, distinct foods (rice, bread, meat, shrimp, broccoli, fries) are found reliably
 and small or blended ones (sauces, garnish, mixed stir-fries) are often missed or confused. The exported ONNX is 42 MB and
 runs in ~2 s per photo in the browser (single-threaded WebAssembly on a laptop CPU).
@@ -243,6 +244,19 @@ python scripts/train_plate.py --mix --hours 8  # fine-tune on both datasets
 
 The new model is scored on FoodSeg103 val (comparable with the first model) **and** on Food Recognition's own val set of
 phone photos, next to the old model's score. It is exported for the app only if it beats the old model on the phone photos.
+
+**Result (the model now in the app):** 11 epochs on 41,894 photos (36,911 Food Recognition + 4,983 FoodSeg103), ~6 h on the
+RTX 3050 Ti, starting from the FoodSeg103 model:
+
+| Mask mAP50 | FoodSeg103-only model | + Food Recognition 2022 |
+|---|---|---|
+| Real phone photos (Food Recognition val, 923 photos) | 0.158 | **0.375** |
+| FoodSeg103 val (2,135 photos) | **0.368** | 0.326 |
+
+On everyday phone photos it is 2.4× better; on FoodSeg103's own photos it lost a little, the usual trade-off when a model is
+tuned toward a new photo style. The phone-photo test set comes from the same app as the new training data (same photo
+style and labelling habits), which flatters the new model somewhat. In browser checks, separate foods on a plate are found
+well (chicken, rice, bread, potato, asparagus, tomato); mixed bowls and small items are still often missed or low-confidence.
 
 The section appears on the site only once `docs/model/plate_meta.json` exists and is not a `--smoke` test model.
 

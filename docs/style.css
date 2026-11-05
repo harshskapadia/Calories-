@@ -319,3 +319,13 @@ summary { cursor: pointer; font-weight: 600; }
 .bal-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
 .bal-legend em { color: var(--muted); font-style: normal; }
 .plate-balance p { margin: 8px 0 0; }
+
+/* remove / new photo */
+.photo-clear { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border-radius: 50%; border: 0;
+  background: rgba(20, 16, 40, .62); color: #fff; font-size: 1.1rem; line-height: 1; cursor: pointer; display: grid; place-items: center;
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.photo-clear[hidden] { display: none; }
+.photo-clear:hover, .photo-clear:focus-visible { background: rgba(20, 16, 40, .82); }
+.card-head .new-photo { min-height: 36px; padding: 0 12px; font-size: .85rem; margin-left: auto; }
+#results .card-head .new-photo { order: 1; }
+#results .card-head #timing { order: 2; }

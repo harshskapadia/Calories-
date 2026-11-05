@@ -51,6 +51,7 @@
     <section id="panel-meal" class="card capture" role="tabpanel" aria-labelledby="tab-meal">
       <div id="drop" class="drop" tabindex="0" role="button" aria-label="Choose or drop a meal photo">
         <img id="preview" alt="Your meal" hidden>
+        <button id="photo-clear" type="button" class="photo-clear" aria-label="Remove photo" title="Remove photo" hidden>✕</button>
         <div id="drop-hint" class="drop-hint">
           <div class="drop-icon" aria-hidden="true">📸</div>
           <div class="drop-title">Add a photo of your meal</div>
@@ -176,6 +177,7 @@
       <div class="card-head">
         <h2 id="res-h">What I see</h2>
         <span class="muted small" id="timing"></span>
+        <button id="new-photo" type="button" class="btn ghost small-btn new-photo">📸 New photo</button>
       </div>
       <div id="warn" class="warn" hidden></div>
       <ol id="top3" class="top3"></ol>

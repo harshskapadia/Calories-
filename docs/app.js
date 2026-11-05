@@ -115,6 +115,7 @@ async function analyze(blob) {
   if ($("plate-view")) { $("plate-view").hidden = true; $("plate-status").textContent = ""; }
   $("preview").src = URL.createObjectURL(blob);
   $("preview").hidden = false;
+  $("photo-clear").hidden = false;
   $("drop-hint").hidden = true;
   setStatus("Looking at your meal…", 1);
   const t0 = performance.now();
@@ -220,6 +221,26 @@ function render() {
     : `Nutrition: ${food.match} match from USDA FNDDS (${food.source}).`;
 }
 
+// Remove the photo and its results so a new one can be taken (the nutrition card and today's log are kept)
+function clearPhoto() {
+  state.lastBlob = null;
+  const img = $("preview");
+  if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
+  img.removeAttribute("src");
+  img.hidden = true;
+  $("photo-clear").hidden = true;
+  $("drop-hint").hidden = false;
+  $("top3").innerHTML = "";
+  $("results").hidden = true;
+  $("warn").hidden = true;
+  $("ov-results").hidden = true;
+  $("ov-status").textContent = "";
+  $("photo-est").hidden = true;
+  if ($("plate-view")) { $("plate-view").hidden = true; $("plate-status").textContent = ""; }
+  if (state.session) setStatus(`Ready: ${state.meta.classes.length} dishes, running on this device.`, 1, true);
+  $("panel-meal").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 // ---------------------------------------------------------------- search
 // Everyday names -> the dish they usually mean (ranked first when the query matches)
 const ALIASES = {
@@ -281,7 +302,9 @@ function wire() {
     $(id).addEventListener("change", (e) => { const f = e.target.files[0]; if (f) analyze(f); e.target.value = ""; });
   }
   const drop = $("drop");
-  drop.addEventListener("click", () => $("file").click());
+  drop.addEventListener("click", (e) => { if (!e.target.closest("#photo-clear")) $("file").click(); });
+  $("photo-clear").addEventListener("click", (e) => { e.stopPropagation(); clearPhoto(); });
+  $("new-photo").addEventListener("click", clearPhoto);
   drop.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("file").click(); } });
   drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("drag"); });
   drop.addEventListener("dragleave", () => drop.classList.remove("drag"));

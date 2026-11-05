@@ -166,3 +166,10 @@ def test_food_recognition_mapping() -> None:
               "mixed-salad-chopped-without-sauce": "lettuce", "tomato-sauce": "sauce", "butter": "cheese butter",
               "roll-with-pieces-of-chocolate": "chocolate", "something-unknown": "other ingredients"}
     assert {k: map_name(k) for k in expect} == expect
+
+
+def test_photo_can_be_removed() -> None:
+    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    js = (DOCS / "app.js").read_text(encoding="utf-8")
+    assert 'id="photo-clear"' in html and 'id="new-photo"' in html
+    assert "function clearPhoto()" in js and '$("photo-clear").addEventListener' in js and '$("new-photo").addEventListener' in js

@@ -292,7 +292,8 @@ async function classifyRegion(bmp, x, y, w, h) {
 async function suggestDishes(bmp, box, S, mw, mh) {
   if (!state.session) return;
   const sc = mw / S, r = box.w / bmp.width;
-  for (const it of plate.items.filter((x) => x.coverage >= 0.04).slice(0, 5)) {
+  // drinks get their own variant picker; the dish model has no drink classes, so its opinion on them is noise
+  for (const it of plate.items.filter((x) => x.coverage >= 0.04 && !DRINKS[x.food.name]).slice(0, 5)) {
     let xa = mw, ya = mh, xb = -1, yb = -1;
     for (let i = 0; i < it.mask.length; i++) {
       if (!it.mask[i]) continue;
@@ -375,6 +376,7 @@ function useDrink(i) {
   redrawPlate();
   selectFood(key); // the nutrition card shows the drink, with its typical serving
   setGrams(item.grams);
+  if (typeof learnRemember === "function") learnRemember(key);
   $("nutrition").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -420,6 +422,7 @@ function useWholeFood(food, score) {
   const grams = coverage > 0.02 ? guessGrams(food, coverage) : Math.round(state.foods.get(food.key).serving / 5) * 5;
   plate.items = [{ cls: -1, score, mask, coverage, food, grams, color: PLATE_COLORS[0] }];
   plate.clip = null;
+  if (typeof learnRemember === "function") learnRemember(food.key);
   redrawPlate();
 }
 

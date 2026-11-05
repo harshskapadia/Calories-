@@ -127,6 +127,14 @@
         <button id="log-clear" type="button" class="btn ghost wide" hidden>Clear today</button>
       </div>
 
+      <div class="card learned">
+        <div class="card-head"><h2>🧠 Learned from you</h2><span class="muted small" id="learned-count"></span></div>
+        <p class="muted small">When you correct a photo (another dish, a search result, a drink), NutriSnap remembers it and suggests
+          your answer next time a similar photo comes up. It keeps only a numeric fingerprint of the photo, never the photo, and
+          only on this phone.</p>
+        <button id="learn-forget" type="button" class="btn ghost wide" hidden>Forget all</button>
+      </div>
+
       <div class="card">
         <div class="card-head"><h2>My calorie target</h2></div>
         <p class="muted small">Your details stay on this phone. Used only to estimate how much energy you burn in a day.</p>
@@ -180,6 +188,7 @@
         <button id="new-photo" type="button" class="btn ghost small-btn new-photo">📸 New photo</button>
       </div>
       <div id="warn" class="warn" hidden></div>
+      <div id="learn" class="plate-dish learn" role="status" hidden></div>
       <ol id="top3" class="top3"></ol>
 
       <div id="plate" class="plate" hidden>
@@ -317,5 +326,6 @@
   <script src="openvocab.js"></script>
   <script src="plate.js"></script>
   <script src="diary.js"></script>
+  <script src="learn.js"></script>
 </body>
 </html>

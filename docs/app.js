@@ -120,7 +120,17 @@ async function analyze(blob) {
   setStatus("Looking at your meal…", 1);
   const t0 = performance.now();
   const input = await toTensor(blob);
-  const { logits } = await state.session.run({ image: input });
+  const out = await state.session.run({ image: input });
+  const { logits } = out;
+  state.lastEmb = null;
+  if (out.embedding) { // image fingerprint (original + mirrored, averaged, unit length) for "Learns from you"
+    const E = out.embedding.data, D = E.length / 2, v = new Float32Array(D);
+    let n = 0;
+    for (let d = 0; d < D; d++) { v[d] = (E[d] + E[D + d]) / 2; n += v[d] * v[d]; }
+    n = Math.sqrt(n) || 1;
+    for (let d = 0; d < D; d++) v[d] /= n;
+    state.lastEmb = v;
+  }
   const C = state.meta.classes.length, L = logits.data;
   const avg = Array.from({ length: C }, (_, k) => (L[k] + L[C + k]) / 2);
   const probs = softmax(avg, state.meta.temperature);
@@ -131,6 +141,7 @@ async function analyze(blob) {
   renderTop3(top, ms);
   selectFood(state.meta.classes[top[0][1]]);
   if (typeof onDishResult === "function") onDishResult(state.meta.classes[top[0][1]]);
+  if (typeof learnSuggest === "function") learnSuggest(state.meta.classes[top[0][1]]);
 }
 
 function renderTop3(top, ms) {
@@ -141,7 +152,10 @@ function renderTop3(top, ms) {
     const b = document.createElement("button");
     b.textContent = state.meta.display_names[i];
     b.title = "Use this dish";
-    b.addEventListener("click", () => selectFood(state.meta.classes[i]));
+    b.addEventListener("click", () => {
+      selectFood(state.meta.classes[i]);
+      if (typeof learnRemember === "function") learnRemember(state.meta.classes[i]);
+    });
     const pct = document.createElement("span");
     pct.className = "pct";
     pct.textContent = `${(p * 100).toFixed(p < 0.1 ? 1 : 0)}%`;
@@ -226,6 +240,8 @@ function render() {
 // Remove the photo and its results so a new one can be taken (the nutrition card and today's log are kept)
 function clearPhoto() {
   state.lastBlob = null;
+  state.lastEmb = null;
+  $("learn").hidden = true;
   const img = $("preview");
   if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
   img.removeAttribute("src");
@@ -327,6 +343,7 @@ function wire() {
     const b = e.target.closest("button[data-key]");
     if (!b) return;
     selectFood(b.dataset.key);
+    if (typeof learnRemember === "function" && state.lastEmb && !$("results").hidden) learnRemember(b.dataset.key);
     $("search-results").hidden = true;
     $("search").value = state.foods.get(b.dataset.key).name;
     $("nutrition").scrollIntoView({ behavior: "smooth", block: "start" });

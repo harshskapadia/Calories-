@@ -344,3 +344,5 @@ summary { cursor: pointer; font-weight: 600; }
 .clip-picks { display: flex; flex-wrap: wrap; gap: 6px; }
 .clip-picks .chip span { display: block; margin: 0; font-size: .75rem; }
 .clip-picks .chip { text-align: left; border-radius: 12px; }
+#learn { margin-bottom: 12px; }
+#panel-day.no-target .learned { order: 3; }

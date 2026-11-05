@@ -73,7 +73,11 @@ async function identifyAnything() {
       const tag = m.keys[i].startsWith("fndds_") ? "USDA food" : m.keys[i].startsWith("wd_") ? `${ov.regions[i]} · world dish` : "dish";
       b.innerHTML = `<span>${escapeHtml(food ? food.name : m.names[i])}<span class="sub"> · ${tag}${food ? ` · ${Math.round(food.kcal)} kcal/100 g` : ""}</span></span>` +
         `<span class="sub">${Math.round((ex[r] / z) * 100)}%</span>`;
-      b.addEventListener("click", () => { selectFood(m.keys[i]); $("nutrition").scrollIntoView({ behavior: "smooth", block: "start" }); });
+      b.addEventListener("click", () => {
+        selectFood(m.keys[i]);
+        if (typeof learnRemember === "function") learnRemember(m.keys[i]);
+        $("nutrition").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
       li.append(b);
       list.append(li);
     });

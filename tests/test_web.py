@@ -200,3 +200,17 @@ def test_drink_variants() -> None:
     keys = re.findall(r'\["([a-z0-9_]+)", "', block)
     assert len(keys) >= 20 and set(keys) <= foods  # every drink variant has nutrition
     assert "function onDishResult" in js and "onDishResult(" in (DOCS / "app.js").read_text(encoding="utf-8")
+
+
+def test_learns_from_you() -> None:
+    import onnxruntime as ort
+
+    sess = ort.InferenceSession(str(DOCS / "model" / "nutrisnap.int8.onnx"))
+    outs = {o.name: o.shape for o in sess.get_outputs()}
+    assert set(outs) == {"logits", "embedding"} and outs["embedding"][1] == 768  # image fingerprint for corrections
+    js = (DOCS / "learn.js").read_text(encoding="utf-8")
+    assert "LEARN_SIM = 0.8" in js and "function learnRemember" in js and "function learnSuggest" in js
+    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    assert 'src="learn.js"' in html and 'id="learn"' in html and 'id="learn-forget"' in html
+    for f in ("app.js", "openvocab.js", "plate.js"):  # every way of correcting a photo is remembered
+        assert "learnRemember(" in (DOCS / f).read_text(encoding="utf-8"), f

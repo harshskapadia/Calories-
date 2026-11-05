@@ -333,6 +333,21 @@ The **📊 My day** tab turns the app into a calorie-deficit tracker:
   and plate, from the user's own weight and MET values from the Compendium of Physical Activities.
 - **Private by design.** Profile and log are stored only in the browser (`localStorage`, last 60 days); nothing is uploaded.
 
+### 🧠 Learns from you (on-device personalisation)
+
+When you correct a photo (another dish from the top 3, a search result, an *Identify anything* match, a drink variant, a
+whole-dish pick), the app stores the dish model's **768-number image embedding** (int8, ~1 KB) with your answer in this
+browser's storage; the photo itself is never kept and nothing is uploaded. For each new photo it compares the embedding
+with your memories and, if one is close (cosine ≥ 0.8), shows *"You corrected a similar photo to …: Use it / No"*. The
+closest memory wins and "No" stores the kept answer, so wrong suggestions correct themselves. *My day* shows how much it
+has learned, with **Forget all**.
+
+The embedding is a second output of the same ONNX model (identical logits, so no accuracy change and no extra compute).
+The threshold was chosen on held-out photos: re-shots of the same meal (crop, rotation, lighting) score 0.77–0.99 (median
+0.97) and 93% clear 0.8; pairs of different dishes never did (max 0.55). The model was never trained on coffee, so coffee and chai
+embeddings sit close (median 0.72), which is why it only *suggests*: in the browser check, a coffee correction was
+offered for a re-shot of the same cup but not for a real chai photo.
+
 ### Packaged foods and drinks (barcode + product search)
 
 For anything in a package (biscuits, chips, shakes, lassi, protein drinks…) the page looks the product up in

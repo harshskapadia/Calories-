@@ -41,9 +41,21 @@ def export_onnx(checkpoint: Path, out: Path) -> dict:
     out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         fp32 = Path(tmp) / "fp32.onnx"
-        torch.onnx.export(model, (torch.randn(1, 3, size, size),), fp32, input_names=["image"],
-                          output_names=["logits"], opset_version=17, dynamo=False,
-                          dynamic_axes={"image": {0: "batch"}, "logits": {0: "batch"}})
+        # two outputs: dish logits, and the pooled image embedding just before the classifier ("fingerprint" used by
+        # "Learns from you" to recognise photos similar to ones the user corrected; computed anyway, so it is free)
+        class WithEmbedding(torch.nn.Module):
+            def __init__(self, m: torch.nn.Module) -> None:
+                super().__init__()
+                self.m = m
+
+            def forward(self, x: torch.Tensor):
+                feats = self.m.forward_features(x)
+                emb = self.m.forward_head(feats, pre_logits=True)
+                return self.m.get_classifier()(emb), emb
+
+        torch.onnx.export(WithEmbedding(model), (torch.randn(1, 3, size, size),), fp32, input_names=["image"],
+                          output_names=["logits", "embedding"], opset_version=17, dynamo=False,
+                          dynamic_axes={"image": {0: "batch"}, "logits": {0: "batch"}, "embedding": {0: "batch"}})
         quantize_dynamic(fp32, out, weight_type=QuantType.QInt8, op_types_to_quantize=["MatMul", "Gemm"])
     print(f"ONNX int8 model -> {out} ({out.stat().st_size / 1e6:.1f} MB)")
     return {"classes": classes, "temperature": float(getattr(model, "temperature", 1.0)),

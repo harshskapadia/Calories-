@@ -120,42 +120,69 @@ def export_yolo_crops(spec: dict, out_root: Path, short_side: int) -> Path:
     ``<split>/<our label>/``. Small boxes (side < min_box of the photo) are skipped; dishes with fewer than
     ``min_images`` crops are dropped.
     """
+    os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
+    from concurrent.futures import ThreadPoolExecutor
+
     from huggingface_hub import hf_hub_download, snapshot_download
 
     keep, min_box = spec["keep"], spec.get("min_box", 0.12)
-    names = yaml.safe_load(Path(hf_hub_download(spec["hf"], "data.yaml", repo_type="dataset")).read_text(encoding="utf-8"))["names"]
-    print(f"[export] {spec['hf']}: downloading images and boxes (~1-2 GB, once)…", flush=True)
-    root = Path(snapshot_download(spec["hf"], repo_type="dataset", allow_patterns=["*/labels*/*.txt", "*/images*/*.jpg"],
-                                  max_workers=8))
-    rows: list[tuple[str, str, str]] = []
-    for split_dir, local_split in spec["splits"].items():
+    repo, kind = spec["hf"], "dataset"
+    names = yaml.safe_load(Path(hf_hub_download(repo, "data.yaml", repo_type=kind)).read_text(encoding="utf-8"))["names"]
+    # 1) the small box files only (~21k); 2) only the photos that contain a big enough box of a dish we keep.
+    # Files are fetched one by one from the Hub, so many parallel requests matter more than bandwidth.
+    print(f"[export] {repo}: downloading box files…", flush=True)
+    root = Path(snapshot_download(repo, repo_type=kind, allow_patterns=["*/labels*/*.txt"], max_workers=32))
+    jobs: dict[str, list[tuple[int, str, list[float]]]] = {}  # image path in repo -> [(k, label, box)]
+    for split_dir in spec["splits"]:
         for label_file in sorted(root.glob(f"*/{split_dir}/labels*/*.txt")):
-            lines = [ln.split() for ln in label_file.read_text(encoding="utf-8").splitlines() if ln.strip()]
-            wanted = [ln for ln in lines if len(ln) >= 5 and names[int(ln[0])] in keep]
-            if not wanted:
-                continue
-            img_path = Path(str(label_file.parent).replace("labels", "images")) / (label_file.stem + ".jpg")
-            if not img_path.exists():
-                continue
-            img = Image.open(img_path).convert("RGB")
-            W, H = img.size
-            for k, (c, cx, cy, bw, bh, *_) in enumerate(wanted):
-                cx, cy, bw, bh = float(cx), float(cy), float(bw), float(bh)
-                if bw < min_box or bh < min_box:
-                    continue
-                m = 0.1 * max(bw * W, bh * H)
-                box = (max(0, (cx - bw / 2) * W - m), max(0, (cy - bh / 2) * H - m),
-                       min(W, (cx + bw / 2) * W + m), min(H, (cy + bh / 2) * H + m))
-                crop = img.crop(tuple(round(v) for v in box))
-                s = short_side / min(crop.size)
-                if s < 1:
-                    crop = crop.resize((round(crop.width * s), round(crop.height * s)), Image.BICUBIC)
-                label = keep[names[int(c)]]
-                rel = f"{local_split}/{label}/{split_dir}_{label_file.stem[:40]}_{k}.jpg"
-                (out_root / rel).parent.mkdir(parents=True, exist_ok=True)
-                crop.save(out_root / rel, "JPEG", quality=90)
-                rows.append((rel, label, local_split))
-        print(f"[export] {spec['hf']}/{split_dir}: {len(rows)} crops so far", flush=True)
+            boxes = []
+            for k, ln in enumerate(l.split() for l in label_file.read_text(encoding="utf-8").splitlines() if l.strip()):
+                if len(ln) >= 5 and names[int(ln[0])] in keep:
+                    cx, cy, bw, bh = map(float, ln[1:5])
+                    if bw >= min_box and bh >= min_box:
+                        boxes.append((k, keep[names[int(ln[0])]], [cx, cy, bw, bh]))
+            if boxes:
+                rel_lbl = label_file.relative_to(root).as_posix()
+                img_rel = rel_lbl.replace("/labels", "/images", 1).rsplit(".", 1)[0] + ".jpg"
+                jobs[img_rel] = boxes
+    print(f"[export] {repo}: {len(jobs)} photos contain dishes we keep; downloading them…", flush=True)
+
+    def fetch(rel: str) -> tuple[str, str | None]:
+        try:
+            return rel, hf_hub_download(repo, rel, repo_type=kind)
+        except Exception as e:  # a missing/renamed photo shouldn't stop the export
+            print(f"[export]   skipped {rel}: {e}", flush=True)
+            return rel, None
+
+    local: dict[str, str | None] = {}
+    with ThreadPoolExecutor(32) as pool:
+        for i, (rel, path) in enumerate(pool.map(fetch, sorted(jobs)), 1):
+            local[rel] = path
+            if i % 1000 == 0:
+                print(f"[export]   {i}/{len(jobs)} photos", flush=True)
+
+    rows: list[tuple[str, str, str]] = []
+    for img_rel, boxes in sorted(jobs.items()):
+        split_dir = img_rel.split("/")[1]
+        if not local.get(img_rel) or split_dir not in spec["splits"]:
+            continue
+        local_split = spec["splits"][split_dir]
+        img = Image.open(local[img_rel]).convert("RGB")
+        W, H = img.size
+        stem = Path(img_rel).stem
+        for k, label, (cx, cy, bw, bh) in boxes:
+            m = 0.1 * max(bw * W, bh * H)
+            box = (max(0, (cx - bw / 2) * W - m), max(0, (cy - bh / 2) * H - m),
+                   min(W, (cx + bw / 2) * W + m), min(H, (cy + bh / 2) * H + m))
+            crop = img.crop(tuple(round(v) for v in box))
+            sc = short_side / min(crop.size)
+            if sc < 1:
+                crop = crop.resize((round(crop.width * sc), round(crop.height * sc)), Image.BICUBIC)
+            rel = f"{local_split}/{label}/{split_dir}_{stem[:40]}_{k}.jpg"
+            (out_root / rel).parent.mkdir(parents=True, exist_ok=True)
+            crop.save(out_root / rel, "JPEG", quality=90)
+            rows.append((rel, label, local_split))
+    print(f"[export] {repo}: {len(rows)} dish crops", flush=True)
     counts: dict[str, int] = defaultdict(int)
     for _, label, _ in rows:
         counts[label] += 1

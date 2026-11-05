@@ -107,12 +107,15 @@
  ],
  "metrics": {
   "model": "yolo26s-seg",
-  "epochs": 60,
-  "box_map50": 0.3677,
-  "box_map50_95": 0.3049,
-  "mask_map50": 0.3677,
-  "mask_map50_95": 0.2922
+  "epochs": 11,
+  "data": "FoodSeg103 + Food Recognition 2022",
+  "box_map50": 0.3249,
+  "box_map50_95": 0.2622,
+  "mask_map50": 0.3259,
+  "mask_map50_95": 0.2537,
+  "phone_photos_mask_map50": 0.375,
+  "phone_photos_mask_map50_before": 0.1583
  },
  "smoke": false,
- "model": "Ultralytics yolo26s-seg (AGPL-3.0) trained on FoodSeg103 (Apache-2.0)"
+ "model": "Ultralytics yolo26s-seg (AGPL-3.0) trained on FoodSeg103 (Apache-2.0) + Food Recognition 2022 (MyFoodRepo, CC-BY-4.0)"
 }

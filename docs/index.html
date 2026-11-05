@@ -317,9 +317,31 @@
           <a href="https://world.openfoodfacts.org">Open Food Facts</a> contributors, under the
           <a href="https://opendatacommons.org/licenses/odbl/1-0/">ODbL</a>.</p>
       </details>
+      <p><a href="#" id="tour-replay">Show the tour again</a></p>
       <p><a href="https://github.com/harshskapadia/Calories-">Source code, training &amp; evaluation on GitHub</a> (AGPL-3.0)</p>
     </footer>
   </main>
+
+
+  <!-- First-run tour (docs/tour.js) -->
+  <div id="tour" class="tour" role="dialog" aria-modal="true" aria-labelledby="tour-title" hidden>
+    <div id="tour-card" class="tour-card">
+      <div class="tour-top"><span id="tour-step" class="muted small"></span>
+        <button id="tour-skip" type="button" class="linkish">Skip</button></div>
+      <div id="tour-art" class="tour-art" aria-hidden="true"></div>
+      <h2 id="tour-title" class="tour-title"></h2>
+      <p id="tour-text" class="tour-text"></p>
+      <div id="tour-dots" class="tour-dots" aria-hidden="true"></div>
+      <div class="tour-nav">
+        <button id="tour-back" type="button" class="btn ghost">Back</button>
+        <button id="tour-next" type="button" class="btn primary">Next</button>
+      </div>
+      <div id="tour-end" class="tour-end" hidden>
+        <button id="tour-target" type="button" class="btn primary wide">📊 Set my calorie target</button>
+        <button id="tour-start" type="button" class="btn ghost wide">📸 Start snapping</button>
+      </div>
+    </div>
+  </div>
 
   <script src="ort/ort.wasm.min.js"></script>
   <script src="app.js"></script>
@@ -328,5 +350,6 @@
   <script src="plate.js"></script>
   <script src="diary.js"></script>
   <script src="learn.js"></script>
+  <script src="tour.js"></script>
 </body>
 </html>

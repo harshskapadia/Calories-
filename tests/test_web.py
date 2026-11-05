@@ -214,3 +214,11 @@ def test_learns_from_you() -> None:
     assert 'src="learn.js"' in html and 'id="learn"' in html and 'id="learn-forget"' in html
     for f in ("app.js", "openvocab.js", "plate.js"):  # every way of correcting a photo is remembered
         assert "learnRemember(" in (DOCS / f).read_text(encoding="utf-8"), f
+
+
+def test_first_run_tour() -> None:
+    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    js = (DOCS / "tour.js").read_text(encoding="utf-8")
+    assert 'src="tour.js"' in html and 'id="tour"' in html and 'id="tour-replay"' in html
+    assert js.count("title:") >= 5 and 'TOUR_KEY = "nutrisnap.tour.v1"' in js  # shown once, remembered per browser
+    assert '"tour.js"' in (DOCS / "sw.js").read_text(encoding="utf-8")

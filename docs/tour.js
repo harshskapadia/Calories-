@@ -32,7 +32,7 @@ function renderTour() {
   $("tour-step").textContent = `${tour.i + 1} of ${TOUR.length}`;
   $("tour-dots").innerHTML = TOUR.map((_, k) => `<i class="${k === tour.i ? "on" : ""}"></i>`).join("");
   $("tour-back").hidden = tour.i === 0;
-  $("tour-next").hidden = last;
+  $("tour-next").textContent = last ? "Finish" : "Next";
   $("tour-skip").hidden = last;
   $("tour-end").hidden = !last;
   $("tour-card").classList.toggle("last", last);
@@ -42,8 +42,11 @@ function openTour() {
   tour.i = 0;
   renderTour();
   $("tour").hidden = false;
+  // only as a proper pop-up card: if this page got an older stylesheet (cached), wait for the next visit
+  if (getComputedStyle($("tour")).position !== "fixed") { $("tour").hidden = true; return false; }
   document.body.classList.add("tour-open");
   $("tour-next").focus();
+  return true;
 }
 
 function closeTour(then) {
@@ -58,16 +61,15 @@ function tourGo(d) {
   renderTour();
 }
 
-$("tour-next").addEventListener("click", () => tourGo(1));
+$("tour-next").addEventListener("click", () => (tour.i === TOUR.length - 1 ? closeTour() : tourGo(1)));
 $("tour-back").addEventListener("click", () => tourGo(-1));
 $("tour-skip").addEventListener("click", () => closeTour());
-$("tour-start").addEventListener("click", () => closeTour());
 $("tour-target").addEventListener("click", () => closeTour("target"));
 $("tour-replay").addEventListener("click", (e) => { e.preventDefault(); openTour(); });
 document.addEventListener("keydown", (e) => {
   if ($("tour").hidden) return;
   if (e.key === "Escape") closeTour();
-  if (e.key === "ArrowRight") tourGo(1);
+  if (e.key === "ArrowRight" && tour.i < TOUR.length - 1) tourGo(1);
   if (e.key === "ArrowLeft") tourGo(-1);
 });
 // swipe left/right on phones
@@ -79,4 +81,8 @@ $("tour-card").addEventListener("touchend", (e) => {
   if (Math.abs(dx) > 50) tourGo(dx < 0 ? 1 : -1);
 });
 
-if (!tourStorage(false)) openTour();
+// after the stylesheet has loaded (a fresh visit), so the tour is always a styled pop-up
+if (!tourStorage(false)) {
+  if (document.readyState === "complete") openTour();
+  else window.addEventListener("load", () => openTour());
+}

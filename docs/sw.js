@@ -4,7 +4,7 @@
    - Core model + food data are precached at install so photo recognition works offline after the first visit.
    - The optional "Identify anything" and "Whole plate" files are cached the first time they are downloaded.
    - Cross-origin requests (Open Food Facts) always go to the network. */
-const SHELL_VERSION = "shell-2026-11-06-5";
+const SHELL_VERSION = "shell-2026-11-06-6";
 const ASSET_VERSION = "assets-1123cc8c07"; // = hash of docs/model + docs/ort contents (tests/test_web.py checks it)
 const SHELL = SHELL_VERSION, ASSETS = ASSET_VERSION;
 
@@ -21,7 +21,8 @@ self.addEventListener("install", (event) => {
     const shell = await caches.open(SHELL), assets = await caches.open(ASSETS);
     for (const url of CORE) {
       const target = BIG.test(url) ? assets : shell;
-      if (!(await target.match(url))) await target.add(url);
+      // cache: "reload" skips the browser's own HTTP cache, so a new version never mixes with stale CSS/JS
+      if (!(await target.match(url))) await target.add(new Request(url, { cache: "reload" }));
     }
     await self.skipWaiting();
   })());
@@ -57,7 +58,7 @@ self.addEventListener("fetch", (event) => {
     const cache = await caches.open(SHELL);
     const hit = await cache.match(req, { ignoreSearch: true }) ||
       (req.mode === "navigate" ? await cache.match("index.html") : undefined);
-    const fresh = fetch(req).then((res) => {
+    const fresh = fetch(req, { cache: "no-cache" }).then((res) => { // revalidate with the server, not the HTTP cache
       if (res.ok) cache.put(req, res.clone());
       return res;
     }).catch(() => undefined);

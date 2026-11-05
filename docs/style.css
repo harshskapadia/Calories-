@@ -368,4 +368,4 @@ body.tour-open { overflow: hidden; }
 .tour-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .tour-nav #tour-back[hidden] + #tour-next { grid-column: 1 / -1; }
 .tour-end { display: grid; gap: 10px; }
-.tour-card.last .tour-nav { grid-template-columns: 1fr; margin-bottom: 10px; }
+.tour-end { margin-top: 10px; }

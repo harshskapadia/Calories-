@@ -127,6 +127,7 @@ async function analyze(blob) {
   const top = probs.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]).slice(0, 3);
   const ms = Math.round(performance.now() - t0);
   setStatus(`Ready: ${C} dishes, running on this device.`, 1, true);
+  state.lastTop = top; // used by "Split the plate" to spot a single mixed dish
   renderTop3(top, ms);
   selectFood(state.meta.classes[top[0][1]]);
 }

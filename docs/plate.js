@@ -184,6 +184,7 @@ function renderPlateList() {
       <i class="dot" style="background:${it.color}"></i>
       <button type="button" class="plate-name" data-open="${i}" title="Show full nutrition">${escapeHtml(f.name)}
         <span class="sub">${escapeHtml(f.food)} · ${Math.round(it.score * 100)}% sure</span></button>
+      ${it.dishSuggest ? `<button type="button" class="dish-suggest" data-dish="${i}">Looks like <b>${escapeHtml(it.dishSuggest.name)}</b> (${Math.round(it.dishSuggest.p * 100)}%) · use</button>` : ""}
       <span class="plate-g"><input type="number" min="0" max="3000" step="5" value="${it.grams}" data-g="${i}" aria-label="${escapeHtml(f.name)} grams"> g</span>
       <b class="plate-kcal">${Math.round(f.kcal * it.grams / 100)}</b>
       <button type="button" class="plate-x" data-x="${i}" aria-label="Remove ${escapeHtml(f.name)}">✕</button></li>`;
@@ -242,6 +243,101 @@ function renderBalance() {
     <p class="small">${b.tip}</p>`;
 }
 
+
+// ---------------------------------------------------------------- mixed dishes
+// FoodSeg103 labels ingredients, so a biryani or a curry comes out as "rice + chicken + onion". The dish model (139 dishes,
+// calibrated) recognises such dishes as a whole: it checks the whole photo and each outlined area.
+const DISH_WHOLE = 0.6, DISH_REGION = 0.7;
+
+function dishFood(idx) {
+  const key = state.meta.classes[idx], f = state.foods.get(key);
+  return f && { name: state.meta.display_names[idx], key, food: "whole dish (dish model)", kcal: f.kcal, p: f.p, c: f.c, f: f.f, thick: 1, dish: true };
+}
+
+function guessGrams(food, coverage) {
+  const cap = Math.min(900, (PLATE_MAX_KCAL / Math.max(food.kcal, 1)) * 100);
+  return Math.round(Math.min(cap, Math.max(5, PLATE_K * coverage * food.thick)) / 5) * 5;
+}
+
+async function classifyRegion(bmp, x, y, w, h) {
+  const pad = 0.12 * Math.max(w, h);
+  const x0 = Math.max(0, x - pad), y0 = Math.max(0, y - pad);
+  const x1 = Math.min(bmp.width, x + w + pad), y1 = Math.min(bmp.height, y + h + pad);
+  const c = Object.assign(document.createElement("canvas"), { width: Math.round(x1 - x0), height: Math.round(y1 - y0) });
+  c.getContext("2d").drawImage(bmp, x0, y0, x1 - x0, y1 - y0, 0, 0, c.width, c.height);
+  const blob = await new Promise((res) => c.toBlob(res, "image/jpeg", 0.92));
+  const { logits } = await state.session.run({ image: await toTensor(blob) });
+  const C = state.meta.classes.length, L = logits.data;
+  const probs = softmax(Array.from({ length: C }, (_, k) => (L[k] + L[C + k]) / 2), state.meta.temperature);
+  let best = 0;
+  for (let i = 1; i < C; i++) if (probs[i] > probs[best]) best = i;
+  return [probs[best], best];
+}
+
+// Each outlined food (big enough to judge) gets a dish-model opinion, shown as a one-tap suggestion
+async function suggestDishes(bmp, box, S, mw, mh) {
+  if (!state.session) return;
+  const sc = mw / S, r = box.w / bmp.width;
+  for (const it of plate.items.filter((x) => x.coverage >= 0.04).slice(0, 5)) {
+    let xa = mw, ya = mh, xb = -1, yb = -1;
+    for (let i = 0; i < it.mask.length; i++) {
+      if (!it.mask[i]) continue;
+      const x = i % mw, y = (i - x) / mw;
+      if (x < xa) xa = x; if (x > xb) xb = x; if (y < ya) ya = y; if (y > yb) yb = y;
+    }
+    if (xb < 0) continue;
+    const toImg = (v, o) => (v / sc - o) / r;
+    const [p, idx] = await classifyRegion(bmp, toImg(xa, box.px), toImg(ya, box.py), (xb - xa + 1) / sc / r, (yb - ya + 1) / sc / r);
+    const name = state.meta.display_names[idx];
+    it.regionTop = { p, idx };
+    if (p >= DISH_REGION && name.toLowerCase() !== it.food.name.toLowerCase()) it.dishSuggest = { p, idx, name };
+  }
+}
+
+// Offer "one mixed dish" only with evidence beyond the whole-photo guess (the dish model always names *some* dish):
+// nothing separate was found, or 2+ outlined areas look like that dish, or the area that looks like it covers most of the food.
+function wholeDishOffer() {
+  const top = state.lastTop;
+  if (!top || top[0][0] < DISH_WHOLE || plate.dismissed || plate.items.some((it) => it.food.dish)) return null;
+  const [p, idx] = top[0];
+  const items = plate.items;
+  if (!items.length) return { p, idx };
+  const agree = items.filter((it) => it.regionTop && it.regionTop.idx === idx && it.regionTop.p >= DISH_REGION);
+  const total = items.reduce((s, it) => s + it.coverage, 0);
+  const dominant = agree.some((it) => it.coverage >= 0.6 * total);
+  return agree.length >= 2 || dominant ? { p, idx } : null;
+}
+
+function renderWholeDish() {
+  const el = $("plate-dish"), offer = wholeDishOffer();
+  el.hidden = !offer;
+  if (!offer) return;
+  const none = !plate.items.length;
+  el.innerHTML = `<span>🍛 ${none ? "No separate foods, but this" : "This"} looks like one mixed dish: <b>${escapeHtml(state.meta.display_names[offer.idx])}</b>
+    (${Math.round(offer.p * 100)}% sure).</span>
+    <span class="dish-actions"><button type="button" class="btn soft small-btn" data-whole="${offer.idx}">Count as one dish</button>
+    ${none ? "" : `<button type="button" class="linkish" data-keep>Keep separate</button>`}</span>`;
+}
+
+function useWholeDish(idx) {
+  const food = dishFood(idx);
+  if (!food) return;
+  const v = plate.view, mask = new Uint8Array(v ? v.mw * v.mh : 0);
+  let coverage = 0;
+  for (const it of plate.items) { coverage += it.coverage; for (let i = 0; i < mask.length; i++) mask[i] |= it.mask[i]; }
+  // no outline at all: fall back to the dish's typical serving
+  const grams = coverage > 0.02 ? guessGrams(food, coverage) : Math.round(state.foods.get(food.key).serving / 5) * 5;
+  plate.items = [{ cls: -1, score: state.lastTop[0][0], mask, coverage, food, grams, color: PLATE_COLORS[0] }];
+  redrawPlate();
+}
+
+function redrawPlate() {
+  if (plate.view) drawPlate(plate.view.bmp, plate.view.box, plate.view.S, plate.view.mw, plate.view.mh, plate.items);
+  renderPlateList();
+  renderBalance();
+  renderWholeDish();
+}
+
 async function analyzePlate() {
   if (!state.lastBlob) { $("plate-status").textContent = "Take or choose a photo first."; return; }
   $("plate-btn").disabled = true;
@@ -255,11 +351,13 @@ async function analyzePlate() {
     const [o0, o1] = plate.session.outputNames.map((n) => out[n]);
     const dec = decodePlate(o0, o1, S, C, plate.meta.conf ?? 0.25);
     plate.items = plateItems(dec, S, box);
-    drawPlate(bmp, box, S, dec.mw, dec.mh, plate.items);
-    bmp.close?.();
+    plate.dismissed = false;
+    plate.view?.bmp.close?.(); // keep this photo for redraws until the next one
+    plate.view = { bmp, box, S, mw: dec.mw, mh: dec.mh };
+    $("plate-status").textContent = "Checking for mixed dishes…";
+    await suggestDishes(bmp, box, S, dec.mw, dec.mh);
     $("plate-view").hidden = false;
-    renderPlateList();
-    renderBalance();
+    redrawPlate();
     const ms = Math.round(performance.now() - t0);
     $("plate-status").textContent = plate.items.length
       ? `${plate.items.length} food${plate.items.length > 1 ? "s" : ""} found in ${ms} ms. Portions are rough guesses from photo area: edit the grams.`
@@ -276,6 +374,11 @@ async function analyzePlate() {
   if (!(await plateAvailable())) return;
   $("plate").hidden = false;
   $("plate-btn").addEventListener("click", analyzePlate);
+  $("plate-dish").addEventListener("click", (e) => {
+    const w = e.target.closest("[data-whole]");
+    if (w) useWholeDish(Number(w.dataset.whole));
+    if (e.target.closest("[data-keep]")) { plate.dismissed = true; $("plate-dish").hidden = true; }
+  });
   $("plate-list").addEventListener("input", (e) => {
     const i = e.target.dataset.g;
     if (i === undefined) return;
@@ -286,7 +389,15 @@ async function analyzePlate() {
   });
   $("plate-list").addEventListener("click", (e) => {
     const x = e.target.closest("[data-x]"), o = e.target.closest("[data-open]");
-    if (x) { plate.items.splice(Number(x.dataset.x), 1); renderPlateList(); renderBalance(); return; }
+    if (x) { plate.items.splice(Number(x.dataset.x), 1); redrawPlate(); return; }
+    const d = e.target.closest("[data-dish]");
+    if (d) {
+      const it = plate.items[Number(d.dataset.dish)];
+      const food = dishFood(it.dishSuggest.idx);
+      if (food) { it.food = food; it.score = it.dishSuggest.p; it.grams = guessGrams(food, it.coverage); it.dishSuggest = null; }
+      redrawPlate();
+      return;
+    }
     if (o) {
       const it = plate.items[Number(o.dataset.open)];
       if (!state.foods.has(it.food.key)) return;

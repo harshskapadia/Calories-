@@ -258,6 +258,14 @@ tuned toward a new photo style. The phone-photo test set comes from the same app
 style and labelling habits), which flatters the new model somewhat. In browser checks, separate foods on a plate are found
 well (chicken, rice, bread, potato, asparagus, tomato); mixed bowls and small items are still often missed or low-confidence.
 
+**Mixed dishes.** FoodSeg103 labels *ingredients*, so a biryani comes out as "rice + cucumber" and chole as "bread + shrimp".
+The dish classifier (139 dishes, calibrated) fills that gap: it already labels the whole photo, and after *Split the plate* it
+also checks each outlined area. The app offers **"Count as one dish"** only with evidence beyond the whole-photo guess: two or
+more areas look like that dish (≥ 70%), the area that does covers most of the food, or nothing separate was found (then the
+dish's typical serving is used). On held-out photos it offered Biryani, Chole Bhature, Masala Dosa and Pad Thai (96–97%) and
+stayed quiet on plates of separate foods (chicken dinner, shrimp with vegetables). Single areas also get a one-tap
+"Looks like …" suggestion.
+
 The section appears on the site only once `docs/model/plate_meta.json` exists and is not a `--smoke` test model.
 
 ### My day: calorie target and food log

@@ -173,3 +173,12 @@ def test_photo_can_be_removed() -> None:
     js = (DOCS / "app.js").read_text(encoding="utf-8")
     assert 'id="photo-clear"' in html and 'id="new-photo"' in html
     assert "function clearPhoto()" in js and '$("photo-clear").addEventListener' in js and '$("new-photo").addEventListener' in js
+
+
+def test_mixed_dish_fallback() -> None:
+    js = (DOCS / "plate.js").read_text(encoding="utf-8")
+    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    assert 'id="plate-dish"' in html
+    for name in ("function suggestDishes", "function wholeDishOffer", "function useWholeDish", "DISH_WHOLE", "DISH_REGION"):
+        assert name in js, name
+    assert "state.lastTop = top" in (DOCS / "app.js").read_text(encoding="utf-8")  # whole-photo dish guess is kept

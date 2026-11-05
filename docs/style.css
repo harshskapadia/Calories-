@@ -329,3 +329,15 @@ summary { cursor: pointer; font-weight: 600; }
 .card-head .new-photo { min-height: 36px; padding: 0 12px; font-size: .85rem; margin-left: auto; }
 #results .card-head .new-photo { order: 1; }
 #results .card-head #timing { order: 2; }
+
+/* mixed dishes */
+.plate-dish { margin-top: 12px; padding: 12px 14px; border-radius: 14px; background: var(--primary-soft); display: grid; gap: 8px; font-size: .92rem; }
+.dish-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.plate-item .dish-suggest { all: unset; grid-column: 2 / -1; font-size: .82rem; color: var(--primary); cursor: pointer; text-decoration: underline;
+  text-underline-offset: 2px; margin-top: -2px; }
+.plate-item > .dot { grid-row: 1; grid-column: 1; }
+.plate-item > .plate-name { grid-row: 1; grid-column: 2; }
+.plate-item > .plate-g { grid-row: 1; grid-column: 3; }
+.plate-item > .plate-kcal { grid-row: 1; grid-column: 4; }
+.plate-item > .plate-x { grid-row: 1; grid-column: 5; }
+.plate-item > .dish-suggest { grid-row: 2; grid-column: 2 / -1; }

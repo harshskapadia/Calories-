@@ -136,7 +136,11 @@ expected calibration error from 0.21 to 0.09 on validation.
 The 16 new dishes have USDA-based nutrition in `data/nutrition_mapping.csv` (single foods or recipe mixes, tested).
 Training **warm-starts from the current app model** (`model.init_from`): the backbone and the 139 known dishes' classifier
 rows are copied by name, so only the new dishes start from scratch; in a CPU check one short epoch already reached 94%
-validation accuracy on a small sample. 6 epochs ≈ 1.5 h on an RTX 3050 Ti:
+validation accuracy on a small sample. It is also tuned for speed on a 4 GB laptop GPU: each epoch is a fresh *balanced
+random sample of 40k photos* (`train.samples_per_epoch`) instead of all ~110k, the stem and first two ConvNeXt stages stay
+frozen (`train.freeze_stages`: generic edges/textures; less backward compute and less forgetting), fp16 runs in the
+channels-last layout with cuDNN autotuning, and running loss/accuracy stay on the GPU (no per-step sync). Expect roughly
+4-5 min per epoch, ~30 min for 6 epochs plus the one-time dataset download:
 
 ```bash
 python run_all.py --final-config configs/gpu/multi_world_convnext_tiny.yaml --steps data final evaluate export --batch-size 16 --workers 2

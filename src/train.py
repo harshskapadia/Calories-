@@ -66,8 +66,11 @@ def lr_lambda(warmup_steps: int, total_steps: int):
 def evaluate_loader(model: nn.Module, loader, device: torch.device, amp: bool, criterion=None) -> dict[str, float]:
     model.eval()
     n, loss_sum, top1, top5 = 0, 0.0, 0, 0
+    cl = next(model.parameters()).is_contiguous(memory_format=torch.channels_last) and device.type == "cuda"
     for x, y in loader:
-        x, y = x.to(device), y.to(device)
+        x, y = x.to(device, non_blocking=True), y.to(device, non_blocking=True)
+        if cl:
+            x = x.contiguous(memory_format=torch.channels_last)
         with autocast_ctx(device, amp):
             logits = model(x)
         logits = logits.float()
@@ -132,6 +135,11 @@ def train(cfg: dict[str, Any], out_dir: Path, use_wandb: bool = False) -> dict[s
         ws = warm_start(model, ROOT / mcfg["init_from"], classes)
         print(f"warm start from {mcfg['init_from']}: {ws['known']}/{len(classes)} dishes already known")
     model.to(device)
+    channels_last = device.type == "cuda" and tcfg.get("channels_last", True)
+    if device.type == "cuda":
+        torch.backends.cudnn.benchmark = True  # fixed 224 px input: let cuDNN pick the fastest convolution kernels
+        if channels_last:  # NHWC is the fast layout for fp16 convolutions on NVIDIA tensor cores
+            model.to(memory_format=torch.channels_last)
     print(f"device={device} backbone={mcfg['backbone']} params={count_params(model)/1e6:.2f}M "
           f"classes={len(classes)} train={len(loaders['train'].dataset)} val={len(loaders['val'].dataset)}")
 
@@ -164,12 +172,23 @@ def train(cfg: dict[str, Any], out_dir: Path, use_wandb: bool = False) -> dict[s
 
     best_acc, best_epoch, bad_epochs = -1.0, -1, 0
     freeze_epochs = tcfg.get("freeze_backbone_epochs", 0)
+    freeze_stages = tcfg.get("freeze_stages", 0)
     for epoch in range(1, tcfg["epochs"] + 1):
         set_backbone_trainable(model, epoch > freeze_epochs)
         model.train()
-        t0, seen, correct, loss_sum = time.time(), 0, 0, 0.0
+        if freeze_stages:
+            from src.models import freeze_early_stages
+
+            frozen = freeze_early_stages(model, freeze_stages)
+            if epoch == 1:
+                print(f"frozen early layers: stem + {freeze_stages} stages ({frozen / 1e6:.1f}M parameters)")
+        t0, seen = time.time(), 0
+        correct = torch.zeros((), device=device, dtype=torch.long)  # running sums stay on the GPU:
+        loss_sum = torch.zeros((), device=device)                   # no CPU-GPU sync on every step
         for step, (x, y) in enumerate(loaders["train"]):
             x, y = x.to(device, non_blocking=True), y.to(device, non_blocking=True)
+            if channels_last:
+                x = x.contiguous(memory_format=torch.channels_last)
             with autocast_ctx(device, amp):
                 logits = model(x)
                 loss = criterion(logits.float(), y)
@@ -180,11 +199,12 @@ def train(cfg: dict[str, Any], out_dir: Path, use_wandb: bool = False) -> dict[s
             scaler.step(optimizer)
             scaler.update()
             scheduler.step()
-            loss_sum += loss.item() * len(y)
-            correct += (logits.argmax(1) == y).sum().item()
+            loss_sum += loss.detach() * len(y)
+            correct += (logits.argmax(1) == y).sum()
             seen += len(y)
             if step % 50 == 0:
                 print(f"  ep{epoch} step {step}/{steps_per_epoch} loss {loss.item():.3f}", flush=True)
+        loss_sum, correct = loss_sum.item(), correct.item()
 
         val = evaluate_loader(model, loaders["val"], device, amp, criterion)
         row = {

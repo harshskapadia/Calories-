@@ -2,7 +2,8 @@
 # = 155 dishes. Starts from the current app model (init_from): the 139 known dishes keep what they learned, the 16 new
 # ones (vada pav, dabeli, malai kofta, dal tadka, plov, lagman, beshbarmak, samsa, borscht, cheburek, khachapuri,
 # vareniki, syrniki, olivier salad, shorpa, doner kebab) start fresh, so a few epochs are enough.
-# Sized for a 4 GB laptop GPU (RTX 3050 Ti): ~13 min/epoch -> ~1.5 h for 6 epochs.
+# Fast fine-tune for a 4 GB laptop GPU (RTX 3050 Ti): a balanced 40k-image sample per epoch, frozen early layers,
+# channels-last fp16 -> roughly 4-5 min/epoch, ~30 min for 6 epochs (plus the one-time dataset download).
 experiment: multi_world_convnext_tiny
 data:
   name: multiworld
@@ -29,6 +30,9 @@ train:
   patience: 3
   num_workers: 2
   balanced_sampling: true           # new dishes have fewer photos: sample classes evenly
+  samples_per_epoch: 40000          # fresh balanced random draw each epoch instead of all ~110k photos
+  freeze_stages: 2                  # stem + first 2 ConvNeXt stages stay as learned (generic edges/textures)
+  channels_last: true
   seed: 42
 augment:
   phone_aug: true

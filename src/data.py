@@ -136,7 +136,10 @@ def build_loaders(cfg: dict[str, Any]) -> tuple[dict[str, DataLoader], list[str]
 
             counts = Counter(y for _, y in ds.samples)
             weights = [counts[y] ** -0.5 for _, y in ds.samples]
-            sampler = WeightedRandomSampler(weights, num_samples=len(weights), replacement=True)
+            # samples_per_epoch: a shorter "epoch" (fresh random draw each time): when fine-tuning a model that
+            # already knows most dishes, seeing a balanced 40k-image sample per epoch is enough and much faster
+            n = min(tcfg.get("samples_per_epoch") or len(weights), len(weights))
+            sampler = WeightedRandomSampler(weights, num_samples=n, replacement=True)
         loaders[split] = DataLoader(
             ds,
             batch_size=tcfg["batch_size"] * (1 if is_train else 2),
@@ -149,5 +152,6 @@ def build_loaders(cfg: dict[str, Any]) -> tuple[dict[str, DataLoader], list[str]
             num_workers=tcfg.get("num_workers", 4) if is_train else max(0, tcfg.get("num_workers", 4) // 2),
             pin_memory=torch.cuda.is_available(),
             persistent_workers=is_train and tcfg.get("num_workers", 4) > 0,
+            prefetch_factor=4 if is_train and tcfg.get("num_workers", 4) > 0 else None,
         )
     return loaders, classes

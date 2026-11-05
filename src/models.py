@@ -32,6 +32,30 @@ def set_backbone_trainable(model: nn.Module, trainable: bool) -> None:
             p.requires_grad = trainable
 
 
+def early_modules(model: nn.Module, n_stages: int) -> list[nn.Module]:
+    """Stem + the first ``n_stages`` stages of a timm ConvNeXt (``stages``) or EfficientNet (``blocks``)."""
+    if n_stages <= 0:
+        return []
+    if hasattr(model, "stages"):
+        return [model.stem, *list(model.stages)[:n_stages]]
+    if hasattr(model, "blocks"):
+        return [m for m in (getattr(model, "conv_stem", None), getattr(model, "bn1", None)) if m is not None] + \
+            list(model.blocks)[:n_stages]
+    return []
+
+
+def freeze_early_stages(model: nn.Module, n_stages: int) -> int:
+    """Freeze the generic early layers (edges, colours, textures) when fine-tuning a model that already knows food.
+    Less backward compute (faster) and less forgetting. Returns the number of frozen parameters."""
+    n = 0
+    for mod in early_modules(model, n_stages):
+        mod.eval()  # keeps BatchNorm statistics fixed in EfficientNet; no-op for ConvNeXt's LayerNorm
+        for p in mod.parameters():
+            p.requires_grad = False
+            n += p.numel()
+    return n
+
+
 def count_params(model: nn.Module) -> int:
     return sum(p.numel() for p in model.parameters())
 

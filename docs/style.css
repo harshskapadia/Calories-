@@ -341,3 +341,6 @@ summary { cursor: pointer; font-weight: 600; }
 .plate-item > .plate-kcal { grid-row: 1; grid-column: 4; }
 .plate-item > .plate-x { grid-row: 1; grid-column: 5; }
 .plate-item > .dish-suggest { grid-row: 2; grid-column: 2 / -1; }
+.clip-picks { display: flex; flex-wrap: wrap; gap: 6px; }
+.clip-picks .chip span { display: block; margin: 0; font-size: .75rem; }
+.clip-picks .chip { text-align: left; border-radius: 12px; }

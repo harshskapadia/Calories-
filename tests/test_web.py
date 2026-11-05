@@ -182,3 +182,10 @@ def test_mixed_dish_fallback() -> None:
     for name in ("function suggestDishes", "function wholeDishOffer", "function useWholeDish", "DISH_WHOLE", "DISH_REGION"):
         assert name in js, name
     assert "state.lastTop = top" in (DOCS / "app.js").read_text(encoding="utf-8")  # whole-photo dish guess is kept
+
+
+def test_open_vocab_whole_dish() -> None:
+    ov = (DOCS / "openvocab.js").read_text(encoding="utf-8")
+    plate = (DOCS / "plate.js").read_text(encoding="utf-8")
+    assert "async function ovTopMatches" in ov  # reusable matcher (whole photo or crop)
+    assert "function matchWholeDish" in plate and "data-clip-pick" in plate and "function useWholeFood" in plate

@@ -88,6 +88,35 @@ async function identifyAnything() {
   }
 }
 
+/** Top-k open-vocabulary matches for any image (whole photo or a crop), honouring the cuisine filter.
+    Returns [{key, name, tag, pct}] with pct = relative confidence among the top 50 candidates. */
+async function ovTopMatches(blob, k = 3) {
+  await loadOpenVocab();
+  const m = ov.meta, region = $("ov-region").value;
+  const x = await toTensor(blob, { size: m.size, resize: m.resize, mean: m.mean, std: m.std, flip: true });
+  const { embedding } = await ov.session.run({ image: x });
+  const D = m.dim, N = m.keys.length, e = new Float32Array(D);
+  let norm = 0;
+  for (let d = 0; d < D; d++) { e[d] = (embedding.data[d] + embedding.data[D + d]) / 2; norm += e[d] * e[d]; }
+  norm = Math.sqrt(norm);
+  const scores = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    if (region && ov.regions[i] !== region && ov.regions[i] !== "core") { scores[i] = -9; continue; }
+    let s = 0;
+    const off = i * D;
+    for (let d = 0; d < D; d++) s += e[d] * ov.bank[off + d];
+    scores[i] = s / 127 / norm;
+  }
+  const idx = Array.from(scores.keys()).sort((a, b) => scores[b] - scores[a]).slice(0, 50);
+  const ex = idx.map((i) => Math.exp((scores[i] - scores[idx[0]]) * m.logit_scale));
+  const z = ex.reduce((a, b) => a + b, 0);
+  return idx.slice(0, k).map((i, r) => {
+    const key = m.keys[i], food = state.foods.get(key);
+    const tag = key.startsWith("fndds_") ? "USDA food" : key.startsWith("wd_") ? `${ov.regions[i]} dish` : "dish";
+    return { key, name: food ? food.name : m.names[i], tag, pct: ex[r] / z };
+  }).filter((x) => state.foods.has(x.key));
+}
+
 /** Calories & macros straight from the photo: linear head on the CLIP embedding (scripts/calorie_model.py). */
 function showPhotoEstimate(e) {
   const h = ov.head;

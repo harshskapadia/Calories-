@@ -264,7 +264,11 @@ also checks each outlined area. The app offers **"Count as one dish"** only with
 more areas look like that dish (≥ 70%), the area that does covers most of the food, or nothing separate was found (then the
 dish's typical serving is used). On held-out photos it offered Biryani, Chole Bhature, Masala Dosa and Pad Thai (96–97%) and
 stayed quiet on plates of separate foods (chicken dinner, shrimp with vegetables). Single areas also get a one-tap
-"Looks like …" suggestion.
+"Looks like …" suggestion. When the dish model has no confident answer (≥ 75% is required), **🌍 Match the whole dish** sends
+the area covered by the outlined foods to the open-vocabulary matcher (10k+ USDA foods and Wikidata world dishes, honouring
+the cuisine filter) and offers the top 3 as one-tap whole dishes; e.g. a meatball, rice and tomato-sauce bowl matched
+"Sausage and rice with tomato-based sauce". It runs automatically only when no separate foods were found and the matcher
+is already downloaded, so there is no surprise 96 MB download.
 
 The section appears on the site only once `docs/model/plate_meta.json` exists and is not a `--smoke` test model.
 

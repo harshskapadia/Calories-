@@ -247,11 +247,16 @@ function renderBalance() {
 // ---------------------------------------------------------------- mixed dishes
 // FoodSeg103 labels ingredients, so a biryani or a curry comes out as "rice + chicken + onion". The dish model (139 dishes,
 // calibrated) recognises such dishes as a whole: it checks the whole photo and each outlined area.
-const DISH_WHOLE = 0.6, DISH_REGION = 0.7;
+const DISH_WHOLE = 0.75, DISH_REGION = 0.7;
 
 function dishFood(idx) {
   const key = state.meta.classes[idx], f = state.foods.get(key);
   return f && { name: state.meta.display_names[idx], key, food: "whole dish (dish model)", kcal: f.kcal, p: f.p, c: f.c, f: f.f, thick: 1, dish: true };
+}
+
+function foodFromKey(key, label) {
+  const f = state.foods.get(key);
+  return f && { name: f.name, key, food: label, kcal: f.kcal, p: f.p, c: f.c, f: f.f, thick: 1, dish: true };
 }
 
 function guessGrams(food, coverage) {
@@ -310,27 +315,89 @@ function wholeDishOffer() {
 
 function renderWholeDish() {
   const el = $("plate-dish"), offer = wholeDishOffer();
-  el.hidden = !offer;
-  if (!offer) return;
-  const none = !plate.items.length;
-  el.innerHTML = `<span>🍛 ${none ? "No separate foods, but this" : "This"} looks like one mixed dish: <b>${escapeHtml(state.meta.display_names[offer.idx])}</b>
-    (${Math.round(offer.p * 100)}% sure).</span>
-    <span class="dish-actions"><button type="button" class="btn soft small-btn" data-whole="${offer.idx}">Count as one dish</button>
-    ${none ? "" : `<button type="button" class="linkish" data-keep>Keep separate</button>`}</span>`;
+  const anyDish = plate.items.some((it) => it.food.dish);
+  if (offer) {
+    const none = !plate.items.length;
+    el.hidden = false;
+    el.innerHTML = `<span>🍛 ${none ? "No separate foods, but this" : "This"} looks like one mixed dish: <b>${escapeHtml(state.meta.display_names[offer.idx])}</b>
+      (${Math.round(offer.p * 100)}% sure).</span>
+      <span class="dish-actions"><button type="button" class="btn soft small-btn" data-whole="${offer.idx}">Count as one dish</button>
+      ${none ? "" : `<button type="button" class="linkish" data-keep>Keep separate</button>`}</span>`;
+    return;
+  }
+  // the dish model has no confident answer: offer the open-vocabulary matcher for curries, stews, bowls, regional dishes…
+  el.hidden = anyDish || plate.dismissed || !plate.view;
+  if (el.hidden) return;
+  if (plate.clip && plate.clip.length) {
+    el.innerHTML = `<span>🌍 If this is one mixed dish, the closest matches are:</span>
+      <span class="clip-picks">${plate.clip.map((c, i) => `<button type="button" class="chip" data-clip-pick="${i}">${escapeHtml(c.name)}
+        <span>${escapeHtml(c.tag)} · ${Math.round(c.pct * 100)}%</span></button>`).join("")}</span>
+      <span class="dish-actions"><button type="button" class="linkish" data-keep>No, keep the separate foods</button></span>`;
+  } else if (plate.clip) {
+    el.innerHTML = `<span>🌍 No confident match. Use search to pick the dish.</span>`;
+  } else {
+    el.innerHTML = `<span>${plate.items.length ? "Is this one mixed dish (curry, stew, rice bowl…)?" : "No separate foods found. Is it one dish?"}</span>
+      <span class="dish-actions"><button type="button" class="btn soft small-btn" data-clip>🌍 Match the whole dish</button>
+      ${plate.items.length ? `<button type="button" class="linkish" data-keep>No</button>` : ""}</span>`;
+  }
 }
 
-function useWholeDish(idx) {
-  const food = dishFood(idx);
+function useWholeDish(idx) { useWholeFood(dishFood(idx), state.lastTop[0][0]); }
+
+function useWholeFood(food, score) {
   if (!food) return;
   const v = plate.view, mask = new Uint8Array(v ? v.mw * v.mh : 0);
   let coverage = 0;
   for (const it of plate.items) { coverage += it.coverage; for (let i = 0; i < mask.length; i++) mask[i] |= it.mask[i]; }
   // no outline at all: fall back to the dish's typical serving
   const grams = coverage > 0.02 ? guessGrams(food, coverage) : Math.round(state.foods.get(food.key).serving / 5) * 5;
-  plate.items = [{ cls: -1, score: state.lastTop[0][0], mask, coverage, food, grams, color: PLATE_COLORS[0] }];
+  plate.items = [{ cls: -1, score, mask, coverage, food, grams, color: PLATE_COLORS[0] }];
+  plate.clip = null;
   redrawPlate();
 }
 
+// ---------------------------------------------------------------- dishes the dish model doesn't know: open vocabulary
+// The CLIP matcher ("Identify anything", 10k+ foods incl. world dishes) looks at the area covered by all outlined foods.
+function foodArea() {
+  const v = plate.view;
+  if (!v || !plate.items.length) return null;
+  const { mw, mh, S, box, bmp } = v, sc = mw / S, r = box.w / bmp.width;
+  let xa = mw, ya = mh, xb = -1, yb = -1;
+  for (const it of plate.items) {
+    for (let i = 0; i < it.mask.length; i++) {
+      if (!it.mask[i]) continue;
+      const x = i % mw, y = (i - x) / mw;
+      if (x < xa) xa = x; if (x > xb) xb = x; if (y < ya) ya = y; if (y > yb) yb = y;
+    }
+  }
+  if (xb < 0) return null;
+  const toImg = (val, off) => (val / sc - off) / r;
+  return { x: toImg(xa, box.px), y: toImg(ya, box.py), w: (xb - xa + 1) / sc / r, h: (yb - ya + 1) / sc / r };
+}
+
+async function cropBlob(area) {
+  const bmp = plate.view.bmp, pad = 0.08 * Math.max(area.w, area.h);
+  const x0 = Math.max(0, area.x - pad), y0 = Math.max(0, area.y - pad);
+  const x1 = Math.min(bmp.width, area.x + area.w + pad), y1 = Math.min(bmp.height, area.y + area.h + pad);
+  const c = Object.assign(document.createElement("canvas"), { width: Math.round(x1 - x0), height: Math.round(y1 - y0) });
+  c.getContext("2d").drawImage(bmp, x0, y0, x1 - x0, y1 - y0, 0, 0, c.width, c.height);
+  return new Promise((res) => c.toBlob(res, "image/jpeg", 0.92));
+}
+
+async function matchWholeDish() {
+  const el = $("plate-dish");
+  if (typeof ovTopMatches !== "function") return;
+  el.innerHTML = `<span>🌍 Comparing with ${$("ov-count").textContent} foods and world dishes… (first time: one-time ~96 MB download)</span>`;
+  try {
+    const area = foodArea();
+    const blob = area && area.w * area.h > 0.15 * plate.view.bmp.width * plate.view.bmp.height ? await cropBlob(area) : state.lastBlob;
+    plate.clip = await ovTopMatches(blob, 3);
+  } catch (e) {
+    console.error(e);
+    plate.clip = [];
+  }
+  renderWholeDish();
+}
 function redrawPlate() {
   if (plate.view) drawPlate(plate.view.bmp, plate.view.box, plate.view.S, plate.view.mw, plate.view.mh, plate.items);
   renderPlateList();
@@ -352,12 +419,14 @@ async function analyzePlate() {
     const dec = decodePlate(o0, o1, S, C, plate.meta.conf ?? 0.25);
     plate.items = plateItems(dec, S, box);
     plate.dismissed = false;
+    plate.clip = null;
     plate.view?.bmp.close?.(); // keep this photo for redraws until the next one
     plate.view = { bmp, box, S, mw: dec.mw, mh: dec.mh };
     $("plate-status").textContent = "Checking for mixed dishes…";
     await suggestDishes(bmp, box, S, dec.mw, dec.mh);
     $("plate-view").hidden = false;
     redrawPlate();
+    if (!plate.items.length && !wholeDishOffer() && typeof ov !== "undefined" && ov.session) await matchWholeDish();
     const ms = Math.round(performance.now() - t0);
     $("plate-status").textContent = plate.items.length
       ? `${plate.items.length} food${plate.items.length > 1 ? "s" : ""} found in ${ms} ms. Portions are rough guesses from photo area: edit the grams.`
@@ -378,6 +447,12 @@ async function analyzePlate() {
     const w = e.target.closest("[data-whole]");
     if (w) useWholeDish(Number(w.dataset.whole));
     if (e.target.closest("[data-keep]")) { plate.dismissed = true; $("plate-dish").hidden = true; }
+    if (e.target.closest("[data-clip]")) matchWholeDish();
+    const pick = e.target.closest("[data-clip-pick]");
+    if (pick) {
+      const c = plate.clip[Number(pick.dataset.clipPick)];
+      useWholeFood(foodFromKey(c.key, `whole dish (${c.tag})`), c.pct);
+    }
   });
   $("plate-list").addEventListener("input", (e) => {
     const i = e.target.dataset.g;

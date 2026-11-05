@@ -2,10 +2,10 @@
 
 [![Try it live](https://img.shields.io/badge/demo-try%20it%20live-2a9d8f)](https://harshskapadia.github.io/Calories-/) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/harshskapadia/Calories-/blob/main/notebooks/nutrisnap_colab.ipynb) [![tests](https://img.shields.io/badge/tests-pytest-green)](tests/) ![python](https://img.shields.io/badge/python-3.11-blue) ![pytorch](https://img.shields.io/badge/PyTorch-timm-orange) ![gradio](https://img.shields.io/badge/demo-Gradio-ff7c00) [![license](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 
-Snap or upload a photo of a meal, or a whole plate, and track it against your own daily calorie target. NutriSnap recognises the dish (**139 Western and Indian dishes**), shows
+Snap or upload a photo of a meal, or a whole plate, and track it against your own daily calorie target. NutriSnap recognises the dish (**155 Western, Indian and Central Asian dishes**), shows
 **where the model looked** (Grad-CAM), estimates the **portion**, and returns **calories, protein, carbs and fat**,
 with every number editable, because the model will sometimes be wrong. Anything it can't recognise can be looked
-up in a **search over 5,500+ foods** (every USDA FNDDS food plus all 139 dishes).
+up in a **search over 5,500+ foods** (every USDA FNDDS food plus all 155 dishes).
 
 **▶ Try it: [https://harshskapadia.github.io/Calories-/](https://harshskapadia.github.io/Calories-/)** (runs entirely in your browser; photos never leave your device)
 
@@ -146,6 +146,12 @@ channels-last layout with cuDNN autotuning, and running loss/accuracy stay on th
 python run_all.py --final-config configs/gpu/multi_world_convnext_tiny.yaml --steps data final evaluate export --batch-size 16 --workers 2
 python scripts/build_web.py && python scripts/stamp_sw.py
 ```
+
+**Result (the app model now):** 6 epochs on the RTX 3050 Ti, tested on **28,739 held-out photos of 155 dishes: 88.6% top-1,
+97.5% top-5, macro-F1 0.887, ECE 0.043 after temperature scaling** (`results/multi_world_convnext_tiny/`). That matches the
+139-dish model (88.8% / 97.7%) while adding 16 dishes; in browser checks held-out photos of plov and lagman were recognised at
+99%, and biryani and masala dosa stayed at 99%. Data: 91,310 training photos (9,279 of them dish crops from Central Asian
+Food Scenes: kebab 1,559, plov 837, samsa 709 … khachapuri 64).
 
 ## In-browser version (free, on-device)
 

@@ -93,7 +93,12 @@ def main() -> None:
 
     foods = build_foods(meta["classes"])
     (DOCS / "data").mkdir(parents=True, exist_ok=True)
-    (DOCS / "data" / "foods.json").write_text(json.dumps(foods, separators=(",", ":")), encoding="utf-8")
+    # keep the Wikidata world dishes (wd_*) that scripts/build_world_dishes.py appended: "Identify anything" links to them
+    foods_path = DOCS / "data" / "foods.json"
+    if foods_path.exists():
+        have = {r[0] for r in foods}
+        foods += [r for r in json.loads(foods_path.read_text(encoding="utf-8")) if r[0].startswith("wd_") and r[0] not in have]
+    foods_path.write_text(json.dumps(foods, separators=(",", ":")), encoding="utf-8")
     print(f"foods.json: {len(foods)} foods")
 
     print(f"site ready in {DOCS}")

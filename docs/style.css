@@ -1,41 +1,42 @@
 /* NutriSnap: calm, warm, food-app look. Light + dark. */
 :root {
-  /* Lavender */
-  --bg: #f4f2fb;
+  /* Monochrome: black on white, white on black in dark mode. Colour is kept only where it carries meaning
+     (macros, plate outlines, scores, Nutri-Score). */
+  --bg: #f4f4f4;
   --surface: #ffffff;
-  --surface-2: #ebe7f8;
-  --ink: #1d1838;
-  --muted: #6c6788;
-  --line: #e2ddf3;
-  --primary: #5a46d6;
+  --surface-2: #efefef;
+  --ink: #0b0b0b;
+  --muted: #6b6b6b;
+  --line: #e2e2e2;
+  --primary: #0b0b0b;
   --primary-ink: #ffffff;
-  --primary-soft: #ebe7fd;
-  --accent: #5a46d6;
-  --warn-bg: #fff4e3;
+  --primary-soft: #ececec;
+  --accent: #0b0b0b;
+  --warn-bg: #fff6e3;
   --warn-line: #efd29c;
-  --protein: #5a46d6;
+  --protein: #0b0b0b;
   --carbs: #f0a35e;
   --fat: #e57aa8;
   --radius: 20px;
   --radius-sm: 12px;
-  --shadow: 0 1px 2px rgba(29, 24, 56, .04), 0 10px 30px -18px rgba(29, 24, 56, .28);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 10px 30px -18px rgba(0, 0, 0, .25);
   --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #110f20; --surface: #19162d; --surface-2: #231f3d; --ink: #eceaf7; --muted: #a29ebf; --line: #2d2850;
-    --primary: #a596ff; --primary-ink: #120f24; --primary-soft: #2a2452; --accent: #a596ff;
-    --warn-bg: #2b2537; --warn-line: #5b4b3a; --protein: #a596ff; --carbs: #f0a35e; --fat: #e57aa8;
+    --bg: #000000; --surface: #121212; --surface-2: #1d1d1d; --ink: #f5f5f5; --muted: #9b9b9b; --line: #2a2a2a;
+    --primary: #f5f5f5; --primary-ink: #0b0b0b; --primary-soft: #262626; --accent: #f5f5f5;
+    --warn-bg: #2a2416; --warn-line: #5b4b3a; --protein: #f5f5f5; --carbs: #f0a35e; --fat: #e57aa8;
     --shadow: none; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #110f20; --surface: #19162d; --surface-2: #231f3d; --ink: #eceaf7; --muted: #a29ebf; --line: #2d2850;
-    --primary: #a596ff; --primary-ink: #120f24; --primary-soft: #2a2452; --accent: #a596ff;
-    --warn-bg: #2b2537; --warn-line: #5b4b3a; --protein: #a596ff; --carbs: #f0a35e; --fat: #e57aa8;
-    --shadow: none; color-scheme: dark;
+  --bg: #000000; --surface: #121212; --surface-2: #1d1d1d; --ink: #f5f5f5; --muted: #9b9b9b; --line: #2a2a2a;
+  --primary: #f5f5f5; --primary-ink: #0b0b0b; --primary-soft: #262626; --accent: #f5f5f5;
+  --warn-bg: #2a2416; --warn-line: #5b4b3a; --protein: #f5f5f5; --carbs: #f0a35e; --fat: #e57aa8;
+  --shadow: none; color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -186,7 +187,7 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 
 /* scanner + products */
 .scanner { position: relative; margin-top: 12px; border-radius: 16px; overflow: hidden; background: #000; }
 .scanner video { width: 100%; max-height: 320px; display: block; object-fit: cover; }
-.scan-frame { position: absolute; left: 12%; right: 12%; top: 33%; bottom: 33%; border: 3px solid #c9bfff; border-radius: 12px;
+.scan-frame { position: absolute; left: 12%; right: 12%; top: 33%; bottom: 33%; border: 3px solid #ffffff; border-radius: 12px;
               box-shadow: 0 0 0 999px rgba(0, 0, 0, .4); pointer-events: none; }
 .scanner .btn { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); }
 .prod-results { max-height: 380px; overflow: auto; }
@@ -322,10 +323,10 @@ summary { cursor: pointer; font-weight: 600; }
 
 /* remove / new photo */
 .photo-clear { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border-radius: 50%; border: 0;
-  background: rgba(20, 16, 40, .62); color: #fff; font-size: 1.1rem; line-height: 1; cursor: pointer; display: grid; place-items: center;
+  background: rgba(0, 0, 0, .6); color: #fff; font-size: 1.1rem; line-height: 1; cursor: pointer; display: grid; place-items: center;
   backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
 .photo-clear[hidden] { display: none; }
-.photo-clear:hover, .photo-clear:focus-visible { background: rgba(20, 16, 40, .82); }
+.photo-clear:hover, .photo-clear:focus-visible { background: rgba(0, 0, 0, .82); }
 .card-head .new-photo { min-height: 36px; padding: 0 12px; font-size: .85rem; margin-left: auto; }
 #results .card-head .new-photo { order: 1; }
 #results .card-head #timing { order: 2; }
@@ -346,3 +347,4 @@ summary { cursor: pointer; font-weight: 600; }
 .clip-picks .chip { text-align: left; border-radius: 12px; }
 #learn { margin-bottom: 12px; }
 #panel-day.no-target .learned { order: 3; }
+.brand .logo-img { width: 30px; height: 30px; border-radius: 8px; display: block; }

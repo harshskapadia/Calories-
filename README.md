@@ -299,6 +299,13 @@ the cuisine filter) and offers the top 3 as one-tap whole dishes; e.g. a meatbal
 "Sausage and rice with tomato-based sauce". It runs automatically only when no separate foods were found and the matcher
 is already downloaded, so there is no surprise 96 MB download.
 
+**Drinks.** The dish classifier has no coffee, tea or juice classes, so a drink comes out as its nearest dish (every
+coffee photo tested came out as "chai 99%"). The plate model does know coffee, tea, juice, milk, milkshake and wine: when
+a drink covers most of the photo it offers the common variants with calories per serving (black coffee 4 kcal vs. latte
+155, iced mocha 186, bottled iced coffee 242). A chai or lassi result points to *Split the plate*, or runs it straight away
+if that model is already downloaded. On 6 held-out Food Recognition photos the drink was named correctly every time
+(tea 92%, coffee 55-90%, orange juice 67%).
+
 The section appears on the site only once `docs/model/plate_meta.json` exists and is not a `--smoke` test model.
 
 ### My day: calorie target and food log

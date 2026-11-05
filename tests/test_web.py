@@ -189,3 +189,14 @@ def test_open_vocab_whole_dish() -> None:
     plate = (DOCS / "plate.js").read_text(encoding="utf-8")
     assert "async function ovTopMatches" in ov  # reusable matcher (whole photo or crop)
     assert "function matchWholeDish" in plate and "data-clip-pick" in plate and "function useWholeFood" in plate
+
+
+def test_drink_variants() -> None:
+    import re
+
+    js = (DOCS / "plate.js").read_text(encoding="utf-8")
+    foods = {row[0] for row in json.loads((DOCS / "data" / "foods.json").read_text(encoding="utf-8"))}
+    block = js[js.index("const DRINKS"):js.index("function drinkOffer")]
+    keys = re.findall(r'\["([a-z0-9_]+)", "', block)
+    assert len(keys) >= 20 and set(keys) <= foods  # every drink variant has nutrition
+    assert "function onDishResult" in js and "onDishResult(" in (DOCS / "app.js").read_text(encoding="utf-8")

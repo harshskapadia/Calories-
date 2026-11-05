@@ -130,6 +130,7 @@ async function analyze(blob) {
   state.lastTop = top; // used by "Split the plate" to spot a single mixed dish
   renderTop3(top, ms);
   selectFood(state.meta.classes[top[0][1]]);
+  if (typeof onDishResult === "function") onDishResult(state.meta.classes[top[0][1]]);
 }
 
 function renderTop3(top, ms) {

@@ -244,6 +244,15 @@ function renderBalance() {
 }
 
 
+// The dish model knows no coffee, tea or juice: any drink tends to come out as chai or lassi. Point to the plate model,
+// which does tell drinks apart, and run it straight away when it is already downloaded.
+const DRINK_LOOKALIKES = new Set(["chai", "lassi"]);
+function onDishResult(key) {
+  if ($("plate").hidden || !DRINK_LOOKALIKES.has(key)) return;
+  if (plate.session) { analyzePlate(); return; }
+  $("plate-status").innerHTML = "☕ A drink? Tap <b>Split the plate</b>: it tells coffee, tea, juice and milk apart.";
+}
+
 // ---------------------------------------------------------------- mixed dishes
 // FoodSeg103 labels ingredients, so a biryani or a curry comes out as "rice + chicken + onion". The dish model (139 dishes,
 // calibrated) recognises such dishes as a whole: it checks the whole photo and each outlined area.
@@ -313,7 +322,65 @@ function wholeDishOffer() {
   return agree.length >= 2 || dominant ? { p, idx } : null;
 }
 
+
+// ---------------------------------------------------------------- drinks
+// The dish model has no coffee/tea/juice classes (it would answer "chai" or "lassi"); the plate model does. When the photo
+// is mainly one drink, offer the common variants: black coffee and an iced mocha differ by ~200 kcal a cup.
+const DRINKS = {
+  coffee: [["fndds_2710375", "Black coffee"], ["fndds_2710386", "Latte / coffee with milk"], ["fndds_2710472", "Cappuccino"],
+    ["fndds_2710431", "Iced latte"], ["fndds_2710478", "Iced coffee, bottled/canned"], ["fndds_2710443", "Iced mocha"], ["chai", "Chai"]],
+  tea: [["fndds_2710488", "Black tea"], ["fndds_2710490", "Green tea"], ["chai", "Chai (milk tea)"],
+    ["fndds_2710527", "Iced tea, bottled, sweetened"], ["fndds_2710508", "Bubble tea"]],
+  juice: [["fndds_2709187", "Orange juice"], ["fndds_2709315", "Fruit juice"], ["fndds_2710150", "Smoothie"]],
+  milkshake: [["fndds_2705511", "Milkshake"], ["fndds_2705510", "Chocolate milkshake"], ["lassi", "Lassi"], ["fndds_2710150", "Smoothie"]],
+  milk: [["fndds_2705384", "Milk"], ["lassi", "Lassi"], ["chai", "Chai"]],
+  wine: [["fndds_2710688", "Red wine"]],
+};
+
+function drinkOffer() {
+  const items = plate.items;
+  if (!items.length || plate.drinkDone) return null;
+  const total = items.reduce((s, it) => s + it.coverage, 0);
+  const top = [...items].sort((a, b) => b.coverage - a.coverage)[0];
+  const opts = DRINKS[top.food.name];
+  if (!opts || top.score < 0.4 || top.coverage < 0.5 * total) return null;
+  const options = opts.filter(([k]) => state.foods.has(k));
+  return options.length ? { item: top, options } : null;
+}
+
+function renderDrink(offer) {
+  const el = $("plate-dish");
+  el.hidden = false;
+  const dish = state.foods.get(state.key);
+  const chips = offer.options.map(([key, label], i) => {
+    const f = state.foods.get(key), kcal = Math.round((f.kcal * f.serving) / 100);
+    return `<button type="button" class="chip" data-drink="${i}">${escapeHtml(label)}<span>${Math.round(f.serving)} ml · ${kcal} kcal</span></button>`;
+  }).join("");
+  el.innerHTML = `<span>🥤 This looks like a drink: <b>${escapeHtml(offer.item.food.name)}</b> (${Math.round(offer.item.score * 100)}% sure)` +
+    `${dish && !offer.options.some(([k]) => k === state.key) ? `, not ${escapeHtml(dish.name)}` : ""}. Which one?</span>
+    <span class="clip-picks">${chips}</span>
+    <span class="dish-actions"><button type="button" class="linkish" data-drink-no>Not a drink</button></span>`;
+  plate.drinkOffer = offer;
+}
+
+function useDrink(i) {
+  const { item, options } = plate.drinkOffer, [key, label] = options[i];
+  const f = state.foods.get(key);
+  item.food = foodFromKey(key, label);
+  item.food.name = label;
+  item.dishSuggest = null;
+  item.grams = Math.round(f.serving / 5) * 5;
+  f.unit = "ml";
+  plate.drinkDone = true;
+  redrawPlate();
+  selectFood(key); // the nutrition card shows the drink, with its typical serving
+  setGrams(item.grams);
+  $("nutrition").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function renderWholeDish() {
+  const drink = drinkOffer();
+  if (drink) { renderDrink(drink); return; }
   const el = $("plate-dish"), offer = wholeDishOffer();
   const anyDish = plate.items.some((it) => it.food.dish);
   if (offer) {
@@ -419,6 +486,7 @@ async function analyzePlate() {
     const dec = decodePlate(o0, o1, S, C, plate.meta.conf ?? 0.25);
     plate.items = plateItems(dec, S, box);
     plate.dismissed = false;
+    plate.drinkDone = false;
     plate.clip = null;
     plate.view?.bmp.close?.(); // keep this photo for redraws until the next one
     plate.view = { bmp, box, S, mw: dec.mw, mh: dec.mh };
@@ -448,6 +516,9 @@ async function analyzePlate() {
     if (w) useWholeDish(Number(w.dataset.whole));
     if (e.target.closest("[data-keep]")) { plate.dismissed = true; $("plate-dish").hidden = true; }
     if (e.target.closest("[data-clip]")) matchWholeDish();
+    const dr = e.target.closest("[data-drink]");
+    if (dr) useDrink(Number(dr.dataset.drink));
+    if (e.target.closest("[data-drink-no]")) { plate.drinkDone = true; renderWholeDish(); }
     const pick = e.target.closest("[data-clip-pick]");
     if (pick) {
       const c = plate.clip[Number(pick.dataset.clipPick)];

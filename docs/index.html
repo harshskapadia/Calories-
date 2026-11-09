@@ -36,7 +36,7 @@
       <h1>What's on your plate?</h1>
       <p class="lede">Snap a meal or scan a barcode for an instant calorie and macro estimate, and track it against your daily target.</p>
       <ul class="stats" aria-label="What NutriSnap knows">
-        <li><b>155</b><span>dishes it was trained on</span></li>
+        <li><b>172</b><span>dishes &amp; drinks it was trained on</span></li>
         <li><b id="chip-count">5,000+</b><span>dishes &amp; foods it can match</span></li>
         <li><b>3M+</b><span>packaged products</span></li>
       </ul>
@@ -329,7 +329,7 @@
       <details>
         <summary>How it works &amp; credits</summary>
         <ul>
-          <li><b>Dish model:</b> ConvNeXt-Tiny fine-tuned on Food-101, two Indian food datasets and Central Asian Food Scenes (155 dishes), <b>88.6% top-1 / 97.5% top-5</b>
+          <li><b>Dish model:</b> ConvNeXt-Tiny fine-tuned on Food-101, two Indian food datasets and Central Asian Food Scenes and Food Recognition 2022 phone photos (172 dishes, drinks and fruits), <b>88.4% top-1 / 97.4% top-5</b>
             on 26,836 test photos; int8 ONNX (34 MB) running in your browser with ONNX Runtime Web, so no photo is uploaded.</li>
           <li><b>Identify anything:</b> CLIP (open_clip ViT-B/32, DataComp-XL) against every USDA food plus world dishes from Wikidata;
             world-dish nutrition is approximate (borrowed from the most similar USDA food).</li>

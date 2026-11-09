@@ -331,7 +331,7 @@ function wholeDishOffer() {
 const DRINKS = {
   coffee: [["fndds_2710375", "Black coffee"], ["fndds_2710386", "Latte / coffee with milk"], ["fndds_2710472", "Cappuccino"],
     ["fndds_2710431", "Iced latte"], ["fndds_2710478", "Iced coffee, bottled/canned"], ["fndds_2710443", "Iced mocha"], ["chai", "Chai"]],
-  tea: [["fndds_2710488", "Black tea"], ["fndds_2710490", "Green tea"], ["chai", "Chai (milk tea)"],
+  tea: [["chai", "Chai (milk tea)"], ["fndds_2710488", "Black tea"], ["fndds_2710490", "Green tea"],
     ["fndds_2710527", "Iced tea, bottled, sweetened"], ["fndds_2710508", "Bubble tea"]],
   juice: [["fndds_2709187", "Orange juice"], ["fndds_2709315", "Fruit juice"], ["fndds_2710150", "Smoothie"]],
   milkshake: [["fndds_2705511", "Milkshake"], ["fndds_2705510", "Chocolate milkshake"], ["lassi", "Lassi"], ["fndds_2710150", "Smoothie"]],
@@ -339,18 +339,25 @@ const DRINKS = {
   wine: [["fndds_2710688", "Red wine"], ["fndds_2710616", "Beer"]],
 };
 // the dish model's own drink classes (v3) -> the same variant lists, shown right under the result
-const DISH_DRINK = { coffee: "coffee", tea: "tea", juice_or_soda: "juice", milk: "milk", wine_or_beer: "wine" };
+// chai -> tea list with a one-tap switch to coffee: milky coffee and chai look the same in a cup (coffee photos tested
+// came out as "chai" 95-99%)
+const DISH_DRINK = { coffee: "coffee", tea: "tea", juice_or_soda: "juice", milk: "milk", wine_or_beer: "wine", chai: "tea", lassi: "milk" };
 const ML_KEYS = ["coffee", "tea", "juice_or_soda", "milk", "wine_or_beer", "chai", "lassi"];
 
-function renderDishDrink(key) {
-  const el = $("drink-pick"), kind = DISH_DRINK[key];
+const DRINK_LABEL = { coffee: "Coffee", tea: "Tea", juice: "Juice / soda", milk: "Milk", wine: "Wine / beer" };
+
+// drinks in a cup or glass look alike (tea is the model's most common coffee mix-up), so other kinds are one tap away
+function renderDishDrink(key, forceKind) {
+  const el = $("drink-pick"), kind = forceKind || DISH_DRINK[key];
   el.hidden = !kind;
   if (!kind) return;
   const opts = DRINKS[kind].filter(([k]) => state.foods.has(k));
-  el.innerHTML = `<span>🥤 Which one exactly? Calories differ a lot:</span><span class="clip-picks">${opts.map(([k, label]) => {
+  const others = Object.keys(DRINK_LABEL).filter((k) => k !== kind)
+    .map((k) => `<button type="button" class="linkish" data-drink-kind="${k}">${DRINK_LABEL[k]}</button>`).join(" · ");
+  el.innerHTML = `<span>🥤 Which ${DRINK_LABEL[kind].toLowerCase()} exactly? Calories differ a lot:</span><span class="clip-picks">${opts.map(([k, label]) => {
     const f = state.foods.get(k);
     return `<button type="button" class="chip" data-dish-drink="${k}">${escapeHtml(label)}<span>${Math.round(f.serving)} ml · ${Math.round((f.kcal * f.serving) / 100)} kcal</span></button>`;
-  }).join("")}</span>`;
+  }).join("")}</span><span class="small">Not ${DRINK_LABEL[kind].toLowerCase()}? ${others}</span>`;
 }
 
 function drinkOffer() {
@@ -526,6 +533,8 @@ async function analyzePlate() {
 }
 
 $("drink-pick").addEventListener("click", (e) => {
+  const kindBtn = e.target.closest("[data-drink-kind]");
+  if (kindBtn) { renderDishDrink(null, kindBtn.dataset.drinkKind); return; }
   const b = e.target.closest("[data-dish-drink]");
   if (!b) return;
   const key = b.dataset.dishDrink, f = state.foods.get(key);

@@ -2,10 +2,10 @@
 
 [![Try it live](https://img.shields.io/badge/demo-try%20it%20live-2a9d8f)](https://harshskapadia.github.io/Calories-/) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/harshskapadia/Calories-/blob/main/notebooks/nutrisnap_colab.ipynb) [![tests](https://img.shields.io/badge/tests-pytest-green)](tests/) ![python](https://img.shields.io/badge/python-3.11-blue) ![pytorch](https://img.shields.io/badge/PyTorch-timm-orange) ![gradio](https://img.shields.io/badge/demo-Gradio-ff7c00) [![license](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 
-Snap or upload a photo of a meal, or a whole plate, and track it against your own daily calorie target. NutriSnap recognises the dish (**155 Western, Indian and Central Asian dishes**), shows
+Snap or upload a photo of a meal, or a whole plate, and track it against your own daily calorie target. NutriSnap recognises the dish (**172 Western, Indian and Central Asian dishes, drinks and fruits**), shows
 **where the model looked** (Grad-CAM), estimates the **portion**, and returns **calories, protein, carbs and fat**,
 with every number editable, because the model will sometimes be wrong. Anything it can't recognise can be looked
-up in a **search over 5,500+ foods** (every USDA FNDDS food plus all 155 dishes).
+up in a **search over 5,500+ foods** (every USDA FNDDS food plus all 172 dishes).
 
 **▶ Try it: [https://harshskapadia.github.io/Calories-/](https://harshskapadia.github.io/Calories-/)** (runs entirely in your browser; photos never leave your device)
 
@@ -164,6 +164,15 @@ so those were left out rather than teach the model wrong answers. Their test pho
 split, i.e. **real phone photos**, reported per class in `results/multi_world_v3_convnext_tiny/per_class.csv`. When the
 model says coffee, tea, juice/soda, milk or wine/beer, the app offers the common variants (black coffee 4 kcal vs. iced
 latte 97 vs. bottled iced coffee 242 per serving). Warm-started from the 155-dish model; ~35-45 min on the laptop GPU.
+
+**Result (the app model now): 88.4% top-1 / 97.4% top-5 on 29,445 test photos of 172 classes** (macro-F1 0.879,
+ECE 0.053). The 155 existing dishes held their accuracy (88.5% vs 88.6%). On **706 real phone photos** of the 17 new
+items, top-1 is **83.3%**: fruit is strong (kiwi 93%, grapes 93%, banana 91%, strawberries 98%, orange 90%), while drinks
+in a cup or glass get confused with each other: tea → coffee 13% of the time, milk only 41% recall, juice/soda 59%. Whole
+photos of milky coffee still mostly come out as *chai* (95–99% in browser checks): the two are close to identical
+in a cup and the Indian data has many chai photos. So the app treats every drink answer, chai and lassi included, as a starting point:
+it lists the variants with calories per serving and a one-tap "Not tea? Coffee · Milk · Juice/soda · Wine/beer" switch,
+and *Learns from you* remembers the user's own cups.
 
 ## In-browser version (free, on-device)
 

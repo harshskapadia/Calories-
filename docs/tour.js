@@ -7,7 +7,7 @@ const TOUR = [
   { art: '<img src="icons/icon-192.png" alt="" class="tour-logo">', title: "Welcome to NutriSnap",
     text: "Snap a meal and get its calories and macros in about a second. Everything runs on your phone: your photos are never uploaded." },
   { art: "📸", title: "Snap a meal",
-    text: "Take or upload a photo. NutriSnap names the dish (155 dishes from many cuisines) and shows calories, protein, carbs and fat. Change the portion with Small, Medium, Large or exact grams." },
+    text: "Take or upload a photo. NutriSnap names the dish (172 dishes, drinks and fruits from many cuisines) and shows calories, protein, carbs and fat. Change the portion with Small, Medium, Large or exact grams." },
   { art: "🍱", title: "Split the plate",
     text: "More than one food? Split the plate outlines every food, adds them up and scores how balanced your plate is. It also tells coffee, tea and juice apart." },
   { art: "📦", title: "Packaged food",

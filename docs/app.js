@@ -268,10 +268,10 @@ const ALIASES = {
   momo: "momos", dosa: "masala_dosa", kebab: "kebab", rajma: "rajma_curry", chole: "chole", chana: "chole",
 };
 
-function search(q) {
+/** Foods matching every word of q, best first (also used by "Type what you ate"). */
+function rankFoods(q) {
   const words = q.toLowerCase().split(/\s+/).filter(Boolean);
-  const box = $("search-results");
-  if (!words.length) { box.hidden = true; return; }
+  if (!words.length) return [];
   const hits = [];
   for (const f of state.foodList) {
     if (words.every((w) => f.lower.includes(w))) hits.push(f);
@@ -289,7 +289,13 @@ function search(q) {
     if (alias && f.key === alias) return -1;
     return pos * 10 + kind;
   };
-  hits.sort((a, b) => rank(a) - rank(b) || a.name.length - b.name.length);
+  return hits.sort((a, b) => rank(a) - rank(b) || a.name.length - b.name.length);
+}
+
+function search(q) {
+  const box = $("search-results");
+  if (!q.trim()) { box.hidden = true; return; }
+  const hits = rankFoods(q);
   box.innerHTML = hits.length
     ? hits.slice(0, 25).map((f) => `<li><button type="button" data-key="${f.key}">${escapeHtml(f.name)}` +
         `<span class="tag">${f.match === "usda" ? "USDA" : f.match === "approx" ? "world dish" : "dish"} · ${Math.round(f.kcal)} kcal/100 g</span></button></li>`).join("")

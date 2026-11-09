@@ -13,7 +13,7 @@ const TOUR = [
   { art: "📦", title: "Packaged food",
     text: "Scan a barcode or search a product name to get the full nutrition label of over 3 million products (needs internet)." },
   { art: "📊", title: "Your daily target",
-    text: "In My day, enter your height, weight and goal to get a safe daily calorie target. Tap Add to today on any food, see what's left, and get ideas for what still fits." },
+    text: "In My day, set a safe daily calorie target, then log food by photo, barcode or just typing \"2 roti and dal\". Log your weight and NutriSnap learns how much you really burn and fine-tunes your target." },
   { art: "🧠", title: "It learns from you",
     text: "Not quite right? Pick the right food, or use Identify anything (10,000+ foods). NutriSnap remembers your corrections on this phone and suggests them next time." },
 ];

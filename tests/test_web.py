@@ -222,3 +222,20 @@ def test_first_run_tour() -> None:
     assert 'src="tour.js"' in html and 'id="tour"' in html and 'id="tour-replay"' in html
     assert js.count("title:") >= 5 and 'TOUR_KEY = "nutrisnap.tour.v1"' in js  # shown once, remembered per browser
     assert '"tour.js"' in (DOCS / "sw.js").read_text(encoding="utf-8")
+
+
+def test_quick_log_and_weight() -> None:
+    import re
+
+    foods = {row[0] for row in json.loads((DOCS / "data" / "foods.json").read_text(encoding="utf-8"))}
+    ql = (DOCS / "quicklog.js").read_text(encoding="utf-8")
+    block = ql[ql.index("const QL_ALIAS"):ql.index("const QL_GENERIC")]
+    keys = set(re.findall(r':\s*"([a-z0-9_]+)"', block))
+    assert len(keys) >= 20 and keys <= foods, keys - foods  # every typed shortcut ("toast", "coke", "dal") has nutrition
+    assert "function qlParse" in ql and "SpeechRecognition" in ql
+    w = (DOCS / "weight.js").read_text(encoding="utf-8")
+    assert "function measuredBurn" in w and "W_MIN_SPAN = 14" in w
+    assert "p.tdeeMeasured" in (DOCS / "diary.js").read_text(encoding="utf-8")  # the target can use the measured burn
+    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    for el in ['id="ql-text"', 'id="ql-mic"', 'id="weight-card"', 'id="w-adapt"', 'src="quicklog.js"', 'src="weight.js"']:
+        assert el in html, el

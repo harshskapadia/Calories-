@@ -369,3 +369,29 @@ body.tour-open { overflow: hidden; }
 .tour-nav #tour-back[hidden] + #tour-next { grid-column: 1 / -1; }
 .tour-end { display: grid; gap: 10px; }
 .tour-end { margin-top: 10px; }
+
+/* type what you ate */
+.ql { margin: 4px 0 14px; }
+.ql .mini-h { display: block; margin-top: 0; }
+.ql-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; }
+.ql-row input { width: 100%; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 10px 12px; min-height: 44px; }
+.ql-mic { padding: 0 12px; min-width: 44px; }
+.ql-mic.on { background: var(--fat); color: #fff; border-color: transparent; }
+.ql-items li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto 32px; gap: 6px; align-items: center; padding: 6px 6px 6px 8px; }
+.ql-items select { min-height: 38px; padding: 6px 28px 6px 8px; font-size: .9rem; }
+.ql-items .ql-kcal { font-variant-numeric: tabular-nums; min-width: 4ch; text-align: right; }
+.ql-items .ql-kcal::after { content: " kcal"; font-weight: 400; color: var(--muted); font-size: .8rem; }
+.ql-items .ql-miss { grid-template-columns: 1fr 32px; color: var(--muted); font-size: .9rem; }
+.ql-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; }
+/* weight */
+.w-chart { margin: 12px 0 4px; }
+.w-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.w-chart text { font: 10px var(--font); fill: var(--muted); }
+.w-chart .axis { stroke: var(--line); }
+.w-chart .goal { stroke: var(--muted); stroke-dasharray: 4 4; }
+.w-chart .goal-t { fill: var(--muted); }
+.w-chart .trend { fill: none; stroke: var(--ink); stroke-width: 2.2; stroke-linejoin: round; }
+.w-chart circle { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; }
+.w-adapt { margin-top: 10px; }
+#panel-day.no-target #weight-card { order: 2; }

@@ -106,6 +106,20 @@
     <section id="panel-day" role="tabpanel" aria-labelledby="tab-day" hidden>
       <div id="today" class="card">
         <div class="card-head"><h2>Today</h2><span class="muted small" id="today-date"></span></div>
+        <div class="ql">
+          <label class="mini-h" for="ql-text">✍️ Type or say what you ate</label>
+          <div class="ql-row">
+            <input id="ql-text" type="text" placeholder="2 roti, dal and a glass of lassi" autocomplete="off" enterkeyhint="go">
+            <button id="ql-mic" type="button" class="btn ghost ql-mic" aria-label="Say what you ate" hidden>🎤</button>
+            <button id="ql-go" type="button" class="btn soft">Find</button>
+          </div>
+          <div id="ql-result" hidden>
+            <ul id="ql-items" class="list ql-items"></ul>
+            <div class="ql-foot"><span id="ql-total" class="muted small"></span>
+              <button id="ql-add" type="button" class="btn primary small-btn">Add to today</button></div>
+          </div>
+          <p id="ql-status" class="hint" role="status" aria-live="polite"></p>
+        </div>
         <div class="today-sum">
           <div id="ring" class="ring" role="img" aria-label="Calories eaten today versus target">
             <div class="donut-hole"><span id="ring-left" class="kcal">0</span><span id="ring-unit" class="kcal-unit">kcal left</span></div>
@@ -126,6 +140,18 @@
         <div class="ideas-wrap"><div class="mini-h">💡 What can I still eat?</div><div id="ideas"></div></div>
         <div class="week" id="week" aria-label="Calories over the last 7 days"></div>
         <button id="log-clear" type="button" class="btn ghost wide" hidden>Clear today</button>
+      </div>
+
+      <div class="card weight" id="weight-card">
+        <div class="card-head"><h2>⚖️ Weight</h2><span id="w-trend" class="muted small"></span></div>
+        <div class="inline">
+          <input id="w-input" type="number" inputmode="decimal" step="0.1" min="30" max="660" aria-label="Today's weight">
+          <button id="w-log" type="button" class="btn primary">Log</button>
+        </div>
+        <div id="w-chart" class="w-chart"></div>
+        <div id="w-adapt" class="plate-dish w-adapt" hidden></div>
+        <p class="muted small">Weigh yourself in the morning before eating, a few times a week. Weight jumps 1–2 kg day to day
+          with water; the line shows the real trend.</p>
       </div>
 
       <div class="card learned">
@@ -349,6 +375,8 @@
   <script src="plate.js"></script>
   <script src="diary.js"></script>
   <script src="learn.js"></script>
+  <script src="quicklog.js"></script>
+  <script src="weight.js"></script>
   <script src="tour.js"></script>
 </body>
 </html>

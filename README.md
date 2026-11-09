@@ -333,6 +333,23 @@ The **📊 My day** tab turns the app into a calorie-deficit tracker:
   and plate, from the user's own weight and MET values from the Compendium of Physical Activities.
 - **Private by design.** Profile and log are stored only in the browser (`localStorage`, last 60 days); nothing is uploaded.
 
+### ✍️ Type or say what you ate, and ⚖️ weight with a self-adjusting target
+
+**Type or say it.** "2 roti, dal and a glass of lassi" becomes three foods with portions (`docs/quicklog.js`): quantities
+in numbers or words ("two", "half"), units (g, ml, cup, bowl, katori, glass, slice, piece, tbsp…), sizes (small/large),
+plurals, and splitting on commas, "and", "with" and "on", except for known dishes such as "mac and cheese" or "fish and
+chips". Each phrase is matched against the 11k-food list with a scorer that prefers plain foods ("1 apple" → *Apple, raw*,
+not apple pie), ranks baby foods and diet products last, and knows ~40 everyday words (toast, coke, black coffee, oats,
+curd, roti, dal…). Countable foods use a typical piece weight (roti 40 g, idli 40 g, egg 50 g). Every match and gram value
+can be changed before **Add to today**. 🎤 uses the browser's speech recognition where available.
+
+**Weight log and measured burn.** Weigh-ins are kept on the phone and plotted with a smoothed trend line. After at least
+14 days with 4 weigh-ins and 10 fully logged days (≥ 800 kcal), `weight.js` estimates the real daily energy use as
+*average intake − weight trend × 7,700 kcal/kg* (least-squares slope over the last 4 weeks). If that differs from the
+Mifflin-St Jeor estimate by ≥ 150 kcal it offers to use it; the safety floors still apply and "Back to the formula" undoes
+it. In a browser check with 3 weeks of simulated data (1,600 kcal a day, −0.49 kg a week) it estimated 2,140 kcal/day vs the
+formula's 1,980 and moved the target from 1,430 to 1,590 kcal.
+
 ### 🧠 Learns from you (on-device personalisation)
 
 When you correct a photo (another dish from the top 3, a search result, an *Identify anything* match, a drink variant, a

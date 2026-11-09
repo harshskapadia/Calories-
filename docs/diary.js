@@ -29,7 +29,8 @@ function calorieTarget(p) {
   if (!(age >= 13 && age <= 100 && cm >= 120 && cm <= 230 && kg >= 30 && kg <= 300 && act > 1)) return null;
   const s = sex === "male" ? 5 : sex === "female" ? -161 : -78; // Mifflin-St Jeor (1990); "other" = midpoint
   const bmr = 10 * kg + 6.25 * cm - 5 * age + s;
-  const tdee = bmr * act;
+  // measured burn (weight trend + food logs, weight.js) replaces the formula once the user accepts it
+  const tdee = p.tdeeMeasured > 1000 ? p.tdeeMeasured : bmr * act;
   const bmi = kg / (cm / 100) ** 2;
   const floor = sex === "male" ? 1500 : 1200; // common minimum without medical supervision
   const warn = [];
@@ -68,7 +69,8 @@ function readProfile() {
   const gw = num("pf-goalw");
   const goal = GOALS[diary.units][Number($("pf-goal").value)] || GOALS[diary.units][1];
   return { units: diary.units, sex: $("pf-sex").value, age: num("pf-age"), cm, kg, act: Number($("pf-act").value),
-    goalIdx: Number($("pf-goal").value), rate: goal[1], goalKg: Number.isFinite(gw) ? (imp ? gw * LB : gw) : null };
+    goalIdx: Number($("pf-goal").value), rate: goal[1], goalKg: Number.isFinite(gw) ? (imp ? gw * LB : gw) : null,
+    tdeeMeasured: diary.tdeeMeasured || null };
 }
 
 function fillGoals(idx) {
@@ -115,7 +117,7 @@ function renderTarget() {
   store(DIARY_PROFILE, p);
   diary.target = t;
   $("tg-kcal").textContent = kfmt(t.target);
-  $("tg-tdee").textContent = `${kfmt(t.tdee)} kcal`;
+  $("tg-tdee").textContent = `${kfmt(t.tdee)} kcal${p.tdeeMeasured ? " (measured)" : ""}`;
   $("tg-def").textContent = t.deficit > 5 ? `−${kfmt(t.deficit)} kcal` : t.deficit < -5 ? `+${kfmt(-t.deficit)} kcal` : "none";
   $("tg-prot").textContent = `about ${kfmt(t.protein)} g a day`;
   const cat = t.bmi < 18.5 ? "underweight" : t.bmi < 25 ? "healthy range" : t.bmi < 30 ? "overweight" : "obese range";
@@ -128,6 +130,7 @@ function renderTarget() {
   $("tg-warn").hidden = !t.warn.length;
   $("tg-warn").innerHTML = t.warn.map((w) => `<p>${escapeHtml(w)}</p>`).join("");
   renderToday();
+  if (typeof renderWeight === "function") renderWeight();
 }
 
 // ---------------------------------------------------------------- today's log
@@ -300,6 +303,7 @@ function renderDay() { renderTarget(); }
 // ---------------------------------------------------------------- wiring
 (function initDiary() {
   const saved = store(DIARY_PROFILE);
+  diary.tdeeMeasured = saved?.tdeeMeasured || null;
   setUnits(saved?.units || (/^en-(US|LR|MM)$/.test(navigator.language) ? "imperial" : "metric"), false);
   if (saved) { fillGoals(saved.goalIdx); writeProfileFields(saved); }
   renderTarget();

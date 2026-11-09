@@ -77,6 +77,8 @@ def export(short_side: int = 256, workers: int = os.cpu_count() or 2, source: st
         return out_root
     if spec.get("type") == "yolo_crops":
         return export_yolo_crops(spec, out_root, short_side)
+    if spec.get("type") == "local_seg_crops":
+        return export_local_seg_crops(spec, out_root, short_side)
 
     rows: list[tuple[str, str, str]] = []
     with ProcessPoolExecutor(workers) as pool:
@@ -200,6 +202,67 @@ def export_yolo_crops(spec: dict, out_root: Path, short_side: int) -> Path:
         w.writerow(["path", "label", "split"])
         w.writerows(rows)
     print(f"[export] {spec['hf']}: wrote {len(rows)} crops -> {out_root / 'index.csv'}")
+    return out_root
+
+
+def export_local_seg_crops(spec: dict, out_root: Path, short_side: int) -> Path:
+    """A YOLO segmentation dataset already on disk (polygon labels, e.g. the Food Recognition 2022 copy made by
+    scripts/prepare_foodrec.py) -> one classification image per kept item, cropped around its polygon.
+
+    Items smaller than ``min_box`` of the photo are skipped; at most ``max_per_class`` crops per dish and split.
+    """
+    src = CACHE / spec["root"]
+    if not (src / "images").exists():
+        raise FileNotFoundError(f"{src} not found: run `python scripts/prepare_foodrec.py` first")
+    names_map = yaml.safe_load((CACHE / spec["names_from"]).read_text(encoding="utf-8"))["names"]
+    names = [names_map[i] for i in range(len(names_map))]
+    keep, min_box, cap = spec["keep"], spec.get("min_box", 0.2), spec.get("max_per_class", 1500)
+    rows: list[tuple[str, str, str]] = []
+    for split_dir, local_split in spec["splits"].items():
+        counts: dict[str, int] = defaultdict(int)
+        files = sorted((src / "labels" / split_dir).glob("*.txt"))
+        random.Random(0).shuffle(files)  # the per-class cap then takes a random sample, not the first photos
+        for label_file in files:
+            img = None
+            for k, line in enumerate(label_file.read_text(encoding="utf-8").splitlines()):
+                vals = line.split()
+                if len(vals) < 7:
+                    continue
+                label = keep.get(names[int(vals[0])])
+                if not label or counts[label] >= cap:
+                    continue
+                xs, ys = [float(v) for v in vals[1::2]], [float(v) for v in vals[2::2]]
+                bw, bh = max(xs) - min(xs), max(ys) - min(ys)
+                if bw < min_box or bh < min_box:
+                    continue
+                if img is None:
+                    img_path = src / "images" / split_dir / (label_file.stem + ".jpg")
+                    if not img_path.exists():
+                        break
+                    img = Image.open(img_path).convert("RGB")
+                W, H = img.size
+                m = 0.1 * max(bw * W, bh * H)
+                box = (max(0, min(xs) * W - m), max(0, min(ys) * H - m), min(W, max(xs) * W + m), min(H, max(ys) * H + m))
+                crop = img.crop(tuple(round(v) for v in box))
+                sc = short_side / min(crop.size)
+                if sc < 1:
+                    crop = crop.resize((round(crop.width * sc), round(crop.height * sc)), Image.BICUBIC)
+                rel = f"{local_split}/{label}/{split_dir}_{label_file.stem[:40]}_{k}.jpg"
+                (out_root / rel).parent.mkdir(parents=True, exist_ok=True)
+                crop.save(out_root / rel, "JPEG", quality=90)
+                rows.append((rel, label, local_split))
+                counts[label] += 1
+        print(f"[export] {spec['root']}/{split_dir}: {dict(sorted(counts.items(), key=lambda kv: -kv[1]))}", flush=True)
+    small = {c for c in {r[1] for r in rows} if sum(r[1] == c for r in rows) < spec.get("min_images", 40)}
+    rows = [r for r in rows if r[1] not in small]
+    if small:
+        print(f"[export] dropped (too few photos): {sorted(small)}", flush=True)
+    out_root.mkdir(parents=True, exist_ok=True)
+    with open(out_root / "index.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["path", "label", "split"])
+        w.writerows(rows)
+    print(f"[export] {spec['root']}: wrote {len(rows)} crops -> {out_root / 'index.csv'}")
     return out_root
 
 

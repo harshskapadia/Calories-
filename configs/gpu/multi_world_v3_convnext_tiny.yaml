@@ -1,0 +1,39 @@
+# v3: the 155-dish model + 17 everyday drinks and fruits cut out of Food Recognition 2022 phone photos (frcitems):
+# coffee, tea, juice/soda, milk, wine/beer, banana, orange, strawberries, grapes, kiwi, pear, peach, pineapple,
+# watermelon, mango, cherries, blueberries = 172 dishes. Warm start from the current app model (155 dishes known).
+# Needs data/cache/foodrec2022 (scripts/prepare_foodrec.py, already done for the plate model). ~35-45 min on an RTX 3050 Ti.
+experiment: multi_world_v3_convnext_tiny
+data:
+  name: multiworld3
+  sources: [food101, indian43, indianfoods15, cafsd, frcitems]   # see data/sources.yaml
+  short_side: 256
+  num_classes: null
+  val_frac: 0.1
+  seed: 42
+model:
+  backbone: convnext_tiny
+  pretrained: false                 # weights come from init_from
+  init_from: app/model/nutrisnap.pt
+  drop_rate: 0.2
+train:
+  img_size: 224
+  epochs: 6
+  batch_size: 16
+  lr: 1.0e-4                        # half the from-scratch rate: fine-tuning
+  weight_decay: 0.05
+  label_smoothing: 0.1
+  warmup_epochs: 1
+  freeze_backbone_epochs: 0
+  amp: true
+  patience: 3
+  num_workers: 2
+  balanced_sampling: true           # new dishes have fewer photos: sample classes evenly
+  samples_per_epoch: 40000          # fresh balanced random draw each epoch instead of all ~110k photos
+  freeze_stages: 2                  # stem + first 2 ConvNeXt stages stay as learned (generic edges/textures)
+  channels_last: true
+  seed: 42
+augment:
+  phone_aug: true
+  randaugment: true
+  color_jitter: 0.25
+  random_erasing: 0.25

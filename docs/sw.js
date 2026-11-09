@@ -4,8 +4,8 @@
    - Core model + food data are precached at install so photo recognition works offline after the first visit.
    - The optional "Identify anything" and "Whole plate" files are cached the first time they are downloaded.
    - Cross-origin requests (Open Food Facts) always go to the network. */
-const SHELL_VERSION = "shell-2026-11-09-1";
-const ASSET_VERSION = "assets-1123cc8c07"; // = hash of docs/model + docs/ort contents (tests/test_web.py checks it)
+const SHELL_VERSION = "shell-2026-11-09-2";
+const ASSET_VERSION = "assets-11d54fda7f"; // = hash of docs/model + docs/ort contents (tests/test_web.py checks it)
 const SHELL = SHELL_VERSION, ASSETS = ASSET_VERSION;
 
 const CORE = [

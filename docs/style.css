@@ -395,3 +395,4 @@ body.tour-open { overflow: hidden; }
 .w-chart circle { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; }
 .w-adapt { margin-top: 10px; }
 #panel-day.no-target #weight-card { order: 2; }
+#drink-pick { margin-bottom: 12px; }

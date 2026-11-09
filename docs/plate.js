@@ -248,6 +248,7 @@ function renderBalance() {
 // which does tell drinks apart, and run it straight away when it is already downloaded.
 const DRINK_LOOKALIKES = new Set(["chai", "lassi"]);
 function onDishResult(key) {
+  renderDishDrink(key);
   if ($("plate").hidden || !DRINK_LOOKALIKES.has(key)) return;
   if (plate.session) { analyzePlate(); return; }
   $("plate-status").innerHTML = "☕ A drink? Tap <b>Split the plate</b>: it tells coffee, tea, juice and milk apart.";
@@ -335,8 +336,22 @@ const DRINKS = {
   juice: [["fndds_2709187", "Orange juice"], ["fndds_2709315", "Fruit juice"], ["fndds_2710150", "Smoothie"]],
   milkshake: [["fndds_2705511", "Milkshake"], ["fndds_2705510", "Chocolate milkshake"], ["lassi", "Lassi"], ["fndds_2710150", "Smoothie"]],
   milk: [["fndds_2705384", "Milk"], ["lassi", "Lassi"], ["chai", "Chai"]],
-  wine: [["fndds_2710688", "Red wine"]],
+  wine: [["fndds_2710688", "Red wine"], ["fndds_2710616", "Beer"]],
 };
+// the dish model's own drink classes (v3) -> the same variant lists, shown right under the result
+const DISH_DRINK = { coffee: "coffee", tea: "tea", juice_or_soda: "juice", milk: "milk", wine_or_beer: "wine" };
+const ML_KEYS = ["coffee", "tea", "juice_or_soda", "milk", "wine_or_beer", "chai", "lassi"];
+
+function renderDishDrink(key) {
+  const el = $("drink-pick"), kind = DISH_DRINK[key];
+  el.hidden = !kind;
+  if (!kind) return;
+  const opts = DRINKS[kind].filter(([k]) => state.foods.has(k));
+  el.innerHTML = `<span>🥤 Which one exactly? Calories differ a lot:</span><span class="clip-picks">${opts.map(([k, label]) => {
+    const f = state.foods.get(k);
+    return `<button type="button" class="chip" data-dish-drink="${k}">${escapeHtml(label)}<span>${Math.round(f.serving)} ml · ${Math.round((f.kcal * f.serving) / 100)} kcal</span></button>`;
+  }).join("")}</span>`;
+}
 
 function drinkOffer() {
   const items = plate.items;
@@ -509,6 +524,22 @@ async function analyzePlate() {
     $("plate-btn").disabled = false;
   }
 }
+
+$("drink-pick").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-dish-drink]");
+  if (!b) return;
+  const key = b.dataset.dishDrink, f = state.foods.get(key);
+  f.unit = "ml";
+  selectFood(key);
+  setGrams(Math.round(f.serving / 5) * 5);
+  if (typeof learnRemember === "function") learnRemember(key);
+  $("nutrition").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+// drinks are measured in ml (1 g ~ 1 ml), once the food list has loaded
+(function mlUnits() {
+  if (!state.foods.size) { setTimeout(mlUnits, 500); return; }
+  for (const k of ML_KEYS) if (state.foods.has(k)) state.foods.get(k).unit = "ml";
+})();
 
 (async () => {
   if (!(await plateAvailable())) return;

@@ -84,3 +84,36 @@ cafsd:
     onion rings: onion_rings
     wings: chicken_wings
     ice-cream: ice_cream
+
+frcitems:
+  # Drinks and fruit cut out of the Food Recognition 2022 phone photos already converted by scripts/prepare_foodrec.py
+  # (MyFoodRepo, CC-BY-4.0). Only plate-model classes whose source labels are clean are used ("apple" also holds plums
+  # and fruit salad, "bread" holds crepes and waffles, "egg" overlaps omelette: those are left out).
+  type: local_seg_crops
+  root: foodrec2022
+  names_from: foodseg103/data.yaml
+  dir: frcitems_256
+  splits: {train: train, val: test}      # their validation photos become our real-phone-photo test set
+  license: CC-BY-4.0
+  url: https://www.frontiersin.org/journals/nutrition/articles/10.3389/fnut.2022.875143/full
+  min_box: 0.2
+  max_per_class: 1500
+  min_images: 40
+  keep:
+    coffee: coffee
+    tea: tea
+    juice: juice_or_soda
+    milk: milk
+    wine: wine_or_beer
+    banana: banana
+    orange: orange
+    strawberry: strawberries
+    grape: grapes
+    kiwi: kiwi
+    pear: pear
+    peach: peach
+    pineapple: pineapple
+    watermelon: watermelon
+    mango: mango
+    cherry: cherries
+    blueberry: blueberries

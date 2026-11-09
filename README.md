@@ -153,6 +153,18 @@ python scripts/build_web.py && python scripts/stamp_sw.py
 99%, and biryani and masala dosa stayed at 99%. Data: 91,310 training photos (9,279 of them dish crops from Central Asian
 Food Scenes: kebab 1,559, plov 837, samsa 709 … khachapuri 64).
 
+### v3: drinks and fruit (172 dishes)
+
+`configs/gpu/multi_world_v3_convnext_tiny.yaml` adds **17 everyday items** the dish model could not name, cut out of the
+Food Recognition 2022 phone photos already converted for the plate model (`frcitems` in `data/sources.yaml`, exporter
+`export_local_seg_crops`): coffee, tea, juice or soda, milk, wine or beer, banana, orange, strawberries, grapes, kiwi,
+pear, peach, pineapple, watermelon, mango, cherries, blueberries. Only classes whose source labels are clean are used:
+the plate data's "apple" also holds plums and fruit salad, "bread" holds crepes and waffles and "egg" overlaps omelette,
+so those were left out rather than teach the model wrong answers. Their test photos are the dataset's own validation
+split, i.e. **real phone photos**, reported per class in `results/multi_world_v3_convnext_tiny/per_class.csv`. When the
+model says coffee, tea, juice/soda, milk or wine/beer, the app offers the common variants (black coffee 4 kcal vs. iced
+latte 97 vs. bottled iced coffee 242 per serving). Warm-started from the 155-dish model; ~35-45 min on the laptop GPU.
+
 ## In-browser version (free, on-device)
 
 The live demo is a static site in [`docs/`](docs/) (GitHub Pages) that runs the 139-dish model **inside the visitor's browser**

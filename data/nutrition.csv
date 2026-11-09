@@ -37,7 +37,7 @@ eggs_benedict,Eggs Benedict,288.0,13.81,8.48,22.1,155.0,exact,2707180:100,"Egg, 
 escargots,Escargots,158.0,19.99,2.48,6.91,85.0,exact,2706368:100,Escargot,
 falafel,Falafel,514.0,8.28,28.96,41.19,120.0,exact,2707408:100,Falafel,serving overridden: 4 patties
 filet_mignon,Filet Mignon,196.0,30.46,0.0,8.25,160.0,exact,2705841:100,"Beef, steak, tenderloin",beef tenderloin steak
-fish_and_chips,Fish And Chips,207.5,7.72,15.11,12.79,350.0,composite,2706244:50|2709458:50,"Fish, cod, fried + Potato, french fries, from fresh, fried",fried cod + fried french fries
+fish_and_chips,Fish and Chips,207.5,7.72,15.11,12.79,350.0,composite,2706244:50|2709458:50,"Fish, cod, fried + Potato, french fries, from fresh, fried",fried cod + fried french fries
 foie_gras,Foie Gras,201.0,13.45,6.55,13.1,85.0,proxy,2706155:100,"Liver, paste or pate","FNDDS 'Liver, paste or pate' (foie gras is fattier)"
 french_fries,French Fries,312.0,3.43,41.44,14.73,110.0,exact,2709461:100,"Potato, french fries, fast food",fast food
 french_onion_soup,French Onion Soup,108.0,5.45,11.84,4.47,245.0,exact,2710108:100,"Soup, French onion",
@@ -53,7 +53,7 @@ grilled_salmon,Grilled Salmon,259.0,25.92,0.0,16.48,140.0,exact,2706287:100,"Fis
 guacamole,Guacamole,155.0,1.95,8.45,14.18,60.0,exact,2709307:100,"Guacamole, NFS",
 gyoza,Gyoza,192.0,8.76,14.05,11.13,150.0,close,2708705:100,"Wonton, dumpling or pot sticker, fried","FNDDS 'Wonton, dumpling or pot sticker, fried'; serving overridden: ~6 pieces"
 hamburger,Hamburger,288.0,17.51,20.68,14.38,145.0,exact,2706920:100,"Hamburger, NFS",
-hot_and_sour_soup,Hot And Sour Soup,39.0,2.58,4.35,1.21,245.0,exact,2707136:100,"Soup, hot and sour",
+hot_and_sour_soup,Hot and Sour Soup,39.0,2.58,4.35,1.21,245.0,exact,2707136:100,"Soup, hot and sour",
 hot_dog,Hot Dog,296.0,10.85,23.73,17.37,102.0,exact,2707056:100,"Hot dog sandwich, NFS, on white bun",hot dog on white bun
 huevos_rancheros,Huevos Rancheros,121.0,6.68,8.85,6.65,236.0,exact,2707191:100,Huevos rancheros,
 hummus,Hummus,243.0,7.35,14.9,17.1,60.0,exact,2707402:100,"Hummus, plain",
@@ -61,7 +61,7 @@ ice_cream,Ice Cream,221.0,3.57,26.36,11.3,135.0,exact,2705629:100,"Ice cream, NF
 lasagna,Lasagna,139.0,7.45,16.17,4.97,250.0,exact,2708750:100,Lasagna with meat,with meat
 lobster_bisque,Lobster Bisque,75.0,2.28,5.9,4.81,255.0,close,2707140:100,"Soup, bisque","FNDDS 'Soup, bisque'"
 lobster_roll_sandwich,Lobster Roll Sandwich,235.4,14.47,14.85,12.83,200.0,composite,2706349:55|2707656:30|2710204:15,"Lobster + Roll, white, hot dog bun + Mayonnaise, regular",lobster + hot dog bun + mayonnaise
-macaroni_and_cheese,Macaroni And Cheese,223.0,8.68,23.08,10.5,230.0,exact,2708811:100,Macaroni or noodles with cheese,
+macaroni_and_cheese,Macaroni and Cheese,223.0,8.68,23.08,10.5,230.0,exact,2708811:100,Macaroni or noodles with cheese,
 macarons,Macarons,460.0,3.02,61.22,22.55,60.0,proxy,2707936:100,"Cookie, macaroon","FNDDS 'Cookie, macaroon' (coconut macaroon, not French macaron); serving overridden: 3 macarons"
 miso_soup,Miso Soup,24.0,2.21,2.3,0.85,245.0,exact,2707455:100,"Soup, miso or tofu",
 mussels,Mussels,109.0,15.06,4.67,2.84,150.0,exact,2706350:100,Mussels,serving overridden: edible meat from ~1 lb in shell
@@ -88,7 +88,7 @@ samosa,Samosa,310.0,5.14,33.16,17.47,75.0,exact,2708730:100,Samosa,
 sashimi,Sashimi,148.5,22.42,0.0,5.83,100.0,composite,2706308:50|2706284:50,"Fish, tuna, raw + Fish, salmon, raw",raw tuna + raw salmon
 scallops,Scallops,126.0,14.99,3.96,5.14,120.0,exact,2706356:100,"Scallops, baked or broiled",baked or broiled; serving overridden: ~5 large scallops
 seaweed_salad,Seaweed Salad,106.6,3.39,10.98,6.46,100.0,composite,2709805:85|2710190:6|2707442:5|2710258:4,"Seaweed, raw + Sesame oil + Soy sauce + Sugar, white, granulated or lump",seaweed + sesame oil + soy sauce + sugar
-shrimp_and_grits,Shrimp And Grits,152.2,9.89,6.75,9.25,350.0,composite,2706363:35|2708369:55|2705885:5|2710154:5,"Shrimp, steamed or boiled + Grits, with cheese, fat added + Bacon, NS as to type of meat, cooked + Butter, NFS",shrimp + cheese grits + bacon + butter
+shrimp_and_grits,Shrimp and Grits,152.2,9.89,6.75,9.25,350.0,composite,2706363:35|2708369:55|2705885:5|2710154:5,"Shrimp, steamed or boiled + Grits, with cheese, fat added + Bacon, NS as to type of meat, cooked + Butter, NFS",shrimp + cheese grits + bacon + butter
 spaghetti_bolognese,Spaghetti Bolognese,178.0,5.43,17.74,9.25,250.0,close,2708837:100,"Pasta with tomato-based sauce and meat, restaurant","FNDDS 'Pasta with tomato-based sauce and meat, restaurant'"
 spaghetti_carbonara,Spaghetti Carbonara,261.1,12.84,21.11,13.65,300.0,composite,2708357:65|2705885:12|2707172:10|2705730:10|2710186:3,"Pasta, cooked + Bacon, NS as to type of meat, cooked + Egg, yolk only, raw + Cheese, Parmesan, hard + Olive oil",pasta + bacon + egg yolk + parmesan + oil
 spring_rolls,Spring Rolls,272.0,7.58,27.02,14.7,100.0,close,2708702:100,"Egg roll, with beef and/or pork","FNDDS 'Egg roll, with beef and/or pork' (fried)"
@@ -154,3 +154,20 @@ syrniki,Syrniki,183.6,9.73,18.42,7.75,150.0,composite,2705748:55|2708304:45,"Che
 olivier_salad,Olivier Salad,142.0,2.93,14.89,7.91,200.0,close,2709536:100,"Potato salad with egg, made with creamy dressing","FNDDS 'Potato salad with egg, made with creamy dressing' for Olivier salad"
 shorpa,Shorpa,47.0,3.28,4.04,2.05,400.0,close,2710115:100,"Soup, beef","FNDDS 'Soup, beef' for meat-and-vegetable broth soup; 1 bowl"
 doner_kebab,Doner Kebab,184.0,11.24,18.78,6.76,250.0,close,2706962:100,Gyro sandwich,FNDDS 'Gyro sandwich' for doner in flatbread
+coffee,Coffee,40.0,1.67,5.63,1.13,250.0,close,2710384:100,"Coffee, cafe con leche","FNDDS 'Coffee, cafe con leche' (coffee with some milk), the middle of black coffee and latte; the app then offers black/latte/iced variants"
+tea,Tea,1.0,0.0,0.3,0.0,250.0,exact,2710488:100,"Tea, hot, leaf, black","black tea, no milk or sugar; 1 cup"
+juice_or_soda,Juice or Soda,46.5,0.14,11.23,0.26,300.0,composite,2709315:50|2710541:50,"Fruit juice, NFS + Soft drink, cola",fruit juice and cola averaged (the photo data mixes both); 1 glass
+milk,Milk,52.0,3.33,4.83,2.14,250.0,exact,2705384:100,"Milk, NFS",1 glass of milk
+wine_or_beer,Wine or Beer,64.0,0.27,3.08,0.0,250.0,composite,2710688:50|2710616:50,"Wine, red + Beer",red wine and beer averaged (the photo data mixes both); 1 glass
+banana,Banana,97.0,0.74,22.71,0.28,120.0,exact,2709224:100,"Banana, raw",1 medium banana
+orange,Orange,50.0,0.92,11.78,0.14,150.0,exact,2709171:100,"Orange, raw",1 orange (also mandarins)
+strawberries,Strawberries,36.0,0.64,7.96,0.22,150.0,exact,2709283:100,"Strawberries, raw",1 cup
+grapes,Grapes,83.0,0.9,19.4,0.2,150.0,exact,2709237:100,"Grapes, raw",1 cup
+kiwi,Kiwi,64.0,1.06,14.0,0.44,75.0,exact,2709239:100,"Kiwi fruit, raw",1 kiwi
+pear,Pear,59.0,0.37,15.18,0.15,180.0,exact,2709254:100,"Pear, raw",1 pear
+peach,Peach,46.0,0.91,10.1,0.27,150.0,exact,2709249:100,"Peach, raw",1 peach (also nectarines)
+pineapple,Pineapple,60.0,0.46,14.09,0.21,165.0,exact,2709260:100,"Pineapple, raw",1 cup of pieces
+watermelon,Watermelon,30.0,0.61,7.55,0.15,280.0,exact,2709270:100,"Watermelon, raw",1 slice
+mango,Mango,60.0,0.82,14.98,0.38,165.0,exact,2709242:100,"Mango, raw",1 cup of pieces
+cherries,Cherries,71.0,1.04,16.16,0.19,140.0,exact,2709231:100,"Cherries, raw",1 cup
+blueberries,Blueberries,64.0,0.7,14.57,0.31,150.0,exact,2709275:100,"Blueberries, raw",1 cup (also blackberries and mixed berries)

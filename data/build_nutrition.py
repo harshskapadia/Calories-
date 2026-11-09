@@ -122,7 +122,9 @@ def build(mapping_csv: Path, fndds_dir: Path, out_csv: Path) -> int:
         rows.append(
             {
                 "class": m["class"],
-                "display_name": m["class"].replace("_", " ").title(),
+                # Title Case, but small joining words stay lower case ("Juice or Soda", "Shrimp and Grits")
+                "display_name": " ".join(w if w in {"or", "and", "with", "of"} else w.capitalize()
+                                         for w in m["class"].split("_")),
                 "kcal_per_100g": round(per100["kcal"], 1),
                 "protein_per_100g": round(per100["protein"], 2),
                 "carbs_per_100g": round(per100["carbs"], 2),

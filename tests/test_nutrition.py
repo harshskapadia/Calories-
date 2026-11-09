@@ -66,9 +66,9 @@ def test_new_world_sources_have_nutrition(db: NutritionDB) -> None:
     src = yaml.safe_load((ROOT / "data" / "sources.yaml").read_text())
     ind = src["indianfoods15"]
     labels = {ind["aliases"].get(c, c) for c in INDIAN_FOODS15 if c not in ind.get("drop", [])}
-    labels |= set(src["cafsd"]["keep"].values())
+    labels |= set(src["cafsd"]["keep"].values()) | set(src["frcitems"]["keep"].values())
     assert labels <= set(db.classes), labels - set(db.classes)
-    assert len(db) == 155  # 139 + 16 new dishes (vada pav, dabeli, malai kofta, dal tadka, plov, lagman, ...)
+    assert len(db) == 172  # 139 + 16 world dishes (vada pav, plov, ...) + 17 drinks and fruits (coffee, banana, ...)
 
 
 def test_search_any_food() -> None:
@@ -89,9 +89,12 @@ def test_values_are_physically_plausible(db: NutritionDB) -> None:
         assert 0 < info.kcal_per_100g < 900  # pure fat is ~900 kcal/100 g
         assert info.protein_per_100g + info.carbs_per_100g + info.fat_per_100g <= 100
         assert 10 <= info.serving_g <= 1000
-        # macros should explain the stated energy (Atwater, within 15%)
+        # macros should explain the stated energy (Atwater, within 15% or 2 kcal for near-zero drinks such as tea);
+        # alcohol (7 kcal/g) is energy without protein/carbs/fat, so wine and beer are exempt
+        if "wine" in name or "beer" in name:
+            continue
         atwater = 4 * info.protein_per_100g + 4 * info.carbs_per_100g + 9 * info.fat_per_100g
-        assert math.isclose(atwater, info.kcal_per_100g, rel_tol=0.15), name
+        assert math.isclose(atwater, info.kcal_per_100g, rel_tol=0.15, abs_tol=2), name
 
 
 def test_lookup_normalizes_names(db: NutritionDB) -> None:

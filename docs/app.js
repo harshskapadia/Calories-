@@ -242,6 +242,7 @@ function clearPhoto() {
   state.lastBlob = null;
   state.lastEmb = null;
   $("learn").hidden = true;
+  $("drink-pick").hidden = true;
   const img = $("preview");
   if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
   img.removeAttribute("src");

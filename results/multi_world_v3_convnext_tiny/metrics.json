@@ -1,0 +1,14 @@
+{
+  "experiment": "multi_world_v3_convnext_tiny",
+  "backbone": "convnext_tiny",
+  "split": "test",
+  "num_images": 29445,
+  "num_classes": 172,
+  "top1": 0.8840889794532178,
+  "top5": 0.9741891662421464,
+  "macro_f1": 0.8786232788005454,
+  "ece": 0.0527,
+  "temperature": 0.741,
+  "params_m": 27.95,
+  "cpu_latency_ms": 213.2
+}

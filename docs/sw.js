@@ -5,7 +5,7 @@
    - The optional "Identify anything" and "Whole plate" files are cached the first time they are downloaded.
    - Cross-origin requests (Open Food Facts) always go to the network. */
 const SHELL_VERSION = "shell-2026-11-09-2";
-const ASSET_VERSION = "assets-11d54fda7f"; // = hash of docs/model + docs/ort contents (tests/test_web.py checks it)
+const ASSET_VERSION = "assets-8d120cb9c7"; // = hash of docs/model + docs/ort contents (tests/test_web.py checks it)
 const SHELL = SHELL_VERSION, ASSETS = ASSET_VERSION;
 
 const CORE = [

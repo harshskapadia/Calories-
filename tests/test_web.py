@@ -255,3 +255,12 @@ def test_backup_and_privacy() -> None:
     assert 'id="backup-save"' in html and 'id="data-delete"' in html and 'href="privacy.html"' in html
     privacy = (DOCS / "privacy.html").read_text(encoding="utf-8")
     assert "never uploaded" in privacy and "Open Food Facts" in privacy and "speech" in privacy
+
+
+def test_streaks_and_weekly_report() -> None:
+    js = (DOCS / "report.js").read_text(encoding="utf-8")
+    for fn in ("function streaks", "function weekStats", "function renderReport", "function renderStreak"):
+        assert fn in js, fn
+    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    assert 'id="streak"' in html and 'id="report-card"' in html and 'src="report.js"' in html
+    assert "slice(-400)" in (DOCS / "diary.js").read_text(encoding="utf-8")  # log kept ~13 months for streaks/reports

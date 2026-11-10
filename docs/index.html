@@ -106,6 +106,7 @@
     <section id="panel-day" role="tabpanel" aria-labelledby="tab-day" hidden>
       <div id="today" class="card">
         <div class="card-head"><h2>Today</h2><span class="muted small" id="today-date"></span></div>
+        <div class="streak-row"><span id="streak" class="streak" hidden></span><span id="streak-cheer" class="small" role="status" aria-live="polite"></span></div>
         <div class="ql">
           <label class="mini-h" for="ql-text">✍️ Type or say what you ate</label>
           <div class="ql-row">
@@ -140,6 +141,11 @@
         <div class="ideas-wrap"><div class="mini-h">💡 What can I still eat?</div><div id="ideas"></div></div>
         <div class="week" id="week" aria-label="Calories over the last 7 days"></div>
         <button id="log-clear" type="button" class="btn ghost wide" hidden>Clear today</button>
+      </div>
+
+      <div class="card" id="report-card">
+        <div class="card-head"><h2>📅 Your week</h2><span id="report-range" class="muted small"></span></div>
+        <div id="report"></div>
       </div>
 
       <div class="card weight" id="weight-card">
@@ -391,6 +397,7 @@
   <script src="quicklog.js"></script>
   <script src="weight.js"></script>
   <script src="backup.js"></script>
+  <script src="report.js"></script>
   <script src="tour.js"></script>
 </body>
 </html>

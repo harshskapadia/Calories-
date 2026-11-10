@@ -2,7 +2,7 @@
    "nutrisnap.*" keys (profile, food log, weight, learned corrections, tour). A backup is that data as one JSON file. */
 "use strict";
 
-const BACKUP_KEYS = ["nutrisnap.profile.v1", "nutrisnap.log.v1", "nutrisnap.weight.v1", "nutrisnap.learned.v1", "nutrisnap.tour.v1"];
+const BACKUP_KEYS = ["nutrisnap.profile.v1", "nutrisnap.log.v1", "nutrisnap.weight.v1", "nutrisnap.learned.v1", "nutrisnap.tour.v1", "nutrisnap.cheer.v1"];
 
 function backupData() {
   const data = {};

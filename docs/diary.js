@@ -136,7 +136,7 @@ function renderTarget() {
 // ---------------------------------------------------------------- today's log
 function loadLog() { return store(DIARY_LOG) || {}; }
 function saveLog(log) {
-  const keep = Object.keys(log).sort().slice(-60); // two months is plenty
+  const keep = Object.keys(log).sort().slice(-400); // ~13 months: streaks, weekly reports, measured burn
   store(DIARY_LOG, Object.fromEntries(keep.map((k) => [k, log[k]])));
 }
 
@@ -213,6 +213,7 @@ function renderToday() {
   $("week").innerHTML = `<div class="wk-bars">${bars}${line}</div><div class="wk-days">${labels}</div>`;
   renderRecent();
   renderIdeas();
+  if (typeof renderProgress === "function") renderProgress();
 }
 
 // ---------------------------------------------------------------- "What can I still eat?"

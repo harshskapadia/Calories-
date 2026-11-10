@@ -371,6 +371,15 @@ Mifflin-St Jeor estimate by ≥ 150 kcal it offers to use it; the safety floors 
 it. In a browser check with 3 weeks of simulated data (1,600 kcal a day, −0.49 kg a week) it estimated 2,140 kcal/day vs the
 formula's 1,980 and moved the target from 1,430 to 1,590 kcal.
 
+### 🔥 Streaks and 📅 weekly report
+
+*My day* shows the current logging streak (a day counts when anything is logged; today's streak holds until midnight)
+and the best one, with a one-time message at 3, 7, 14, 30, 50, 100… days. **Your week** covers the last 7 full days:
+days logged (vs the week before), average calories vs the target, days on target (between 80% and 105% of it) and days
+over, average protein vs the protein aim, weight change from the weight log, the most-logged foods, and one tip picked by
+priority (log more days → too many days over → low protein → eating far below target). Computed on the phone from the
+food log, which is now kept for ~13 months.
+
 ### 🧠 Learns from you (on-device personalisation)
 
 When you correct a photo (another dish from the top 3, a search result, an *Identify anything* match, a drink variant, a

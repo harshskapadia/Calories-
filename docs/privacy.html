@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>NutriSnap · Privacy</title>
+  <meta name="description" content="How NutriSnap handles your photos and data: on your device, never uploaded.">
+  <meta name="theme-color" content="#f4f4f4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="icons/favicon-48.png" type="image/png" sizes="48x48">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .policy h1 { font: 700 1.6rem/1.2 var(--font-display); margin: 18px 0 6px; }
+    .policy h2 { margin: 22px 0 8px; }
+    .policy p, .policy li { line-height: 1.6; }
+    .policy ul { padding-left: 1.2em; }
+    .policy table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    .policy td, .policy th { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .policy th { font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="./" style="color: inherit; text-decoration: none"><img class="logo-img" src="icons/icon-192.png" alt=""><span>NutriSnap</span></a>
+    </div>
+  </header>
+  <main class="wrap policy">
+    <h1>Privacy</h1>
+    <p class="muted">Short version: <b>your photos and your data stay on your phone.</b> There is no account, no server of ours,
+      no analytics and no ads.</p>
+
+    <section class="card">
+      <h2>What happens on your phone</h2>
+      <ul>
+        <li><b>Photos</b> are analysed by AI models that run inside your browser. They are never uploaded, saved or sent anywhere.</li>
+        <li><b>Your calorie target, food log, weight history and learned corrections</b> are saved only in this browser's
+          storage on this device. "Learns from you" keeps a numeric fingerprint of a corrected photo (a list of 768 numbers),
+          not the photo.</li>
+        <li>We can't see any of it, and we can't recover it for you. Use <b>My day → Backup</b> to keep a copy.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>What uses the internet</h2>
+      <table>
+        <tr><th>Feature</th><th>What is sent</th><th>To whom</th></tr>
+        <tr><td>Opening the app</td><td>Normal web requests to download the app and its AI models (no personal data)</td>
+          <td>GitHub Pages, which hosts the files and, like every web host, sees your IP address</td></tr>
+        <tr><td>📦 Packaged food (barcode / product search)</td><td>The barcode number or the words you search for</td>
+          <td><a href="https://world.openfoodfacts.org/privacy">Open Food Facts</a></td></tr>
+        <tr><td>🎤 Voice input (optional)</td><td>Your voice, if you tap the microphone</td>
+          <td>Your browser's own speech service (for example Google in Chrome, Apple in Safari)</td></tr>
+      </table>
+      <p class="muted small">Nothing else leaves your device. Meal photos are never sent, not even for packaged food.</p>
+    </section>
+
+    <section class="card">
+      <h2>Your control</h2>
+      <ul>
+        <li><b>Backup / restore:</b> My day → 💾 Backup &amp; privacy → Download backup (a file you keep), or Restore from file.</li>
+        <li><b>Forget corrections:</b> My day → 🧠 Learned from you → Forget all.</li>
+        <li><b>Delete everything:</b> My day → 💾 Backup &amp; privacy → Delete all my data. Clearing this site's data in your
+          browser settings does the same.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Health information</h2>
+      <p>Calorie and nutrition values are estimates, not medical advice. The daily target uses a standard formula with safety
+        limits; if you are pregnant, breastfeeding, under 18, have an eating disorder or a medical condition, talk to a doctor
+        or dietitian first.</p>
+    </section>
+
+    <p class="muted small">NutriSnap is open source (AGPL-3.0):
+      <a href="https://github.com/harshskapadia/Calories-">source code on GitHub</a>. Questions or concerns can be raised there
+      as an issue. Last updated: November 2026.</p>
+    <p><a href="./">← Back to NutriSnap</a></p>
+  </main>
+</body>
+</html>

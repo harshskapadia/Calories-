@@ -239,3 +239,19 @@ def test_quick_log_and_weight() -> None:
     html = (DOCS / "index.html").read_text(encoding="utf-8")
     for el in ['id="ql-text"', 'id="ql-mic"', 'id="weight-card"', 'id="w-adapt"', 'src="quicklog.js"', 'src="weight.js"']:
         assert el in html, el
+
+
+def test_backup_and_privacy() -> None:
+    import re
+
+    js = (DOCS / "backup.js").read_text(encoding="utf-8")
+    keys = set(re.findall(r'"(nutrisnap\.[a-z]+\.v\d)"', js))
+    used = set()
+    for f in DOCS.glob("*.js"):  # every key the app stores must be in the backup and the delete
+        used |= set(re.findall(r'"(nutrisnap\.[a-z]+\.v\d)"', f.read_text(encoding="utf-8")))
+    assert used <= keys, used - keys
+    assert "function downloadBackup" in js and "function restoreBackup" in js and "function deleteAllData" in js
+    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    assert 'id="backup-save"' in html and 'id="data-delete"' in html and 'href="privacy.html"' in html
+    privacy = (DOCS / "privacy.html").read_text(encoding="utf-8")
+    assert "never uploaded" in privacy and "Open Food Facts" in privacy and "speech" in privacy

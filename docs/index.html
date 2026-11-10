@@ -162,6 +162,18 @@
         <button id="learn-forget" type="button" class="btn ghost wide" hidden>Forget all</button>
       </div>
 
+      <div class="card backup" id="backup-card">
+        <div class="card-head"><h2>💾 Backup &amp; privacy</h2></div>
+        <p class="muted small">Everything you enter stays on this phone only. <span id="backup-now"></span>
+          Save a backup file to move it to a new phone or keep it safe. <a href="privacy.html">Privacy details</a></p>
+        <div class="backup-actions">
+          <button id="backup-save" type="button" class="btn primary">Download backup</button>
+          <label class="btn ghost">Restore from file<input id="backup-load" type="file" accept="application/json,.json" hidden></label>
+        </div>
+        <p id="backup-status" class="hint" role="status" aria-live="polite"></p>
+        <button id="data-delete" type="button" class="linkish danger">Delete all my data</button>
+      </div>
+
       <div class="card">
         <div class="card-head"><h2>My calorie target</h2></div>
         <p class="muted small">Your details stay on this phone. Used only to estimate how much energy you burn in a day.</p>
@@ -344,7 +356,7 @@
           <a href="https://world.openfoodfacts.org">Open Food Facts</a> contributors, under the
           <a href="https://opendatacommons.org/licenses/odbl/1-0/">ODbL</a>.</p>
       </details>
-      <p><a href="#" id="tour-replay">Show the tour again</a></p>
+      <p><a href="#" id="tour-replay">Show the tour again</a> · <a href="privacy.html">Privacy</a></p>
       <p><a href="https://github.com/harshskapadia/Calories-">Source code, training &amp; evaluation on GitHub</a> (AGPL-3.0)</p>
     </footer>
   </main>
@@ -378,6 +390,7 @@
   <script src="learn.js"></script>
   <script src="quicklog.js"></script>
   <script src="weight.js"></script>
+  <script src="backup.js"></script>
   <script src="tour.js"></script>
 </body>
 </html>

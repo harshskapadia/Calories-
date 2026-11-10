@@ -396,3 +396,8 @@ body.tour-open { overflow: hidden; }
 .w-adapt { margin-top: 10px; }
 #panel-day.no-target #weight-card { order: 2; }
 #drink-pick { margin-bottom: 12px; }
+
+/* backup & privacy */
+.backup-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.linkish.danger { color: #d0567f; margin-top: 6px; display: inline-block; font-size: .9rem; }
+#panel-day.no-target #backup-card { order: 4; }

@@ -9,7 +9,7 @@ const ASSET_VERSION = "assets-51fe8a5ae3"; // = hash of docs/model + docs/ort co
 const SHELL = SHELL_VERSION, ASSETS = ASSET_VERSION;
 
 const CORE = [
-  "./", "index.html", "style.css", "app.js", "products.js", "openvocab.js", "plate.js", "diary.js", "learn.js", "quicklog.js", "weight.js", "backup.js", "report.js", "tour.js", "privacy.html", "manifest.webmanifest",
+  "./", "index.html", "style.css", "app.js", "products.js", "openvocab.js", "plate.js", "diary.js", "learn.js", "quicklog.js", "weight.js", "backup.js", "report.js", "tour.js", "motion.js", "privacy.html", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/favicon-48.png",
   "ort/ort.wasm.min.js", "ort/ort-wasm-simd-threaded.mjs", "ort/ort-wasm-simd-threaded.wasm",
   "model/meta.json", "model/nutrisnap.int8.onnx", "data/foods.json", "model/clip_vocab.json",

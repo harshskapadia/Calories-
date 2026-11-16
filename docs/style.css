@@ -417,3 +417,143 @@ body.tour-open { overflow: hidden; }
 .report-tip { background: var(--surface-2); border-radius: var(--radius-sm); padding: 10px 12px; margin: 10px 0 0; }
 @media (max-width: 380px) { .report-tiles { grid-template-columns: repeat(2, 1fr); } }
 #panel-day.no-target #report-card { order: 2; }
+
+/* ================================================================== motion
+   Springy, quick and quiet: things rise into place, numbers count, the selected tab slides. All of it is switched
+   off for people who ask their phone for reduced motion. */
+:root { --ease: cubic-bezier(.2, .8, .2, 1); --spring: cubic-bezier(.34, 1.4, .64, 1); }
+@supports (transition-timing-function: linear(0, 1)) {
+  :root { --spring: linear(0, .009, .035 2.1%, .141, .281 6.7%, .723 12.9%, .938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%, 1.159,
+    1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, .991, .977 51%, .974 53.8%, .975 57.1%, .997 69.8%, 1.003 76.9%, 1); }
+}
+@property --p { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --c { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --pct { syntax: "<number>"; inherits: false; initial-value: 0; }
+.donut { transition: --p .9s var(--ease), --c .9s var(--ease); }
+.ring { transition: --pct 1.1s var(--ease); }
+
+/* first load: the page builds itself top to bottom */
+@keyframes m-rise { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes m-fade { from { opacity: 0; } to { opacity: 1; } }
+.motion .topbar { animation: m-fade .5s var(--ease) both; }
+.motion .brand .logo-img { animation: m-logo .9s var(--spring) .1s both; }
+@keyframes m-logo { from { transform: rotate(-25deg) scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
+.motion .hero h1 { animation: m-rise .7s var(--ease) .08s both; }
+.motion .hero .lede { animation: m-rise .7s var(--ease) .16s both; }
+.motion .hero .stats li { animation: m-rise .7s var(--spring) both; }
+.motion .hero .stats li:nth-child(1) { animation-delay: .24s; }
+.motion .hero .stats li:nth-child(2) { animation-delay: .31s; }
+.motion .hero .stats li:nth-child(3) { animation-delay: .38s; }
+.motion .tabs { animation: m-rise .7s var(--ease) .42s both; }
+.motion #panel-meal { animation: m-rise .8s var(--ease) .5s both; }
+
+/* sliding pill behind the selected tab and segment */
+.tabs.has-pill, .seg.has-pill { position: relative; }
+.m-pill { position: absolute; left: 0; top: 0; z-index: 0; border-radius: inherit; background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .08), 0 6px 16px -10px rgba(0, 0, 0, .3); pointer-events: none;
+  transition: transform .5s var(--spring), width .5s var(--spring), opacity .2s; }
+.tabs .m-pill { border-radius: 999px; }
+.seg .m-pill { border-radius: 10px; }
+.has-pill > button { position: relative; z-index: 1; transition: color .25s; }
+.has-pill > button.on { background: transparent; box-shadow: none; }
+
+/* panels slide in from the side of the tab you tapped */
+@keyframes m-panel { from { opacity: 0; transform: translateX(calc(var(--dir, 1) * 28px)); } to { opacity: 1; transform: none; } }
+.m-panel { animation: m-panel .5s var(--ease) both; }
+.m-panel > .card { animation: m-rise .6s var(--ease) both; }
+.m-panel > .card:nth-child(2) { animation-delay: .06s; } .m-panel > .card:nth-child(3) { animation-delay: .12s; }
+.m-panel > .card:nth-child(4) { animation-delay: .18s; } .m-panel > .card:nth-child(5) { animation-delay: .24s; }
+.m-panel > .card:nth-child(n+6) { animation-delay: .3s; }
+.m-panel .wk-bar { animation: m-bar .8s var(--spring) both; transform-origin: bottom; }
+.m-panel .wk-bar:nth-child(2) { animation-delay: .04s; } .m-panel .wk-bar:nth-child(3) { animation-delay: .08s; }
+.m-panel .wk-bar:nth-child(4) { animation-delay: .12s; } .m-panel .wk-bar:nth-child(5) { animation-delay: .16s; }
+.m-panel .wk-bar:nth-child(6) { animation-delay: .2s; } .m-panel .wk-bar:nth-child(7) { animation-delay: .24s; }
+@keyframes m-bar { from { transform: scaleY(0); } to { transform: none; } }
+.m-panel .w-chart .trend { stroke-dasharray: 2000; animation: m-draw 1.6s var(--ease) .2s both; }
+@keyframes m-draw { from { stroke-dashoffset: 2000; } to { stroke-dashoffset: 0; } }
+
+/* cards and boxes that appear */
+.m-in { animation: m-rise .55s var(--spring) both; }
+.m-in .fill, .m-in .bal-bar span { animation: m-grow 1s var(--ease) .15s both; }
+@keyframes m-grow { from { width: 0; } }
+.m-in .top3 li:first-child button { animation: m-name .6s var(--ease) both; }
+@keyframes m-name { from { opacity: 0; letter-spacing: .02em; filter: blur(6px); } to { opacity: 1; filter: none; } }
+
+/* list items */
+.m-item { animation: m-item .5s var(--spring) both; animation-delay: calc(var(--i, 0) * 45ms); }
+@keyframes m-item { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: none; } }
+.list li.m-out { overflow: hidden; animation: m-out .26s var(--ease) forwards; }
+@keyframes m-out { to { opacity: 0; transform: translateX(40px); height: 0; padding-top: 0; padding-bottom: 0; } }
+#top3 .fill { animation: m-grow 1s var(--ease) .1s both; }
+
+/* "Added to today" */
+.m-pop { animation: m-pop .5s var(--spring); }
+@keyframes m-pop { from { transform: scale(.9); opacity: .4; } }
+
+/* the photo lands, then a scan line sweeps it while the AI is looking */
+.m-photo img { animation: m-photo .8s var(--ease) both; }
+@keyframes m-photo { from { transform: scale(1.08); filter: blur(10px) saturate(.6); } to { transform: none; filter: none; } }
+.drop::before, .drop::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s; z-index: 1; }
+.drop::before { background: linear-gradient(rgba(255, 255, 255, .08) 1px, transparent 1px) 0 0 / 100% 22px,
+  linear-gradient(90deg, rgba(255, 255, 255, .08) 1px, transparent 1px) 0 0 / 22px 100%, rgba(0, 0, 0, .18); }
+.drop::after { height: 38%; inset: auto 0 auto 0; top: -38%;
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, .0) 20%, rgba(255, 255, 255, .45) 92%, #fff 100%);
+  mix-blend-mode: overlay; }
+.drop.scanning::before { opacity: 1; }
+.drop.scanning::after { opacity: 1; animation: m-scan 1.15s cubic-bezier(.45, 0, .2, 1) infinite; }
+@keyframes m-scan { from { top: -38%; } to { top: 100%; } }
+.drop-icon { animation: m-float 3.2s ease-in-out infinite; }
+@keyframes m-float { 50% { transform: translateY(-6px) rotate(-4deg); } }
+.drop { transition: transform .35s var(--spring), border-color .2s; }
+.drop.drag { transform: scale(1.015); }
+.m-reveal { animation: m-reveal 1.1s var(--ease) both; }
+@keyframes m-reveal { from { clip-path: circle(0 at 50% 50%); filter: brightness(1.4); } to { clip-path: circle(75% at 50% 50%); filter: none; } }
+
+/* the loading bar shimmers instead of sitting still */
+.status:not(.ready) #bar-fill { background: linear-gradient(90deg, var(--primary) 0 40%, color-mix(in srgb, var(--primary) 40%, transparent) 50%,
+  var(--primary) 60% 100%) 0 0 / 250% 100%; animation: m-shimmer 1.4s linear infinite; }
+@keyframes m-shimmer { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+#bar-fill { transition: width .45s var(--ease); }
+
+/* buttons: lift on hover, squish on press, ripple where you tap */
+.btn, .chip, .tab, .seg button, .chip-add { position: relative; overflow: hidden; }
+.btn { transition: transform .35s var(--spring), background .2s, box-shadow .25s; }
+.btn:active { transform: scale(.96); transition-duration: .08s; }
+@media (hover: hover) {
+  .btn.primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -10px rgba(0, 0, 0, .5); }
+  .chip { transition: transform .3s var(--spring), background .2s; }
+  .chip:hover { transform: translateY(-1px); }
+}
+.chip:active, .chip-add:active { transform: scale(.94); }
+.m-ripple { position: absolute; border-radius: 50%; background: currentColor; opacity: .18; transform: scale(0); pointer-events: none;
+  animation: m-ripple .6s var(--ease) forwards; }
+@keyframes m-ripple { to { transform: scale(1); opacity: 0; } }
+.photo-clear { transition: transform .3s var(--spring), background .2s; }
+.photo-clear:not([hidden]) { animation: m-logo .5s var(--spring) both; }
+
+/* streak flame */
+.streak:not(.cold) { animation: m-rise .5s var(--spring) both; }
+.streak:not(.cold)::first-letter { display: inline-block; }
+#streak-cheer:not(:empty) { animation: m-pop .6s var(--spring); }
+
+/* tour: each card slides in the direction you swipe */
+.m-step .tour-art { animation: m-art .6s var(--spring) both; }
+.m-step .tour-title, .m-step .tour-text { animation: m-slide .45s var(--ease) both; }
+.m-step .tour-text { animation-delay: .05s; }
+@keyframes m-art { from { transform: scale(.5) rotate(calc(var(--dir, 1) * -12deg)); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes m-slide { from { opacity: 0; transform: translateX(calc(var(--dir, 1) * 24px)); } to { opacity: 1; transform: none; } }
+.tour-dots i { transition: width .4s var(--spring), background .2s; }
+.tour-card { animation: m-card .55s var(--spring) both; }
+@keyframes m-card { from { transform: translateY(30px) scale(.94); opacity: 0; } to { transform: none; opacity: 1; } }
+.tour:not([hidden]) { animation: m-fade .3s var(--ease) both; }
+.tour-logo { animation: m-float 3.6s ease-in-out infinite; }
+
+/* confetti */
+.m-confetti { position: fixed; inset: 0; pointer-events: none; z-index: 60; overflow: hidden; }
+.m-confetti i { position: absolute; width: 8px; height: 12px; border-radius: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important; }
+  .drop.scanning::after { display: none; }
+}

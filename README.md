@@ -2,10 +2,10 @@
 
 [![Try it live](https://img.shields.io/badge/demo-try%20it%20live-2a9d8f)](https://harshskapadia.github.io/Calories-/) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/harshskapadia/Calories-/blob/main/notebooks/nutrisnap_colab.ipynb) [![tests](https://img.shields.io/badge/tests-pytest-green)](tests/) ![python](https://img.shields.io/badge/python-3.11-blue) ![pytorch](https://img.shields.io/badge/PyTorch-timm-orange) ![gradio](https://img.shields.io/badge/demo-Gradio-ff7c00) [![license](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 
-Snap or upload a photo of a meal, or a whole plate, and track it against your own daily calorie target. NutriSnap recognises the dish (**172 Western, Indian and Central Asian dishes, drinks and fruits**), shows
+Snap or upload a photo of a meal, or a whole plate, and track it against your own daily calorie target. NutriSnap recognises the dish (**228 Western, Indian, Central Asian, Turkish and East Asian dishes, drinks and fruits**), shows
 **where the model looked** (Grad-CAM), estimates the **portion**, and returns **calories, protein, carbs and fat**,
 with every number editable, because the model will sometimes be wrong. Anything it can't recognise can be looked
-up in a **search over 5,500+ foods** (every USDA FNDDS food plus all 172 dishes).
+up in a **search over 5,500+ foods** (every USDA FNDDS food plus all 228 dishes).
 
 **▶ Try it: [https://harshskapadia.github.io/Calories-/](https://harshskapadia.github.io/Calories-/)** (runs entirely in your browser; photos never leave your device)
 
@@ -165,7 +165,7 @@ split, i.e. **real phone photos**, reported per class in `results/multi_world_v3
 model says coffee, tea, juice/soda, milk or wine/beer, the app offers the common variants (black coffee 4 kcal vs. iced
 latte 97 vs. bottled iced coffee 242 per serving). Warm-started from the 155-dish model; ~35-45 min on the laptop GPU.
 
-**Result (the app model now): 88.4% top-1 / 97.4% top-5 on 29,445 test photos of 172 classes** (macro-F1 0.879,
+**Result: 88.4% top-1 / 97.4% top-5 on 29,445 test photos of 172 classes** (macro-F1 0.879,
 ECE 0.053). The 155 existing dishes held their accuracy (88.5% vs 88.6%). On **706 real phone photos** of the 17 new
 items, top-1 is **83.3%**: fruit is strong (kiwi 93%, grapes 93%, banana 91%, strawberries 98%, orange 90%), while drinks
 in a cup or glass get confused with each other: tea → coffee 13% of the time, milk only 41% recall, juice/soda 59%. Whole
@@ -190,6 +190,16 @@ the download near 5 GB; no extra photos for already-known dishes), and identical
 removed (10 of 40 egg-tart photos in a sample were duplicates), so none leak into the test split. Durian and mangosteen
 were left out: USDA has no nutrition for them. All 56 new dishes have USDA-based nutrition (single foods or recipe
 mixes), tested. Warm-started from the 172-class model.
+
+**Result (the app model now): 87.5% top-1 / 96.9% top-5 on 31,570 test photos of 228 classes** (macro-F1 0.853,
+ECE 0.056), 6 epochs in 30.5 min on the RTX 3050 Ti. The 172 existing classes held their accuracy (88.0% vs 88.4% in v3).
+The 56 new dishes average **80.2%** recall: the 22 Turkish dishes **87.9%** (best: hünkâr beğendi 96%, içli köfte
+94%, yaprak sarma 93%, simit 93%, lahmacun 91%) and the 34 MM-Food dishes **72.6%** on messy crowd-sourced phone photos,
+with only ~90 training photos each. Distinctive ones are strong (corn on the cob 96%, egg tart 96%, boiled eggs 96%,
+tomato-egg stir-fry 93%, lychee 92%, mapo tofu 89%); look-alike groups are weak (fruit salad 34%, fried chicken 41%,
+vegetable soup 42%, congee 50%, meat stir-fry 51%, fried fish 53%), since soups, stir-fries and fried dishes look alike from
+above. The most-confused pairs are still Food-101's near twins (steak ↔ filet mignon, chocolate mousse ↔ cake). Per-class
+numbers: `results/multi_world_v4_convnext_tiny/per_class.csv`.
 
 ## In-browser version (free, on-device)
 
@@ -396,6 +406,17 @@ days logged (vs the week before), average calories vs the target, days on target
 over, average protein vs the protein aim, weight change from the weight log, the most-logged foods, and one tip picked by
 priority (log more days → too many days over → low protein → eating far below target). Computed on the phone from the
 food log, which is now kept for ~13 months.
+
+
+### ✨ Motion
+
+`docs/motion.js` + the motion block at the end of `style.css`, no library: the page builds itself on first load, a pill
+slides behind the selected tab and portion size, panels slide in from the side of the tab you tapped, a scan line
+sweeps the photo while the AI looks at it, the dish name sharpens in and the confidence bar fills, calories and macros
+count up or down to their new value, the calorie ring and macro donut sweep (CSS `@property`), new log items slide in and
+removed ones fold away, week bars grow, the weight trend draws itself, buttons ripple and squish on tap, tour cards slide
+in the direction you swipe, and confetti marks streak milestones and finishing the tour. It only watches the page (one
+MutationObserver), so no other file depends on it, and all of it is off when the phone asks for reduced motion.
 
 ### 🧠 Learns from you (on-device personalisation)
 

@@ -1,7 +1,7 @@
 # v4: the 172-class model + TurkishFoods-25 (Apache-2.0, 22 new Turkish dishes) + MM-Food-100K phone photos (OpenRAIL,
 # 34 new dishes such as noodle soup, hot pot, stir-fries, fried chicken, apple, egg tart, mapo tofu, and extra phone
 # photos for 37 existing ones) = 228 classes. Warm start from the current app model (172 known).
-# Downloads ~116 MB (Turkish) + ~25k MM-Food photos (~20-40 min, resumable). ~50-60 min of training on an RTX 3050 Ti.
+# Downloads ~116 MB (Turkish) + ~3,300 MM-Food photos (~4.8 GB, resumable). ~45-55 min of training on an RTX 3050 Ti.
 experiment: multi_world_v4_convnext_tiny
 data:
   name: multiworld4

@@ -284,10 +284,16 @@ def export_mmfood_names(spec: dict, out_root: Path, short_side: int) -> Path:
 
     df = pd.read_csv(hf_hub_download(spec["hf"], spec["csv"], repo_type="dataset"), usecols=["image_url", "dish_name"])
     df["dish"] = df.dish_name.astype(str).str.lower().str.strip()
-    to_label = {n.lower(): lab for lab, names in spec["names"].items() for n in names}
+    groups = {**spec["names"], **(spec.get("extra_names") or {})}
+    to_label = {n.lower(): lab for lab, names in groups.items() for n in names}
     df = df[df.dish.isin(to_label)].drop_duplicates("image_url").copy()
     df["label"] = df.dish.map(to_label)
-    df = df.sample(frac=1, random_state=0).groupby("label").head(spec.get("max_per_class", 800))  # random cap per dish
+    # random cap per dish (same shuffle every run, so a smaller cap reuses photos already downloaded)
+    df = df.sample(frac=1, random_state=0)
+    rank = df.groupby("label").cumcount()
+    cap = df.label.map(lambda l: spec.get("max_per_class_extra", 100) if l in (spec.get("extra_names") or {})
+                       else spec.get("max_per_class", 300))
+    df = df[rank < cap]
     jobs = []
     for url, label in zip(df.image_url, df.label):
         h = hashlib.md5(url.encode()).hexdigest()
@@ -318,7 +324,7 @@ def export_mmfood_names(spec: dict, out_root: Path, short_side: int) -> Path:
         return None
 
     rows, seen, dupes = [], set(), 0
-    with ThreadPoolExecutor(16) as pool:
+    with ThreadPoolExecutor(32) as pool:
         for i, r in enumerate(pool.map(fetch, jobs), 1):
             if r:
                 # the same photo is often listed under several URLs: keep one copy, or it would leak into the test set

@@ -139,7 +139,10 @@ mmfood:
   dir: mmfood_256
   license: OpenRAIL
   url: https://huggingface.co/datasets/Humanbased-AI/MM-Food-100K
-  max_per_class: 800
+  # photos are full-size (~1.45 MB each, the server can't send smaller ones): only new dishes, 100 photos each,
+  # keeps the download to ~4.8 GB (photos are shrunk to 256 px as they arrive, so disk use stays ~100 MB)
+  max_per_class: 100               # new dishes, on top of the warm-started model
+  max_per_class_extra: 0           # no extra photos for dishes the model already knows (they have thousands)
   test_frac: 0.1
   min_images: 60
   names:                           # our label: [their dish names]
@@ -178,7 +181,7 @@ mmfood:
     rice_porridge: [rice porridge]
     steamed_crab: [steamed crab, steamed crabs]
     potato_chips: [potato chips]
-    # more phone photos for dishes the model already knows
+  extra_names:                     # more phone photos for dishes the model already knows
     dumplings: [dumplings, steamed dumplings]
     gyoza: [fried dumplings]
     fried_rice: [fried rice, shrimp fried rice, vegetable fried rice]

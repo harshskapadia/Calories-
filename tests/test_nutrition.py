@@ -66,7 +66,7 @@ def test_new_world_sources_have_nutrition(db: NutritionDB) -> None:
     src = yaml.safe_load((ROOT / "data" / "sources.yaml").read_text())
     ind = src["indianfoods15"]
     labels = {ind["aliases"].get(c, c) for c in INDIAN_FOODS15 if c not in ind.get("drop", [])}
-    labels |= set(src["cafsd"]["keep"].values()) | set(src["frcitems"]["keep"].values()) | set(src["mmfood"]["names"])
+    labels |= set(src["cafsd"]["keep"].values()) | set(src["frcitems"]["keep"].values()) | set(src["mmfood"]["names"]) | set(src["mmfood"]["extra_names"])
     labels |= set(src["turkish25"]["aliases"].values())
     assert labels <= set(db.classes), labels - set(db.classes)
     # 139 + 16 world dishes + 17 drinks/fruits + 22 Turkish + 34 MM-Food dishes

@@ -1,0 +1,39 @@
+# v4: the 172-class model + TurkishFoods-25 (Apache-2.0, 22 new Turkish dishes) + MM-Food-100K phone photos (OpenRAIL,
+# 34 new dishes such as noodle soup, hot pot, stir-fries, fried chicken, apple, egg tart, mapo tofu, and extra phone
+# photos for 37 existing ones) = 228 classes. Warm start from the current app model (172 known).
+# Downloads ~116 MB (Turkish) + ~25k MM-Food photos (~20-40 min, resumable). ~50-60 min of training on an RTX 3050 Ti.
+experiment: multi_world_v4_convnext_tiny
+data:
+  name: multiworld4
+  sources: [food101, indian43, indianfoods15, cafsd, frcitems, turkish25, mmfood]   # see data/sources.yaml
+  short_side: 256
+  num_classes: null
+  val_frac: 0.1
+  seed: 42
+model:
+  backbone: convnext_tiny
+  pretrained: false                 # weights come from init_from
+  init_from: app/model/nutrisnap.pt
+  drop_rate: 0.2
+train:
+  img_size: 224
+  epochs: 6
+  batch_size: 16
+  lr: 1.0e-4                        # half the from-scratch rate: fine-tuning
+  weight_decay: 0.05
+  label_smoothing: 0.1
+  warmup_epochs: 1
+  freeze_backbone_epochs: 0
+  amp: true
+  patience: 3
+  num_workers: 2
+  balanced_sampling: true           # new dishes have fewer photos: sample classes evenly
+  samples_per_epoch: 50000          # fresh balanced random draw each epoch instead of all ~110k photos
+  freeze_stages: 2                  # stem + first 2 ConvNeXt stages stay as learned (generic edges/textures)
+  channels_last: true
+  seed: 42
+augment:
+  phone_aug: true
+  randaugment: true
+  color_jitter: 0.25
+  random_erasing: 0.25

@@ -79,6 +79,8 @@ def export(short_side: int = 256, workers: int = os.cpu_count() or 2, source: st
         return export_yolo_crops(spec, out_root, short_side)
     if spec.get("type") == "local_seg_crops":
         return export_local_seg_crops(spec, out_root, short_side)
+    if spec.get("type") == "mmfood_names":
+        return export_mmfood_names(spec, out_root, short_side)
 
     rows: list[tuple[str, str, str]] = []
     with ProcessPoolExecutor(workers) as pool:
@@ -263,6 +265,84 @@ def export_local_seg_crops(spec: dict, out_root: Path, short_side: int) -> Path:
         w.writerow(["path", "label", "split"])
         w.writerows(rows)
     print(f"[export] {spec['root']}: wrote {len(rows)} crops -> {out_root / 'index.csv'}")
+    return out_root
+
+
+def export_mmfood_names(spec: dict, out_root: Path, short_side: int) -> Path:
+    """MM-Food-100K (a CSV of photo URLs + dish names) -> photos of the chosen dish names, downloaded and resized.
+
+    ``names`` maps our label to their dish names (lower-cased, exact). At most ``max_per_class`` photos per label
+    (random, fixed seed); a stable ``test_frac`` of each label (by URL hash) becomes test. Already-downloaded photos
+    are skipped, so a stopped export can simply be run again.
+    """
+    import hashlib
+    import urllib.request
+    from concurrent.futures import ThreadPoolExecutor
+
+    import pandas as pd
+    from huggingface_hub import hf_hub_download
+
+    df = pd.read_csv(hf_hub_download(spec["hf"], spec["csv"], repo_type="dataset"), usecols=["image_url", "dish_name"])
+    df["dish"] = df.dish_name.astype(str).str.lower().str.strip()
+    to_label = {n.lower(): lab for lab, names in spec["names"].items() for n in names}
+    df = df[df.dish.isin(to_label)].drop_duplicates("image_url").copy()
+    df["label"] = df.dish.map(to_label)
+    df = df.sample(frac=1, random_state=0).groupby("label").head(spec.get("max_per_class", 800))  # random cap per dish
+    jobs = []
+    for url, label in zip(df.image_url, df.label):
+        h = hashlib.md5(url.encode()).hexdigest()
+        split = "test" if int(h[:8], 16) % 1000 < spec.get("test_frac", 0.1) * 1000 else "train"
+        jobs.append((url, label, f"{split}/{label}/{h[:16]}.jpg", split))
+    print(f"[export] {spec['hf']}: {len(jobs)} photos for {df.label.nunique()} dishes; downloading…", flush=True)
+
+    def fetch(job) -> tuple | None:
+        url, label, rel, split = job
+        dst = out_root / rel
+        if dst.exists():
+            return (rel, label, split)
+        for attempt in range(3):
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": "NutriSnap-dataset-prep"})
+                with urllib.request.urlopen(req, timeout=30) as r:
+                    data = r.read()
+                img = Image.open(BytesIO(data)).convert("RGB")
+                sc = short_side / min(img.size)
+                if sc < 1:
+                    img = img.resize((round(img.width * sc), round(img.height * sc)), Image.BICUBIC)
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                img.save(dst, "JPEG", quality=90)
+                return (rel, label, split)
+            except Exception:
+                if attempt == 2:
+                    return None
+        return None
+
+    rows, seen, dupes = [], set(), 0
+    with ThreadPoolExecutor(16) as pool:
+        for i, r in enumerate(pool.map(fetch, jobs), 1):
+            if r:
+                # the same photo is often listed under several URLs: keep one copy, or it would leak into the test set
+                digest = hashlib.md5((out_root / r[0]).read_bytes()).hexdigest()
+                if digest in seen:
+                    dupes += 1
+                else:
+                    seen.add(digest)
+                    rows.append(r)
+            if i % 2000 == 0:
+                print(f"[export]   {i}/{len(jobs)} photos ({len(rows)} ok, {dupes} duplicates skipped)", flush=True)
+    counts: dict[str, int] = defaultdict(int)
+    for _, label, _ in rows:
+        counts[label] += 1
+    small = {c for c, n in counts.items() if n < spec.get("min_images", 60)}
+    rows = [r for r in rows if r[1] not in small]
+    print(f"[export] photos per dish: {dict(sorted(counts.items(), key=lambda kv: -kv[1]))}"
+          + (f"; dropped (too few): {sorted(small)}" if small else ""), flush=True)
+    out_root.mkdir(parents=True, exist_ok=True)
+    with open(out_root / "index.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["path", "label", "split"])
+        w.writerows(rows)
+    print(f"[export] {spec['hf']}: wrote {len(rows)} photos ({dupes} duplicates skipped) -> {out_root / 'index.csv'}")
     return out_root
 
 

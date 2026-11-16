@@ -171,3 +171,59 @@ watermelon,Watermelon,30.0,0.61,7.55,0.15,280.0,exact,2709270:100,"Watermelon, r
 mango,Mango,60.0,0.82,14.98,0.38,165.0,exact,2709242:100,"Mango, raw",1 cup of pieces
 cherries,Cherries,71.0,1.04,16.16,0.19,140.0,exact,2709231:100,"Cherries, raw",1 cup
 blueberries,Blueberries,64.0,0.7,14.57,0.31,150.0,exact,2709275:100,"Blueberries, raw",1 cup (also blackberries and mixed berries)
+asure,Asure,132.3,4.76,20.01,3.63,200.0,composite,2705685:70|2707347:30,"Pudding, rice + Beans, NFS",Noah's pudding: grain pudding (FNDDS rice pudding) + beans; 1 bowl
+biber_dolmasi,Biber Dolmasi,178.0,7.83,9.93,11.66,200.0,close,2709073:100,"Stuffed pepper, with rice and meat","FNDDS 'Stuffed pepper, with rice and meat'; 2 peppers"
+borek,Borek,243.0,9.09,12.89,17.17,150.0,composite,2708729:50|2708726:50,"Spanakopita + Pastry, cheese-filled",filo pastry with cheese/spinach: spanakopita + cheese pastry; 1 piece
+cig_kofte,Cig Kofte,142.4,2.38,14.13,8.92,150.0,composite,2708439:70|2709745:25|2710186:5,"Bulgur, fat added + Spaghetti sauce + Olive oil",bulgur kneaded with tomato/pepper paste and oil (vegan version)
+enginar,Enginar,120.1,2.52,10.84,8.31,200.0,composite,2709766:85|2709660:7|2710186:8,"Artichoke + Carrots, raw + Olive oil",artichoke hearts cooked in olive oil with carrots
+et_sote,Et Sote,211.7,17.57,2.61,14.63,200.0,composite,2705849:60|2709746:35|2710186:5,"Beef, stew meat + Spaghetti sauce with added vegetables + Olive oil",sauteed beef with peppers and tomato
+gozleme,Gozleme,243.5,8.68,33.02,8.18,200.0,composite,2708729:50|2707616:50,"Spanakopita + Bread, pita",thin flatbread filled with cheese/spinach: pita + spanakopita; 1 piece
+hamsi,Hamsi,244.5,27.45,0.0,14.22,150.0,close,2706232:95|2710186:5,"Fish, anchovy + Olive oil","pan-fried anchovies (FNDDS 'Fish, anchovy' + oil)"
+hunkar_begendi,Hunkar Begendi,201.0,11.04,4.87,15.18,300.0,composite,2706413:50|2710049:50,Lamb or mutton with gravy + Eggplant dip,lamb stew over smoky eggplant puree: lamb with gravy + eggplant dip
+icli_kofte,Icli Kofte,293.9,11.53,7.79,24.01,120.0,composite,2708439:45|2705854:40|2710186:15,"Bulgur, fat added + Beef, ground + Olive oil",fried bulgur shells filled with spiced minced meat; 2 pieces
+ispanak,Ispanak,112.3,6.37,2.98,8.17,250.0,composite,2710791:70|2705854:15|2709745:10|2710186:5,"Spinach, cooked, as ingredient + Beef, ground + Spaghetti sauce + Olive oil","spinach cooked with a little minced meat, tomato and oil"
+izmir_kofte,Izmir Kofte,158.1,13.2,6.54,8.44,300.0,composite,2706467:70|2709383:30,"Meatballs, NS as to type of meat, with sauce + Potato, baked, NFS",meatballs and potatoes baked in tomato sauce
+karniyarik,Karniyarik,96.0,7.11,4.67,5.53,300.0,close,2710144:100,Eggplant and meat casserole,FNDDS 'Eggplant and meat casserole' for eggplant stuffed with minced meat
+kisir,Kisir,127.0,1.64,9.65,9.66,150.0,close,2709131:100,Tabbouleh,FNDDS 'Tabbouleh' (bulgur salad)
+kuru_fasulye,Kuru Fasulye,160.6,7.51,20.27,5.76,250.0,composite,2707354:80|2709745:20,"White beans, from dried, fat added + Spaghetti sauce",white bean stew in tomato sauce
+lahmacun,Lahmacun,201.0,7.84,36.04,2.46,170.0,composite,2707616:60|2706470:40,"Bread, pita + Spaghetti sauce with meat",thin flatbread topped with minced meat sauce: pita + meat sauce; 1 piece
+lokum,Lokum,396.0,0.0,98.9,0.0,40.0,proxy,2710359:100,"Candy, gummy","FNDDS 'Candy, gummy' for Turkish delight; 3 pieces"
+mucver,Mucver,202.5,3.8,16.89,13.56,150.0,composite,2708024:50|2710802:50,"Fritter, plain + Eggplant, cooked, as ingredient",zucchini fritters: plain fritter + cooked vegetable
+rice_pilaf,Rice Pilaf,137.0,3.29,24.08,3.03,200.0,exact,2709077:100,Rice pilaf,FNDDS 'Rice pilaf' (Turkish pirinc pilavi)
+simit,Simit,319.1,12.04,46.28,10.3,120.0,composite,2707684:85|2707586:15,Bagel + Sesame seeds,sesame bread ring: bagel + sesame seeds; 1 simit
+taze_fasulye,Taze Fasulye,129.2,1.75,7.0,10.44,250.0,composite,2710803:75|2709745:15|2710186:10,"Green beans, cooked, as ingredient + Spaghetti sauce + Olive oil",green beans braised in olive oil and tomato
+yaprak_sarma,Yaprak Sarma,168.0,2.28,13.88,11.95,150.0,exact,2709064:100,Grape leaves stuffed with rice,FNDDS 'Grape leaves stuffed with rice'; ~6 rolls
+apple,Apple,61.0,0.17,14.8,0.15,180.0,exact,2709215:100,"Apple, raw",1 medium apple
+noodle_soup,Noodle Soup,77.0,5.81,5.6,3.33,500.0,close,2707124:100,"Soup, pho, with meat","FNDDS 'Soup, pho, with meat' for noodle soup with meat; 1 bowl"
+hot_pot,Hot Pot,104.0,8.6,7.43,4.44,500.0,composite,2710116:60|2705849:20|2708352:20,"Soup, vegetable, with meat + Beef, stew meat + Noodles, cooked","broth with vegetables, sliced meat and noodles; 1 serving"
+stir_fried_noodles,Stir Fried Noodles,134.0,10.36,11.16,5.57,300.0,close,2706724:100,"Chow mein or chop suey, various types of meat, with noodles","FNDDS 'Chow mein or chop suey, various types of meat, with noodles'"
+fried_chicken,Fried Chicken,251.0,21.75,7.14,15.02,170.0,close,2705949:100,"Chicken, NS as to part, fried, coated, skin / coating eaten","FNDDS 'Chicken, NS as to part, fried, coated, skin / coating eaten'; 2 pieces"
+lychee,Lychee,66.0,0.83,16.53,0.44,100.0,exact,2709240:100,Lychee,~10 lychees
+meat_stir_fry,Meat Stir Fry,102.0,10.73,4.44,4.81,250.0,close,2706751:100,Stir fried beef and vegetables in soy sauce,FNDDS 'Stir fried beef and vegetables in soy sauce'
+shrimp_stir_fry,Shrimp Stir Fry,116.0,9.16,5.15,6.4,250.0,close,2706853:100,"Shrimp and vegetables including carrots, broccoli, and/or dark-green leafy; no potatoes, soy-based sauce",FNDDS 'Shrimp and vegetables ...' (stir-fried)
+stir_fried_vegetables,Stir Fried Vegetables,71.0,2.01,9.65,2.84,150.0,exact,2710036:100,"Asian stir fry vegetables, cooked, fat added","FNDDS 'Asian stir fry vegetables, cooked, fat added'"
+braised_pork,Braised Pork,403.7,23.92,9.96,29.05,150.0,composite,2705901:90|2710258:10,"Pork, belly + Sugar, white, granulated or lump",red-braised pork belly: pork belly + sugar/soy glaze
+steamed_fish,Steamed Fish,87.0,19.29,0.0,0.52,200.0,close,2706245:100,"Fish, cod, steamed","FNDDS 'Fish, cod, steamed'"
+fried_fish,Fried Fish,217.0,13.52,11.72,12.48,150.0,close,2706244:100,"Fish, cod, fried","FNDDS 'Fish, cod, fried'"
+grilled_fish,Grilled Fish,108.0,19.36,0.0,2.79,150.0,close,2706242:100,"Fish, cod, grilled","FNDDS 'Fish, cod, grilled'"
+instant_noodles,Instant Noodles,127.0,7.13,13.95,4.57,400.0,close,2709153:100,"Ramen bowl, NFS","FNDDS 'Ramen bowl, NFS' (prepared instant noodles)"
+steamed_buns,Steamed Buns,273.0,11.17,39.78,7.58,100.0,close,2708724:100,Bao bun,FNDDS 'Bao bun'; 1-2 buns
+crawfish,Crawfish,97.0,20.22,0.0,1.2,200.0,exact,2706348:100,"Crayfish, cooked",edible meat of ~1 plate
+boiled_eggs,Boiled Eggs,143.0,12.4,0.96,9.96,100.0,exact,2707154:100,"Egg, whole, boiled or poached",2 boiled eggs
+corn_on_the_cob,Corn On The Cob,119.0,3.11,17.73,5.43,150.0,close,2709909:100,"Corn, cooked, from restaurant",1 cob
+mapo_tofu,Mapo Tofu,207.3,8.06,3.08,18.22,250.0,composite,2707477:70|2705854:20|2710186:10,"Tofu and vegetables excluding carrots, broccoli, and dark-green leafy; no potatoes, with soy-based sauce + Beef, ground + Olive oil",tofu in chili bean sauce with minced meat and oil
+roast_chicken,Roast Chicken,203.0,24.7,0.0,10.8,200.0,exact,2705933:100,"Chicken, NS as to part, baked, broiled, or roasted, skin eaten","roast chicken, skin eaten"
+egg_tart,Egg Tart,210.0,5.5,20.8,11.6,70.0,close,2708007:100,"Pie, custard","FNDDS 'Pie, custard'; 1 tart"
+sweet_and_sour_meat,Sweet and Sour Meat,255.0,9.49,24.68,13.12,200.0,composite,2706435:50|2706401:50,Sweet and sour chicken or turkey + Sweet and sour pork,sweet and sour chicken / pork
+vegetable_soup,Vegetable Soup,27.0,0.84,5.08,0.45,300.0,exact,2710113:100,"Soup, vegetable",1 bowl
+chicken_soup,Chicken Soup,40.0,3.44,4.04,1.14,300.0,exact,2707134:100,"Soup, chicken",1 bowl
+beef_stew,Beef Stew,107.0,8.76,6.29,5.07,300.0,exact,2706592:100,"Stew, beef",1 bowl
+tomato_egg_stir_fry,Tomato Egg Stir Fry,165.0,10.29,1.47,13.19,200.0,close,2707229:100,"Egg omelet or scrambled egg, with tomatoes, fat added","FNDDS 'Egg omelet or scrambled egg, with tomatoes, fat added'"
+chicken_feet,Chicken Feet,215.0,19.4,0.2,14.6,150.0,exact,2706085:100,Chicken feet,braised or spicy chicken feet
+fruit_salad,Fruit Salad,73.3,0.65,17.32,0.19,200.0,composite,2709215:30|2709224:25|2709237:25|2709171:20,"Apple, raw + Banana, raw + Grapes, raw + Orange, raw","plain mixed fruit, no dressing"
+dragon_fruit,Dragon Fruit,68.0,0.68,16.24,0.21,200.0,exact,2709234:100,Dragon fruit,1 fruit
+zongzi,Zongzi,156.1,6.64,18.25,6.03,200.0,composite,2708422:70|2705901:15|2707347:15,"Rice, white, cooked, glutinous + Pork, belly + Beans, NFS",sticky rice with pork and beans in leaves; 1 zongzi
+chicken_rice,Chicken Rice,149.0,6.46,16.97,5.84,350.0,close,2706537:100,"Chicken or turkey and rice, no sauce","FNDDS 'Chicken or turkey and rice, no sauce' (Hainanese chicken rice)"
+rice_porridge,Rice Porridge,58.0,4.34,7.0,1.28,300.0,exact,2708981:100,"Congee, with meat, poultry, and/or seafood",congee with meat; 1 bowl
+steamed_crab,Steamed Crab,83.0,17.88,0.0,0.74,150.0,close,2706344:100,Crab,edible crab meat
+potato_chips,Potato Chips,532.0,6.39,53.83,33.98,30.0,exact,2709422:100,"Potato chips, plain",1 small bag

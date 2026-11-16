@@ -117,3 +117,101 @@ frcitems:
     mango: mango
     cherry: cherries
     blueberry: blueberries
+
+turkish25:
+  hf: yunusserhat/TurkishFoods-25
+  dir: turkish25_256
+  splits: {train: train, eval: train, test: test}
+  license: Apache-2.0
+  url: https://huggingface.co/datasets/yunusserhat/TurkishFoods-25
+  aliases:                         # 3 of its 25 dishes already exist under our names
+    baklava: baklava
+    manti: dumplings
+    kebap: kebab
+    pirinc_pilavi: rice_pilaf
+
+mmfood:
+  # MM-Food-100K: ~100k crowd-sourced phone photos with a dish name (AI-written, reviewed by people). Only clear, frequent
+  # names are used, merged into one label each; vague ones ("mixed asian cuisine", "meat stew", "birthday cake") are skipped.
+  type: mmfood_names
+  hf: Humanbased-AI/MM-Food-100K
+  csv: MM-Food-100K.csv
+  dir: mmfood_256
+  license: OpenRAIL
+  url: https://huggingface.co/datasets/Humanbased-AI/MM-Food-100K
+  max_per_class: 800
+  test_frac: 0.1
+  min_images: 60
+  names:                           # our label: [their dish names]
+    # new dishes
+    apple: [apple, apples]
+    noodle_soup: [noodle soup, beef noodle soup, spicy noodle soup, seafood noodle soup, noodle soup with meat, chicken noodle soup, shrimp noodle soup]
+    hot_pot: [hot pot, spicy hot pot]
+    stir_fried_noodles: [stir-fried noodles, noodle stir-fry, noodle stir fry, stir-fried noodles with vegetables]
+    fried_chicken: [fried chicken]
+    lychee: [lychee]
+    meat_stir_fry: [stir-fried chicken with vegetables, beef stir-fry, stir-fried meat with vegetables, chicken stir-fry, stir-fried meat and vegetables, stir-fried vegetables with meat, stir-fried beef with vegetables, stir-fried pork with vegetables, spicy beef stir-fry, stir-fried chicken]
+    shrimp_stir_fry: [shrimp stir-fry, shrimp and vegetable stir-fry]
+    stir_fried_vegetables: [vegetable stir-fry, stir-fried greens, stir-fried vegetables, stir-fried cabbage, sautéed greens, stir-fried green beans]
+    braised_pork: [braised pork belly, braised pork]
+    steamed_fish: [steamed fish, steamed fish with vegetables]
+    fried_fish: [fried fish]
+    grilled_fish: [grilled fish]
+    instant_noodles: [instant noodles]
+    steamed_buns: [steamed buns, steamed bun]
+    crawfish: [spicy crawfish, crawfish, crawfish boil]
+    boiled_eggs: [boiled eggs, boiled egg]
+    corn_on_the_cob: [corn on the cob]
+    mapo_tofu: [mapo tofu]
+    roast_chicken: [roasted chicken, roasted chicken with vegetables]
+    egg_tart: [egg tart, custard tart, custard tarts]
+    sweet_and_sour_meat: [sweet and sour chicken, sweet and sour pork]
+    vegetable_soup: [vegetable soup]
+    chicken_soup: [chicken soup]
+    beef_stew: [beef stew]
+    tomato_egg_stir_fry: [tomato and egg stir-fry, scrambled eggs with tomatoes]
+    chicken_feet: [spicy chicken feet, braised chicken feet]
+    fruit_salad: [fruit salad]
+    dragon_fruit: [dragon fruit]
+    zongzi: [zongzi]
+    chicken_rice: [chicken rice, hainanese chicken rice]
+    rice_porridge: [rice porridge]
+    steamed_crab: [steamed crab, steamed crabs]
+    potato_chips: [potato chips]
+    # more phone photos for dishes the model already knows
+    dumplings: [dumplings, steamed dumplings]
+    gyoza: [fried dumplings]
+    fried_rice: [fried rice, shrimp fried rice, vegetable fried rice]
+    pizza: [pizza, pepperoni pizza, cheese pizza, vegetable pizza]
+    sushi: [sushi, sushi platter, sushi rolls]
+    sashimi: [sashimi, sashimi platter]
+    ramen: [ramen]
+    pho: [pho]
+    hamburger: [hamburger, cheeseburger]
+    steak: [grilled steak, grilled steak with vegetables]
+    chicken_wings: [fried chicken wings, glazed chicken wings, grilled chicken wings, chicken wings]
+    french_fries: [french fries]
+    kebab: [grilled meat skewers, grilled skewers, mixed skewers, grilled chicken skewers]
+    peking_duck: [roasted duck, roast duck]
+    spring_rolls: [spring rolls]
+    chocolate_cake: [chocolate cake]
+    oysters: [oysters, baked oysters]
+    bibimbap: [bibimbap]
+    biryani: [biryani]
+    spaghetti_bolognese: [spaghetti bolognese]
+    white_rice: [cooked white rice]
+    ice_cream: [ice cream, soft serve ice cream]
+    baby_back_ribs: [barbecue ribs]
+    watermelon: [watermelon, watermelon slices, watermelon slice]
+    strawberries: [strawberries, strawberry]
+    grapes: [grapes, green grapes]
+    banana: [bananas, banana]
+    cherries: [cherries]
+    peach: [peach, peaches, fresh peaches]
+    mango: [mango]
+    orange: [oranges, orange]
+    blueberries: [blueberries]
+    pear: [pear, pears]
+    pineapple: [pineapple]
+    milk: [whole milk, milk]
+    coffee: [iced coffee]

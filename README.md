@@ -174,6 +174,22 @@ in a cup and the Indian data has many chai photos. So the app treats every drink
 it lists the variants with calories per serving and a one-tap "Not tea? Coffee · Milk · Juice/soda · Wine/beer" switch,
 and *Learns from you* remembers the user's own cups.
 
+### v4: Turkish dishes and everyday Asian meals from phone photos (228 classes)
+
+`configs/gpu/multi_world_v4_convnext_tiny.yaml` adds two more openly licensed sources:
+
+| Source | License | What it adds |
+|---|---|---|
+| [TurkishFoods-25](https://huggingface.co/datasets/yunusserhat/TurkishFoods-25) (11,461 photos) | Apache-2.0 | 22 new dishes: lahmacun, börek, gözleme, simit, kuru fasulye, yaprak sarma, çiğ köfte, karnıyarık, mantı → dumplings, kebap → kebab… |
+| [MM-Food-100K](https://huggingface.co/datasets/Humanbased-AI/MM-Food-100K) (crowd-sourced phone photos) | OpenRAIL | 34 new dishes (noodle soup, hot pot, stir-fried noodles, meat/shrimp/vegetable stir-fries, fried chicken, braised pork, steamed/fried/grilled fish, steamed buns, egg tart, mapo tofu, boiled eggs, apple, lychee, congee…) and more phone photos for 37 existing classes |
+
+MM-Food's dish names are AI-written and human-reviewed, so only frequent, unambiguous names are used, merged into one
+label each (e.g. *apple* + *apples*, nine stir-fry wordings → *meat stir-fry*); vague ones ("mixed asian cuisine",
+"meat stew", "birthday cake") are skipped, at most 800 photos per dish, and identical photos listed under several URLs are
+removed (10 of 40 egg-tart photos in a sample were duplicates), so none leak into the test split. Durian and mangosteen
+were left out: USDA has no nutrition for them. All 56 new dishes have USDA-based nutrition (single foods or recipe
+mixes), tested. Warm-started from the 172-class model.
+
 ## In-browser version (free, on-device)
 
 The live demo is a static site in [`docs/`](docs/) (GitHub Pages) that runs the 139-dish model **inside the visitor's browser**

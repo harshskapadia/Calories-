@@ -5,7 +5,7 @@
 const DIARY_PROFILE = "nutrisnap.profile.v1", DIARY_LOG = "nutrisnap.log.v1", DIARY_FAVS = "nutrisnap.favs.v1";
 const MEALS = [["breakfast", "Breakfast"], ["lunch", "Lunch"], ["dinner", "Dinner"], ["snack", "Snacks"]];
 // what a logged food carries: name, amount, kcal + macros (g), and when known fibre, sugars, saturated fat (g), sodium (mg)
-const ENTRY_KEYS = ["name", "amount", "kcal", "p", "c", "f", "fb", "sg", "sf", "na"];
+const ENTRY_KEYS = ["name", "key", "amount", "kcal", "p", "c", "f", "fb", "sg", "sf", "na"];
 const SCALED = ["kcal", "p", "c", "f", "fb", "sg", "sf", "na"];
 const DAILY = { fibre: 25, saltG: 5 }; // WHO / EFSA: at least 25 g fibre, under 5 g salt a day; saturated fat under 10% of energy
 const KCAL_PER_KG = 7700;   // energy in ~1 kg of body fat (rule of thumb)
@@ -173,10 +173,10 @@ function addEntries(entries) {
 }
 
 function entryFromCurrent() {
-  const food = state.foods.get(state.key);
-  if (!food || !state.grams) return null;
-  const k = state.grams / 100;
-  return { name: food.name, amount: `${Math.round(state.grams)} ${food.unit || "g"}`,
+  const base = state.foods.get(state.key);
+  if (!base || !state.grams) return null;
+  const food = typeof effectiveFood === "function" ? effectiveFood(base) : base, k = state.grams / 100;
+  return { name: food.styled ? `${food.name} (${food.styled})` : food.name, key: state.key, amount: `${Math.round(state.grams)} ${food.unit || "g"}`,
     kcal: food.kcal * k, p: food.p * k, c: food.c * k, f: food.f * k, ...microsFor(food, state.grams) };
 }
 
@@ -401,6 +401,7 @@ function renderDay() { renderTarget(); }
   $("add-today").addEventListener("click", () => {
     const e = entryFromCurrent();
     if (!e) { flash("Pick a food and an amount first."); return; }
+    if (typeof rememberPortion === "function") rememberPortion(state.key, state.grams, state.style);
     flash(addedMessage(addEntries([e])));
   });
   $("plate-add")?.addEventListener("click", () => {

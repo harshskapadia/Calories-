@@ -478,6 +478,36 @@ value scales with it) or move it to another meal, and to add it to **favourites*
 backups). **"↻ Yesterday's breakfast"** (any meal eaten yesterday and not logged yet today) copies the whole meal in one
 tap.
 
+### 🤔 "This might be a dish I don't know", and a second opinion
+
+The dish model can be confidently wrong about a dish it was never trained on (a halal snack pack came out as *Nachos
+94%*). Measured on **234 phone photos of 120 dishes it was never trained on** (MM-Food-100K dish names outside its
+classes) and 1,000 test photos of dishes it knows:
+
+| Check | Unknown dishes caught | Known dishes flagged |
+|---|---|---|
+| Low confidence only (< 40%, the old "Not sure") | 57% | 5% |
+| **+ unusually low raw score** (max logit < 5th percentile on known photos; `scripts/calibrate_unknown.py`) | **65%** | 6% |
+| Identify anything (CLIP) disagrees: its best match is not in the dish's name family by > 0.04 | 88% | 13% |
+
+The first two run on every photo for free and show *"This might be a dish I don't know yet"*. The CLIP check costs a
+~110 MB one-time download and ~1 s per photo, and disagrees on 13% of known dishes, so it is a **second opinion, never
+an error**: tick *Double-check every photo* (or tap *Get a second opinion* when the app is unsure) and, when the two
+disagree, the app shows "this looks more like *X*" with **Use it** / **Keep *Y*** (using it also teaches *Learns from
+you*); when they agree it says so. Limits, honestly: some photos fool both models (the snack pack also looks like nachos
+to CLIP, and a brownie came out as chocolate cake 98%); CLIP's own suggestion can be wrong for foods it doesn't know
+either (goji berries -> pinto beans). Only training photos fix those.
+
+### 🍽️ Your portions and how it was cooked
+
+- **Learns your portions**: when you add a food, NutriSnap remembers the amount; next time that food is recognised it
+  starts at **your usual** (median of your last 5), with *Small / Medium / Large* one tap away and "Your usual: 300 g"
+  to go back.
+- **How it was cooked**: *Light / Normal / Rich* for cooked food with some fat. It changes the fat (oil, ghee, butter,
+  cream, cheese) by −30% / +40%, and the calories and saturated fat with it; protein and carbs stay the same. Logged as
+  e.g. "Pizza (rich)", and remembered per food with your portion.
+- **Your plate** (Split the plate): Small / Standard / Large scales the area-based gram guesses (×0.7 / ×1 / ×1.35).
+
 ### 🍲 My recipes
 
 A tab for dishes you cook at home. Name the dish, set how many servings it makes, and add ingredients the way a recipe

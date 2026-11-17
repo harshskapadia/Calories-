@@ -2,7 +2,39 @@
 "use strict";
 
 const $ = (id) => document.getElementById(id);
-const state = { meta: null, foods: new Map(), foodList: [], session: null, key: null, preset: "medium", grams: 0, micros: {} };
+const state = { meta: null, foods: new Map(), foodList: [], session: null, key: null, preset: "medium", grams: 0, micros: {}, style: "normal" };
+
+// ---------------------------------------------------------------- your portions and cooking style
+// NutriSnap remembers how much of a food you log (median of your last 5) and how you cook it, per food, on this phone.
+const PORTIONS_KEY = "nutrisnap.portions.v1";
+// cooking style changes the fat (oil, ghee, butter, cream, cheese): light = 30% less, rich = 40% more (restaurant-style)
+const STYLES = { light: 0.7, normal: 1, rich: 1.4 };
+function portionMemory() { try { return JSON.parse(localStorage.getItem(PORTIONS_KEY) || "{}") || {}; } catch { return {}; } }
+function rememberPortion(key, grams, style) {
+  if (!key || !(grams > 0)) return;
+  const m = portionMemory(), r = m[key] || { g: [] };
+  r.g = [...(r.g || []), Math.round(grams)].slice(-5);
+  r.style = style;
+  r.t = Date.now();
+  m[key] = r;
+  const keys = Object.keys(m).sort((a, b) => m[b].t - m[a].t); // keep the 300 most recent foods
+  try { localStorage.setItem(PORTIONS_KEY, JSON.stringify(Object.fromEntries(keys.slice(0, 300).map((k) => [k, m[k]])))); } catch { /* storage full */ }
+}
+function usualPortion(key) {
+  const r = portionMemory()[key];
+  if (!r || !r.g || !r.g.length) return null;
+  const g = [...r.g].sort((a, b) => a - b);
+  return { grams: g[Math.floor(g.length / 2)], style: STYLES[r.style] ? r.style : "normal", n: g.length };
+}
+/** Cooking style only means something for cooked food with some fat (not fruit, drinks, packaged foods or your recipes). */
+function styleAllowed(food) { return !!food && food.match !== "off" && food.match !== "recipe" && food.f >= 2; }
+/** The food as you cooked it: per-100 g values with the cooking style applied (protein and carbs stay the same). */
+function effectiveFood(food) {
+  if (!styleAllowed(food) || state.style === "normal") return food;
+  const k = STYLES[state.style], f = food.f * k, mi = microsOf(food);
+  return { ...food, f, kcal: Math.max(0, food.kcal + (f - food.f) * 9), styled: state.style,
+    styleMicros: mi ? [mi[0], mi[1], mi[2] == null ? null : mi[2] * k, mi[3]] : null };
+}
 
 // ---------------------------------------------------------------- loading
 async function fetchWithProgress(url, onProgress) {
@@ -184,6 +216,11 @@ async function analyze(blob) {
     helperProbs = softmax(Array.from({ length: H }, (_, k) => (HL[k] + HL[H + k]) / 2), state.meta.helper.temperature);
   }
   const probs = combineProbs(softmax(avg, state.meta.temperature), helperProbs);
+  // "might be a dish I don't know": the main model's strongest raw score is unusually low for a dish it knows
+  // (threshold = the 5th percentile on known test photos; scripts/calibrate_unknown.py). The low-confidence rule below
+  // covers the rest. Together they flag ~65% of photos of unknown dishes and ~6% of known ones.
+  const maxLogit = Math.max(...avg);
+  state.unknownish = !!(state.meta.ood && maxLogit < state.meta.ood.max_logit);
   const top = probs.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]).slice(0, 3);
   const ms = Math.round(performance.now() - t0);
   setStatus(`Ready: ${dishCount()} dishes, running on this device.`, 1, true);
@@ -192,6 +229,10 @@ async function analyze(blob) {
   selectFood(state.meta.classes[top[0][1]]);
   if (typeof onDishResult === "function") onDishResult(state.meta.classes[top[0][1]]);
   if (typeof learnSuggest === "function") learnSuggest(state.meta.classes[top[0][1]]);
+  state.lastTopKey = state.meta.classes[top[0][1]];
+  if (typeof maybeSecondOpinion === "function") {
+    maybeSecondOpinion(blob, state.lastTopKey, top[0][0] < state.meta.low_confidence || state.unknownish);
+  }
 }
 
 function renderTop3(top, ms) {
@@ -217,9 +258,13 @@ function renderTop3(top, ms) {
   }
   const best = top[0][0];
   const warn = $("warn");
-  warn.hidden = best >= state.meta.low_confidence;
-  warn.innerHTML = `🤔 <b>Not sure</b> (best guess ${(best * 100).toFixed(0)}%). This may be a dish I wasn't trained on. ` +
-    `Try <b>🌍 Identify anything</b> below, tap the right dish, or <b>search any food</b>.`;
+  const unsure = best < state.meta.low_confidence;
+  warn.hidden = !unsure && !state.unknownish;
+  warn.innerHTML = unsure
+    ? `🤔 <b>Not sure</b> (best guess ${(best * 100).toFixed(0)}%). This may be a dish I wasn't trained on. ` +
+      `Try <b>🌍 Identify anything</b> below, tap the right dish, or <b>search any food</b>.`
+    : `🤔 <b>This might be a dish I don't know yet.</b> It looks most like ${escapeHtml(state.meta.display_names[top[0][1]])}, ` +
+      `but the photo doesn't match my examples well. Check with <b>🌍 Identify anything</b> below, or search.`;
   $("timing").textContent = `Recognised on this device in ${ms} ms.`;
   $("results").hidden = false;
 }
@@ -234,12 +279,24 @@ function buildDishSelect() {
   sel.addEventListener("change", () => sel.value && selectFood(sel.value));
 }
 
-function selectFood(key) {
+function selectFood(key, fromPreset = false) {
   const food = state.foods.get(key);
   if (!food) return;
+  const changed = state.key !== key;
   state.key = key;
   $("dish").value = state.meta.classes.includes(key) ? key : "";
-  setGrams(Math.round(food.serving * state.meta.portion_multipliers[state.preset]));
+  const usual = usualPortion(key);
+  if (changed) state.style = usual ? usual.style : "normal";
+  // a new food starts at your usual amount if you've logged it before; Small/Medium/Large still work as before
+  const useUsual = usual && !fromPreset;
+  $("usual-hint").textContent = usual ? `Your usual: ${usual.grams} ${food.unit || "g"} (from your log)${useUsual ? "" : ". Tap here to use it."}` : "";
+  $("usual-hint").dataset.grams = usual ? usual.grams : "";
+  $("usual-hint").classList.toggle("linkish", !!usual && !useUsual);
+  document.querySelectorAll(".seg button[data-preset]").forEach((b) => {
+    const on = !useUsual && b.dataset.preset === state.preset;
+    b.classList.toggle("on", on); b.setAttribute("aria-checked", on);
+  });
+  setGrams(useUsual ? usual.grams : Math.round(food.serving * state.meta.portion_multipliers[state.preset]));
 }
 
 function setGrams(g) {
@@ -253,6 +310,7 @@ function setGrams(g) {
     their own from Open Food Facts (salt g -> sodium mg: salt = 2.5 x sodium). */
 function microsOf(food) {
   if (!food) return null;
+  if (food.styleMicros) return food.styleMicros;
   if (food.match === "recipe") return food.micros || null;
   if (food.match === "off") {
     const x = food.extra && food.extra.per100;
@@ -263,13 +321,27 @@ function microsOf(food) {
 }
 
 function render() {
-  const food = state.foods.get(state.key);
-  if (!food) return;
+  const base = state.foods.get(state.key);
+  if (!base) return;
+  const food = effectiveFood(base);
+  // cooking style (only for cooked food with some fat)
+  const canStyle = styleAllowed(base);
+  $("style-field").hidden = !canStyle;
+  document.querySelectorAll(".seg button[data-style]").forEach((b) => {
+    const on = b.dataset.style === (canStyle ? state.style : "normal");
+    b.classList.toggle("on", on); b.setAttribute("aria-checked", on);
+  });
+  if (canStyle) {
+    const d = ((food.kcal - base.kcal) * state.grams) / 100;
+    $("style-hint").textContent = state.style === "light" ? `Less oil, ghee or butter: ${Math.round(d)} kcal for this portion.`
+      : state.style === "rich" ? `More oil, ghee, butter or cream, like most restaurants: +${Math.round(d)} kcal for this portion.`
+      : "As a typical recipe. Change it if yours used much less or more oil, ghee or butter.";
+  }
   const k = state.grams / 100;
   const P = food.p * k, C = food.c * k, F = food.f * k, kcal = food.kcal * k;
   const unit = food.unit || "g";
   $("unit").textContent = unit;
-  $("food-name").textContent = food.name;
+  $("food-name").textContent = food.styled ? `${food.name}, ${food.styled === "rich" ? "rich" : "light"}` : food.name;
   $("nf-grams").textContent = `${Math.round(state.grams)} ${unit}`;
   $("kcal").textContent = Math.round(kcal);
   $("p").textContent = `${Math.round(P)} g`;
@@ -315,6 +387,7 @@ function render() {
 // Remove the photo and its results so a new one can be taken (the nutrition card and today's log are kept)
 function clearPhoto() {
   state.lastBlob = null;
+  if ($("second")) $("second").hidden = true;
   state.lastEmb = null;
   $("learn").hidden = true;
   $("drink-pick").hidden = true;
@@ -417,7 +490,15 @@ function wire() {
   document.querySelectorAll(".seg button[data-preset]").forEach((b) => b.addEventListener("click", () => {
     document.querySelectorAll(".seg button[data-preset]").forEach((x) => { x.classList.toggle("on", x === b); x.setAttribute("aria-checked", x === b); });
     state.preset = b.dataset.preset;
-    if (state.key) selectFood(state.key);
+    if (state.key) selectFood(state.key, true);
+  }));
+  $("usual-hint").addEventListener("click", () => {
+    const g = Number($("usual-hint").dataset.grams);
+    if (g > 0 && state.key) selectFood(state.key, false);
+  });
+  document.querySelectorAll(".seg button[data-style]").forEach((b) => b.addEventListener("click", () => {
+    state.style = b.dataset.style;
+    render();
   }));
   $("grams-range").addEventListener("input", (e) => setGrams(e.target.value));
   $("grams").addEventListener("input", (e) => setGrams(e.target.value));

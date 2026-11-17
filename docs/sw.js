@@ -5,11 +5,11 @@
    - Core model + food data are precached at install so photo recognition works offline after the first visit.
    - The optional "Identify anything" and "Whole plate" files are cached the first time they are downloaded.
    - Cross-origin requests (Open Food Facts) always go to the network. */
-const SHELL_VERSION = "shell-8e51e3d71c";
-const ASSET_VERSION = "assets-7d5b70b3b1"; // = hash of docs/model + docs/ort contents (tests/test_web.py checks it)
+const SHELL_VERSION = "shell-6dfd41a831";
+const ASSET_VERSION = "assets-62852cc783"; // = hash of docs/model + docs/ort contents (tests/test_web.py checks it)
 const SHELL = SHELL_VERSION, ASSETS = ASSET_VERSION;
 // the current CSS/JS, exactly as the pages link them (written by scripts/stamp_sw.py)
-const SHELL_FILES = ["app.js?v=b60a92bdc9", "backup.js?v=1822bab602", "diary.js?v=59ddda5cd1", "learn.js?v=83e94f1c79", "motion.js?v=f0b5cd75d0", "openvocab.js?v=62177ce2f7", "plate.js?v=a0d49d169d", "products.js?v=5c2fdfff6c", "quicklog.js?v=824cda88c3", "recipes.js?v=13ba89093f", "report.js?v=60299acc57", "style.css?v=edffca8ce0", "tour.js?v=c6027606f8", "water.js?v=28619159ba", "weight.js?v=804c49732f"];
+const SHELL_FILES = ["app.js?v=718d267387", "backup.js?v=f59e3d9060", "diary.js?v=3780f35587", "learn.js?v=83e94f1c79", "motion.js?v=f0b5cd75d0", "openvocab.js?v=72c9ad3cc6", "plate.js?v=f75ede5795", "products.js?v=5c2fdfff6c", "quicklog.js?v=824cda88c3", "recipes.js?v=13ba89093f", "report.js?v=60299acc57", "style.css?v=120adb5558", "tour.js?v=c6027606f8", "water.js?v=28619159ba", "weight.js?v=804c49732f"];
 
 const CORE = [
   "./", "index.html", "privacy.html", "manifest.webmanifest", ...SHELL_FILES,

@@ -5,6 +5,12 @@
 const plate = { meta: null, foods: null, session: null, loading: null, items: [], img: null };
 const PLATE_COLORS = ["#7c5cff", "#ff7a59", "#2bb673", "#f5b700", "#1fa2ff", "#e2489b", "#8a6d3b", "#00b3a4", "#c0392b", "#6c7a89"];
 const PLATE_K = 800; // grams of an average-density food that would fill the whole photo (rough; see README)
+// your plate size scales that guess (a photo of a small plate holds less food than one of a large plate); remembered
+const PLATE_SIZES = { small: 0.7, standard: 1, large: 1.35 };
+function plateSize() {
+  try { const v = JSON.parse(localStorage.getItem("nutrisnap.platesize.v1")); return PLATE_SIZES[v] ? v : "standard"; } catch { return "standard"; }
+}
+const plateK = () => PLATE_K * (PLATE_SIZES[plateSize()] || 1);
 const PLATE_MAX_KCAL = 600; // the automatic guess never gives one food more than this
 
 async function plateAvailable() {
@@ -121,7 +127,7 @@ function plateItems({ dets, mw, mh }, S, box) {
     it.food = food;
     // area x thickness guess, capped at ~600 kcal per food so a dense food (nuts, cheese) can't run away; user edits win
     const cap = Math.min(900, (PLATE_MAX_KCAL / Math.max(food.kcal, 1)) * 100);
-    it.grams = Math.round(Math.min(cap, Math.max(5, PLATE_K * it.coverage * food.thick)) / 5) * 5;
+    it.grams = Math.round(Math.min(cap, Math.max(5, plateK() * it.coverage * food.thick)) / 5) * 5;
     items.push(it);
   }
   items.sort((a, b) => b.coverage - a.coverage);
@@ -271,7 +277,7 @@ function foodFromKey(key, label) {
 
 function guessGrams(food, coverage) {
   const cap = Math.min(900, (PLATE_MAX_KCAL / Math.max(food.kcal, 1)) * 100);
-  return Math.round(Math.min(cap, Math.max(5, PLATE_K * coverage * food.thick)) / 5) * 5;
+  return Math.round(Math.min(cap, Math.max(5, plateK() * coverage * food.thick)) / 5) * 5;
 }
 
 async function classifyRegion(bmp, x, y, w, h) {
@@ -595,6 +601,21 @@ $("drink-pick").addEventListener("click", (e) => {
       $("dish").value = state.meta.classes.includes(it.food.key) ? it.food.key : "";
       setGrams(it.grams);
       $("nutrition").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+})();
+
+// plate size: rescale the current plate's guesses (your own edits scale too) and remember it for next time
+(function initPlateSize() {
+  const sel = $("plate-size");
+  if (!sel) return;
+  sel.value = plateSize();
+  sel.addEventListener("change", () => {
+    const before = PLATE_SIZES[plateSize()] || 1, after = PLATE_SIZES[sel.value] || 1;
+    try { localStorage.setItem("nutrisnap.platesize.v1", JSON.stringify(sel.value)); } catch { /* storage blocked */ }
+    if (plate.items && plate.items.length) {
+      for (const it of plate.items) it.grams = Math.max(5, Math.round((it.grams * after) / before / 5) * 5);
+      renderPlateList();
     }
   });
 })();

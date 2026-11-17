@@ -713,3 +713,18 @@ body.tour-open { overflow: hidden; }
 /* saving: the card files itself away into the list */
 .rc-filing { animation: rc-file .38s cubic-bezier(.5, 0, .75, 0) forwards; transform-origin: 50% 0; }
 @keyframes rc-file { to { transform: translateY(-24px) scale(.92); opacity: 0; } }
+
+/* your usual portion, cooking style */
+.usual-hint { all: unset; display: block; margin-top: 8px; font-size: .85rem; color: var(--muted); }
+.usual-hint:empty { display: none; }
+.usual-hint.linkish { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.style-hint { margin: 6px 0 0; }
+.plate-size { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; font-weight: 600; font-size: .92rem; }
+.plate-size select { width: auto; min-height: 40px; }
+
+/* second opinion */
+.second { margin-top: 12px; padding: 12px 14px; border-radius: 14px; background: var(--primary-soft); display: grid; gap: 10px; font-size: .92rem; }
+.second-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.second .btn, .second .chip { white-space: normal; text-align: left; height: auto; min-height: 38px; max-width: 100%; }
+.second-toggle { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; font-size: .86rem; cursor: pointer; }
+.second-toggle input { width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--primary); flex: none; }

@@ -21,7 +21,9 @@ DOCS = Path(__file__).resolve().parents[1] / "docs"
 def asset_hash() -> str:
     h = hashlib.sha256()
     for p in sorted([*(DOCS / "model").glob("*"), *(DOCS / "ort").glob("*")]):
-        if p.suffix in {".onnx", ".wasm", ".bin", ".json", ".mjs", ".js"}:
+        # only the big files the service worker caches by ASSET_VERSION (sw.js BIG); small JSON/JS are revalidated anyway,
+        # so editing meta.json must not make every installed app download its models again
+        if p.suffix in {".onnx", ".wasm", ".bin"}:
             h.update(p.name.encode())
             data = p.read_bytes()
             if p.suffix in {".json", ".mjs", ".js"}:  # same hash on Windows (CRLF) and Linux/GitHub (LF)

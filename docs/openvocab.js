@@ -174,3 +174,106 @@ fetch("model/clip_vocab.json").then((r) => r.json()).then((m) => {
     $("ov-region").append(o);
   }
 }).catch(() => {});
+
+
+// ---------------------------------------------------------------- second opinion
+// The dish model can be confidently wrong about a dish it was never trained on. Identify anything (CLIP, 10,000+ foods)
+// is a second, independent opinion: when its best match is not in the same family as the dish model's answer (no
+// food whose name contains the dish's name scores within 0.04 of its best match), the app offers its answer instead.
+// Measured on 234 phone photos of 120 unknown dishes and 600 known ones: catches 88% of unknown dishes, and differs on
+// 13% of known ones (shown as a suggestion, never as an error).
+const SECOND = { margin: 0.04, prefKey: "nutrisnap.prefs.v1" };
+const ovWords = (s) => new Set((String(s).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().match(/[a-z]+/g) || [])
+  .filter((w) => w.length > 2).map((w) => (w.length > 3 && w.endsWith("s") ? w.slice(0, -1) : w)));
+
+function prefs() { try { return JSON.parse(localStorage.getItem(SECOND.prefKey)) || {}; } catch { return {}; } }
+function setPref(k, v) { try { localStorage.setItem(SECOND.prefKey, JSON.stringify({ ...prefs(), [k]: v })); } catch { /* blocked */ } }
+
+async function ovScores(blob) {
+  await loadOpenVocab();
+  const m = ov.meta;
+  const x = await toTensor(blob, { size: m.size, resize: m.resize, mean: m.mean, std: m.std, flip: true });
+  const { embedding } = await ov.session.run({ image: x });
+  const D = m.dim, N = m.keys.length, e = new Float32Array(D);
+  let norm = 0;
+  for (let d = 0; d < D; d++) { e[d] = (embedding.data[d] + embedding.data[D + d]) / 2; norm += e[d] * e[d]; }
+  norm = Math.sqrt(norm);
+  const scores = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    let s = 0;
+    const off = i * D;
+    for (let d = 0; d < D; d++) s += e[d] * ov.bank[off + d];
+    scores[i] = s / 127 / norm;
+  }
+  return scores;
+}
+
+async function secondOpinion(blob, dishKey) {
+  const scores = await ovScores(blob), m = ov.meta;
+  if (!ov.words) ov.words = m.names.map(ovWords);
+  const merged = new Set([dishKey, ...Object.entries(state.meta.merge || {}).filter(([, b]) => b === dishKey).map(([a]) => a)]);
+  const dw = [...ovWords(state.foods.get(dishKey)?.name || dishKey.replace(/_/g, " "))];
+  const inFamily = (i) => merged.has(m.keys[i]) || (dw.length && dw.every((w) => ov.words[i].has(w)));
+  let best = 0, fam = -9;
+  for (let i = 0; i < scores.length; i++) {
+    if (scores[i] > scores[best]) best = i;
+    if (inFamily(i) && scores[i] > fam) fam = scores[i];
+  }
+  const order = Array.from(scores.keys()).sort((a, b) => scores[b] - scores[a]).slice(0, 12);
+  const alts = order.filter((i) => !inFamily(i) && state.foods.has(m.keys[i])).slice(0, 3)
+    .map((i) => ({ key: m.keys[i], name: state.foods.get(m.keys[i]).name }));
+  return { agree: scores[best] - fam <= SECOND.margin, alts };
+}
+
+/** After a photo: run the second opinion when the user asked for it on every photo, or offer it when unsure. */
+async function maybeSecondOpinion(blob, dishKey, unsure, now = false) {
+  const el = $("second");
+  el.hidden = true;
+  el.innerHTML = "";
+  const name = escapeHtml(state.foods.get(dishKey)?.name || "this");
+  if (!prefs().double && !now) {
+    if (!unsure) return;
+    el.innerHTML = `<button type="button" class="btn soft small-btn" data-second-run>🌍 Get a second opinion</button>
+      <span class="muted small">Identify anything checks the photo against 10,000+ foods.</span>`;
+    el.hidden = false;
+    el.dataset.key = dishKey;
+    return;
+  }
+  el.dataset.key = dishKey;
+  el.hidden = false;
+  el.innerHTML = `<span class="muted small">🌍 Getting a second opinion…</span>`;
+  try {
+    const r = await secondOpinion(blob, dishKey);
+    if (state.lastBlob !== blob) return; // a newer photo arrived meanwhile
+    el.innerHTML = r.agree || !r.alts.length
+      ? `<span class="muted small">✓ Identify anything agrees: ${name}.</span>`
+      : `<div class="second-head">🌍 <b>Second opinion:</b> this looks more like <b>${escapeHtml(r.alts[0].name)}</b>.</div>
+         <div class="second-actions"><button type="button" class="btn primary small-btn" data-second-use="${escapeHtml(r.alts[0].key)}">Use it</button>
+         <button type="button" class="btn ghost small-btn" data-second-keep>Keep ${name}</button></div>` +
+        (r.alts.length > 1 ? `<div class="chips second-more">${r.alts.slice(1).map((a) =>
+          `<button type="button" class="chip" data-second-use="${escapeHtml(a.key)}">${escapeHtml(a.name)}</button>`).join("")}</div>` : "");
+  } catch (err) {
+    el.innerHTML = `<span class="muted small">Couldn't run the second opinion (${escapeHtml(err.message || "offline?")}). Try again when online.</span>`;
+  }
+}
+
+(function initSecondOpinion() {
+  const box = $("second"), auto = $("second-auto");
+  if (!box || !auto) return;
+  auto.checked = !!prefs().double;
+  auto.addEventListener("change", () => {
+    setPref("double", auto.checked);
+    if (auto.checked && state.lastBlob && state.key) maybeSecondOpinion(state.lastBlob, state.lastTopKey || state.key, false);
+  });
+  box.addEventListener("click", (e) => {
+    if (e.target.closest("[data-second-run]")) { maybeSecondOpinion(state.lastBlob, box.dataset.key, true, true); return; }
+    const use = e.target.closest("[data-second-use]");
+    if (use) {
+      selectFood(use.dataset.secondUse);
+      if (typeof learnRemember === "function") learnRemember(use.dataset.secondUse); // next similar photo: suggested
+      box.innerHTML = `<span class="muted small">✓ Using ${escapeHtml(state.foods.get(use.dataset.secondUse)?.name || "it")}. NutriSnap will remember this for similar photos.</span>`;
+      return;
+    }
+    if (e.target.closest("[data-second-keep]")) box.hidden = true;
+  });
+})();

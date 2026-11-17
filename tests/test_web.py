@@ -345,3 +345,14 @@ def test_recipes_wired() -> None:
     assert '"nutrisnap.recipes.v1"' in js and '"nutrisnap.recipes.v1"' in (DOCS / "backup.js").read_text(encoding="utf-8")
     assert "registerRecipes()" in (DOCS / "app.js").read_text(encoding="utf-8")
     assert "data/ingredients.json" in (DOCS / "sw.js").read_text(encoding="utf-8")
+
+
+def test_unknown_dish_and_portions_wired() -> None:
+    meta = json.loads((DOCS / "model" / "meta.json").read_text(encoding="utf-8"))
+    assert 3 < meta["ood"]["max_logit"] < 12  # calibrated for this model (scripts/calibrate_unknown.py)
+    app = (DOCS / "app.js").read_text(encoding="utf-8")
+    assert "state.unknownish" in app and "rememberPortion" in (DOCS / "diary.js").read_text(encoding="utf-8")
+    assert "STYLES = { light: 0.7, normal: 1, rich: 1.4 }" in app
+    assert "maybeSecondOpinion" in (DOCS / "openvocab.js").read_text(encoding="utf-8")
+    keys = (DOCS / "backup.js").read_text(encoding="utf-8")
+    assert all(k in keys for k in ('"nutrisnap.portions.v1"', '"nutrisnap.platesize.v1"', '"nutrisnap.prefs.v1"'))

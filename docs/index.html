@@ -16,7 +16,7 @@
   <meta name="apple-mobile-web-app-title" content="NutriSnap">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="preload" href="fonts/archivo-wdth.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=edffca8ce0">
+  <link rel="stylesheet" href="style.css?v=120adb5558">
 </head>
 <body>
   <header class="topbar">
@@ -344,6 +344,9 @@
       <div id="learn" class="plate-dish learn" role="status" hidden></div>
       <div id="drink-pick" class="plate-dish drink-pick" hidden></div>
       <ol id="top3" class="top3"></ol>
+      <div id="second" class="second" role="status" aria-live="polite" hidden></div>
+      <label class="second-toggle"><input type="checkbox" id="second-auto">
+        <span>Double-check every photo with Identify anything <span class="muted">(one-time ~110 MB download, about a second per photo)</span></span></label>
 
       <div id="plate" class="plate" hidden>
         <div class="divider"></div>
@@ -354,6 +357,12 @@
         <div id="plate-view" hidden>
           <div id="plate-dish" class="plate-dish" hidden></div>
           <canvas id="plate-canvas" class="plate-canvas" role="img" aria-label="Your photo with each food outlined"></canvas>
+          <label class="plate-size"><span>Your plate</span>
+            <select id="plate-size" aria-label="Plate size">
+              <option value="small">Small (about 20 cm)</option>
+              <option value="standard">Standard (about 25 cm)</option>
+              <option value="large">Large (about 30 cm)</option>
+            </select></label>
           <ul id="plate-list" class="list plate-list"></ul>
           <div id="plate-balance" class="plate-balance" hidden></div>
           <div id="plate-total" class="photo-est plate-total" hidden></div>
@@ -421,6 +430,17 @@
           <input id="grams-range" type="range" min="0" max="1200" step="5" aria-label="Portion in grams">
           <span class="grams-box"><input id="grams" type="number" min="0" max="3000" step="5" aria-label="Amount"><span id="unit">g</span></span>
         </div>
+        <button type="button" id="usual-hint" class="usual-hint muted small"></button>
+      </div>
+
+      <div class="field" id="style-field" hidden>
+        <span class="label">How it was cooked</span>
+        <div class="seg seg-style" role="radiogroup" aria-label="Cooking style">
+          <button type="button" data-style="light" role="radio">Light</button>
+          <button type="button" data-style="normal" role="radio" class="on">Normal</button>
+          <button type="button" data-style="rich" role="radio">Rich</button>
+        </div>
+        <p id="style-hint" class="muted small style-hint"></p>
       </div>
 
       <p id="burn" class="burn muted small"></p>
@@ -502,15 +522,15 @@
   </div>
 
   <script src="ort/ort.wasm.min.js"></script>
-  <script src="app.js?v=b60a92bdc9"></script>
+  <script src="app.js?v=718d267387"></script>
   <script src="products.js?v=5c2fdfff6c"></script>
-  <script src="openvocab.js?v=62177ce2f7"></script>
-  <script src="plate.js?v=a0d49d169d"></script>
-  <script src="diary.js?v=59ddda5cd1"></script>
+  <script src="openvocab.js?v=72c9ad3cc6"></script>
+  <script src="plate.js?v=f75ede5795"></script>
+  <script src="diary.js?v=3780f35587"></script>
   <script src="learn.js?v=83e94f1c79"></script>
   <script src="quicklog.js?v=824cda88c3"></script>
   <script src="weight.js?v=804c49732f"></script>
-  <script src="backup.js?v=1822bab602"></script>
+  <script src="backup.js?v=f59e3d9060"></script>
   <script src="report.js?v=60299acc57"></script>
   <script src="recipes.js?v=13ba89093f"></script>
   <script src="water.js?v=28619159ba"></script>

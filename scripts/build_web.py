@@ -121,6 +121,13 @@ def main() -> None:
         helper = {"file": args.helper_file, "classes": h["classes"], "temperature": h["temperature"]}
     if helper and set(helper["classes"]) <= cls and (DOCS / "model" / helper["file"]).exists() and not args.no_helper:
         meta["helper"] = helper
+    # the "dish I don't know" threshold belongs to one model: a new model needs scripts/calibrate_unknown.py
+    if old.exists() and json.loads(old.read_text(encoding="utf-8")).get("classes") == meta["classes"] and \
+            json.loads(old.read_text(encoding="utf-8")).get("temperature") == meta["temperature"]:
+        if "ood" in json.loads(old.read_text(encoding="utf-8")):
+            meta["ood"] = json.loads(old.read_text(encoding="utf-8"))["ood"]
+    else:
+        print("new dish model: run python scripts/calibrate_unknown.py for the 'dish I don't know' warning")
     (DOCS / "model" / "meta.json").write_text(json.dumps(meta), encoding="utf-8")
 
     foods = build_foods(meta["classes"])

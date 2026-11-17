@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
 
 DOCS = Path(__file__).resolve().parents[1] / "docs"
+
+
+def _page(name: str) -> str:
+    """An HTML page with its ?v=<hash> version stamps removed (checked separately in test_pages_are_stamped)."""
+    return re.sub(r'(\.(?:css|js))\?v=[0-9a-f]+"', r'\1"', (DOCS / name).read_text(encoding="utf-8"))
 pytestmark = pytest.mark.skipif(not (DOCS / "model" / "meta.json").exists(), reason="web site not built")
 
 
@@ -26,7 +32,7 @@ def test_site_files_present() -> None:
                 "ort/ort-wasm-simd-threaded.mjs", "ort/ort-wasm-simd-threaded.wasm", ".nojekyll",
                 "products.js", "zxing/zxing-reader.js", "zxing/zxing_reader.wasm"]:
         assert (DOCS / rel).exists(), rel
-    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    html = _page("index.html")
     assert 'src="ort/ort.wasm.min.js"' in html and 'src="app.js"' in html and 'src="products.js"' in html
     js = (DOCS / "products.js").read_text(encoding="utf-8")
     assert "world.openfoodfacts.org" in js and "Open Food Facts" in html and "ODbL" in html  # attribution
@@ -62,7 +68,7 @@ def test_calorie_head_shape() -> None:
 
 
 def test_new_layout_hooks() -> None:
-    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    html = _page("index.html")
     for el in ["tab-meal", "tab-pack", "panel-meal", "panel-pack", "donut", "ov-btn", "photo-est", "scan-btn", "chip-count"]:
         assert f'id="{el}"' in html, el
     assert "examples" not in html and not (DOCS / "examples").exists()
@@ -85,9 +91,11 @@ def test_installable_app() -> None:
     assert re.search(r'ASSET_VERSION = "assets-([0-9a-f]+)"', sw).group(1) == asset_hash(), "run scripts/stamp_sw.py"
     for url in re.search(r"const CORE = \[(.*?)\];", sw, re.S).group(1).replace("\n", "").split(","):
         url = url.strip().strip('"')
+        if url == "...SHELL_FILES":
+            continue
         if url and url != "./":
             assert (DOCS / url).exists(), url
-    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    html = _page("index.html")
     assert 'rel="manifest"' in html and "sw.js" in (DOCS / "app.js").read_text(encoding="utf-8")
 
 
@@ -97,9 +105,9 @@ def test_whole_plate_mode() -> None:
     names = json.loads((DOCS.parent / "data" / "foodseg103_classes.json").read_text(encoding="utf-8"))
     assert [p["name"] for p in plate] == [names[str(k)] for k in range(1, 104)]  # YOLO id i -> FoodSeg class i+1
     assert all(p["key"] in foods and p["kcal"] >= 0 and 0 < p["thick"] <= 3 for p in plate)
-    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    html = _page("index.html")
     assert 'src="plate.js"' in html and 'id="plate-btn"' in html and "AGPL-3.0" in html and "FoodSeg103" in html
-    assert '"plate.js"' in (DOCS / "sw.js").read_text(encoding="utf-8")
+    assert '"plate.js?v=' in (DOCS / "sw.js").read_text(encoding="utf-8")
     meta_path = DOCS / "model" / "plate_meta.json"
     if meta_path.exists():  # only after the model was trained (scripts/train_plate.py)
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
@@ -112,9 +120,9 @@ def test_my_day_calorie_target() -> None:
     import shutil
     import subprocess
 
-    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    html = _page("index.html")
     assert 'src="diary.js"' in html and 'id="tab-day"' in html and 'id="add-today"' in html and 'id="plate-add"' in html
-    assert '"diary.js"' in (DOCS / "sw.js").read_text(encoding="utf-8")
+    assert '"diary.js?v=' in (DOCS / "sw.js").read_text(encoding="utf-8")
     node = shutil.which("node")
     if not node:
         pytest.skip("node not installed")
@@ -146,7 +154,7 @@ def test_differentiators_wired() -> None:
     plate = (DOCS / "plate.js").read_text(encoding="utf-8")
     grouped = {n.strip() for block in re.findall(r'put\("\w+", `([^`]*)`', plate) for n in block.split(",")}
     assert grouped <= names and len(grouped) > 70  # plate-balance groups use the model's own class names
-    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    html = _page("index.html")
     for el in ['id="ideas"', 'id="recent"', 'id="burn"', 'id="plate-balance"']:
         assert el in html, el
 
@@ -169,7 +177,7 @@ def test_food_recognition_mapping() -> None:
 
 
 def test_photo_can_be_removed() -> None:
-    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    html = _page("index.html")
     js = (DOCS / "app.js").read_text(encoding="utf-8")
     assert 'id="photo-clear"' in html and 'id="new-photo"' in html
     assert "function clearPhoto()" in js and '$("photo-clear").addEventListener' in js and '$("new-photo").addEventListener' in js
@@ -177,7 +185,7 @@ def test_photo_can_be_removed() -> None:
 
 def test_mixed_dish_fallback() -> None:
     js = (DOCS / "plate.js").read_text(encoding="utf-8")
-    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    html = _page("index.html")
     assert 'id="plate-dish"' in html
     for name in ("function suggestDishes", "function wholeDishOffer", "function useWholeDish", "DISH_WHOLE", "DISH_REGION"):
         assert name in js, name
@@ -210,18 +218,18 @@ def test_learns_from_you() -> None:
     assert set(outs) == {"logits", "embedding"} and outs["embedding"][1] == 768  # image fingerprint for corrections
     js = (DOCS / "learn.js").read_text(encoding="utf-8")
     assert "LEARN_SIM = 0.8" in js and "function learnRemember" in js and "function learnSuggest" in js
-    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    html = _page("index.html")
     assert 'src="learn.js"' in html and 'id="learn"' in html and 'id="learn-forget"' in html
     for f in ("app.js", "openvocab.js", "plate.js"):  # every way of correcting a photo is remembered
         assert "learnRemember(" in (DOCS / f).read_text(encoding="utf-8"), f
 
 
 def test_first_run_tour() -> None:
-    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    html = _page("index.html")
     js = (DOCS / "tour.js").read_text(encoding="utf-8")
     assert 'src="tour.js"' in html and 'id="tour"' in html and 'id="tour-replay"' in html
     assert js.count("title:") >= 5 and 'TOUR_KEY = "nutrisnap.tour.v1"' in js  # shown once, remembered per browser
-    assert '"tour.js"' in (DOCS / "sw.js").read_text(encoding="utf-8")
+    assert '"tour.js?v=' in (DOCS / "sw.js").read_text(encoding="utf-8")
 
 
 def test_quick_log_and_weight() -> None:
@@ -236,7 +244,7 @@ def test_quick_log_and_weight() -> None:
     w = (DOCS / "weight.js").read_text(encoding="utf-8")
     assert "function measuredBurn" in w and "W_MIN_SPAN = 14" in w
     assert "p.tdeeMeasured" in (DOCS / "diary.js").read_text(encoding="utf-8")  # the target can use the measured burn
-    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    html = _page("index.html")
     for el in ['id="ql-text"', 'id="ql-mic"', 'id="weight-card"', 'id="w-adapt"', 'src="quicklog.js"', 'src="weight.js"']:
         assert el in html, el
 
@@ -251,9 +259,9 @@ def test_backup_and_privacy() -> None:
         used |= set(re.findall(r'"(nutrisnap\.[a-z]+\.v\d)"', f.read_text(encoding="utf-8")))
     assert used <= keys, used - keys
     assert "function downloadBackup" in js and "function restoreBackup" in js and "function deleteAllData" in js
-    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    html = _page("index.html")
     assert 'id="backup-save"' in html and 'id="data-delete"' in html and 'href="privacy.html"' in html
-    privacy = (DOCS / "privacy.html").read_text(encoding="utf-8")
+    privacy = _page("privacy.html")
     assert "never uploaded" in privacy and "Open Food Facts" in privacy and "speech" in privacy
 
 
@@ -261,7 +269,7 @@ def test_streaks_and_weekly_report() -> None:
     js = (DOCS / "report.js").read_text(encoding="utf-8")
     for fn in ("function streaks", "function weekStats", "function renderReport", "function renderStreak"):
         assert fn in js, fn
-    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    html = _page("index.html")
     assert 'id="streak"' in html and 'id="report-card"' in html and 'src="report.js"' in html
     assert "slice(-400)" in (DOCS / "diary.js").read_text(encoding="utf-8")  # log kept ~13 months for streaks/reports
 
@@ -287,14 +295,28 @@ def test_meals_favourites_and_backup() -> None:
     js = (DOCS / "diary.js").read_text(encoding="utf-8")
     assert all(m in js for m in ('"breakfast"', '"lunch"', '"dinner"', '"snack"')) and "data-copy" in js and "toggleFav" in js
     assert '"nutrisnap.favs.v1"' in (DOCS / "backup.js").read_text(encoding="utf-8")
-    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    html = _page("index.html")
     assert all(f'id="{i}"' in html for i in ("nf-sf", "nf-na", "nf-fb", "nf-sg", "t-micros", "log-hint"))
 
 
 def test_water_tracker_wired() -> None:
-    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    html = _page("index.html")
     js = (DOCS / "water.js").read_text(encoding="utf-8")
     assert 'src="water.js"' in html and 'id="water-card"' in html and 'id="wt-glasses"' in html
     assert '"nutrisnap.water.v1"' in js and '"nutrisnap.water.v1"' in (DOCS / "backup.js").read_text(encoding="utf-8")
-    assert '"water.js"' in (DOCS / "sw.js").read_text(encoding="utf-8")
+    assert '"water.js?v=' in (DOCS / "sw.js").read_text(encoding="utf-8")
     assert "kg * 35" in js and "prefers-reduced-motion" in js  # goal from body weight; splash respects reduced motion
+
+
+def test_pages_are_stamped() -> None:
+    """Every page links its CSS/JS as file?v=<content hash> and the service worker precaches exactly those, so a phone
+    never mixes a new page with an older stylesheet (run scripts/stamp_sw.py after changing docs/)."""
+    import hashlib
+
+    sw = (DOCS / "sw.js").read_text(encoding="utf-8")
+    shell = set(re.findall(r'"([\w.-]+\.(?:css|js)\?v=[0-9a-f]+)"', re.search(r"const SHELL_FILES = \[(.*?)\];", sw, re.S).group(1)))
+    for page in DOCS.glob("*.html"):
+        for name, v in re.findall(r'(?:href|src)="([\w.-]+\.(?:css|js))\?v=([0-9a-f]+)"', page.read_text(encoding="utf-8")):
+            assert v == hashlib.sha256((DOCS / name).read_bytes().replace(b"\r\n", b"\n")).hexdigest()[:10], f"{page.name}: {name}"
+            assert f"{name}?v={v}" in shell, name
+    assert not re.search(r'(?:href|src)="[\w.-]+\.(?:css|js)"', (DOCS / "index.html").read_text(encoding="utf-8"))

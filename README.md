@@ -480,15 +480,19 @@ priority (log more days → too many days over → low protein → eating far be
 food log, which is now kept for ~13 months.
 
 
-### ✨ Motion
+### ✨ Look and motion
 
-`docs/motion.js` + the motion block at the end of `style.css`, no library: the page builds itself on first load, a pill
-slides behind the selected tab and portion size, panels slide in from the side of the tab you tapped, a scan line
-sweeps the photo while the AI looks at it, the dish name sharpens in and the confidence bar fills, calories and macros
-count up or down to their new value, the calorie ring and macro donut sweep (CSS `@property`), new log items slide in and
-removed ones fold away, week bars grow, the weight trend draws itself, buttons ripple and squish on tap, tour cards slide
-in the direction you swipe, and confetti marks streak milestones and finishing the tour. It only watches the page (one
-MutationObserver), so no other file depends on it, and all of it is off when the phone asks for reduced motion.
+Black ink on white paper (white on black in dark mode), borrowed from the thing people already trust for calories: the
+printed **Nutrition Facts label**. The result is set as one, with heavy rules, a condensed black typeface and a large
+calorie number; everything around it stays quiet. Type is **Archivo** (variable width, SIL Open Font License,
+self-hosted in `docs/fonts/` so the app works offline): extra-condensed black for the label voice, normal width for text.
+Colour appears only where it means something (macros, plate outlines, scores).
+
+Motion (`docs/motion.js` + the motion block in `style.css`, no library) has **one orchestrated moment**: when a photo is
+recognised, the label prints, rule by rule, while the calories count up. Everything else answers what you do: a pill
+slides behind the tab or portion you pick, panels slide in from that side, a scan line sweeps the photo while the AI
+looks, numbers count to their new value, log items slide in and fold away, tour cards follow your swipe, and confetti
+marks streak milestones. All of it is off when the phone asks for reduced motion.
 
 ### 🧠 Learns from you (on-device personalisation)
 

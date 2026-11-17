@@ -10,7 +10,7 @@ const SHELL = SHELL_VERSION, ASSETS = ASSET_VERSION;
 
 const CORE = [
   "./", "index.html", "style.css", "app.js", "products.js", "openvocab.js", "plate.js", "diary.js", "learn.js", "quicklog.js", "weight.js", "backup.js", "report.js", "tour.js", "motion.js", "privacy.html", "manifest.webmanifest",
-  "icons/icon-192.png", "icons/icon-512.png", "icons/favicon-48.png",
+  "icons/icon-192.png", "icons/icon-512.png", "icons/favicon-48.png", "fonts/archivo-wdth.woff2",
   "ort/ort.wasm.min.js", "ort/ort-wasm-simd-threaded.mjs", "ort/ort-wasm-simd-threaded.wasm",
   "model/meta.json", "model/nutrisnap.int8.onnx", "model/helper_v4.int8.onnx", "data/foods.json", "model/clip_vocab.json",
 ];

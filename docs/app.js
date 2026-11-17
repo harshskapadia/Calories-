@@ -223,7 +223,9 @@ function renderTop3(top, ms) {
 // ---------------------------------------------------------------- nutrition
 function buildDishSelect() {
   const sel = $("dish");
-  const opts = state.meta.classes.map((k, i) => [state.meta.display_names[i], k]).sort((a, b) => a[0].localeCompare(b[0]));
+  const hidden = new Set([...state.meta.mergeIdx.map(([a]) => a), ...state.meta.dropIdx]);
+  const opts = state.meta.classes.map((k, i) => [state.meta.display_names[i], k]).filter((_, i) => !hidden.has(i))
+    .sort((a, b) => a[0].localeCompare(b[0]));
   sel.innerHTML = `<option value="">— pick a dish —</option>` + opts.map(([n, k]) => `<option value="${k}">${escapeHtml(n)}</option>`).join("");
   sel.addEventListener("change", () => sel.value && selectFood(sel.value));
 }
@@ -250,7 +252,8 @@ function render() {
   const P = food.p * k, C = food.c * k, F = food.f * k, kcal = food.kcal * k;
   const unit = food.unit || "g";
   $("unit").textContent = unit;
-  $("food-name").textContent = `${food.name} · ${Math.round(state.grams)} ${unit}`;
+  $("food-name").textContent = food.name;
+  $("nf-grams").textContent = `${Math.round(state.grams)} ${unit}`;
   $("kcal").textContent = Math.round(kcal);
   $("p").textContent = `${Math.round(P)} g`;
   $("c").textContent = `${Math.round(C)} g`;

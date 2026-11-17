@@ -1,5 +1,6 @@
-/* Motion: entrances, a sliding tab pill, counting numbers, list items that slide in and out, a scan sweep while the
-   AI looks at a photo, button ripples and a confetti burst for milestones. It only watches the page (no other file
+/* Motion: the Nutrition Facts label "prints" when a result arrives (the one orchestrated moment), and everything else
+   answers what you do: a sliding tab pill, counting numbers, list items that slide in and out, a scan sweep while the
+   AI looks at a photo and a confetti burst for milestones. It only watches the page (no other file
    calls it), so the app works the same without it. Everything is skipped when the phone asks for reduced motion. */
 "use strict";
 
@@ -205,6 +206,7 @@
       if (t.id === "streak-cheer" && t.textContent.trim()) setTimeout(() => confetti($("streak")), 150);
     }
     lists.forEach(listChanged);
+    if (lists.has($("top3")) && $("top3").children.length) play(document.querySelector(".nf"), "m-print", 1200);
     if (tabs) pills();
     if (scan) scanState();
     if (tour && !$("tour").hidden) tourChanged();
@@ -213,17 +215,6 @@
     attributeFilter: ["hidden", "class"], attributeOldValue: true });
 
   // ------------------------------------------------------------ small touches
-  // ripple where the finger lands
-  document.addEventListener("pointerdown", (e) => {
-    const b = e.target.closest(".btn, .chip, .tab, .seg button, .chip-add");
-    if (!b || still() || b.disabled) return;
-    const r = b.getBoundingClientRect(), s = document.createElement("span"), d = Math.max(r.width, r.height) * 2.2;
-    s.className = "m-ripple";
-    s.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - r.left - d / 2}px;top:${e.clientY - r.top - d / 2}px`;
-    b.append(s);
-    setTimeout(() => s.remove(), 650);
-  }, { passive: true });
-
   // the photo settles in when it loads
   $("preview").addEventListener("load", () => play($("drop"), "m-photo", 900));
 

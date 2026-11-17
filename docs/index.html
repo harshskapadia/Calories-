@@ -15,6 +15,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="NutriSnap">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="preload" href="fonts/archivo-wdth.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -34,12 +35,9 @@
       <button type="button" id="ios-hint-close" aria-label="Dismiss">✕</button></div>
     <section class="hero">
       <h1>What's on your plate?</h1>
-      <p class="lede">Snap a meal or scan a barcode for an instant calorie and macro estimate, and track it against your daily target.</p>
-      <ul class="stats" aria-label="What NutriSnap knows">
-        <li><b id="dish-count">228</b><span>dishes &amp; drinks it was trained on</span></li>
-        <li><b id="chip-count">5,000+</b><span>dishes &amp; foods it can match</span></li>
-        <li><b>3M+</b><span>packaged products</span></li>
-      </ul>
+      <p class="lede">Photograph a meal and get its calories in about a second. NutriSnap recognises
+        <b id="dish-count">428</b> dishes, matches <b id="chip-count">10,000+</b> foods, and reads the label of 3 million
+        packaged products. Your photos never leave this phone.</p>
     </section>
 
     <div class="tabs" role="tablist" aria-label="Input type">
@@ -277,23 +275,25 @@
     </section>
 
     <!-- Nutrition -->
-    <section id="nutrition" class="card" aria-labelledby="nut-h" hidden>
-      <div class="card-head"><h2 id="nut-h">Nutrition</h2></div>
-
-      <div class="summary">
-        <div id="donut" class="donut empty" role="img" aria-label="Energy split between protein, carbs and fat">
-          <div class="donut-hole"><span id="kcal" class="kcal">0</span><span class="kcal-unit">kcal</span></div>
+    <section id="nutrition" class="card label-card" aria-labelledby="nut-h" hidden>
+      <div class="nf">
+        <h2 id="nut-h" class="nf-title">Nutrition Facts</h2>
+        <div id="food-name" class="nf-food">Pick a dish</div>
+        <div class="nf-line nf-serving"><span>Serving size</span><b id="nf-grams">0 g</b></div>
+        <div class="nf-rule nf-heavy" aria-hidden="true"></div>
+        <div class="nf-cal"><span>Calories</span><b id="kcal" class="kcal">0</b></div>
+        <div class="nf-rule nf-mid" aria-hidden="true"></div>
+        <ul class="nf-rows">
+          <li><span class="nf-k"><i class="dot protein"></i>Protein</span><b id="p">0 g</b><span class="nf-e" id="kp"></span></li>
+          <li><span class="nf-k"><i class="dot carbs"></i>Carbohydrate</span><b id="c">0 g</b><span class="nf-e" id="kc"></span></li>
+          <li><span class="nf-k"><i class="dot fat"></i>Fat</span><b id="f">0 g</b><span class="nf-e" id="kf"></span></li>
+        </ul>
+        <div id="donut" class="nf-split empty" role="img" aria-label="Energy split between protein, carbs and fat">
+          <i class="sp"></i><i class="sc"></i><i class="sf"></i>
         </div>
-        <div class="summary-side">
-          <div id="food-name" class="food-name">Pick a dish</div>
-          <ul class="legend">
-            <li><i class="dot protein"></i><span>Protein</span><b id="p">0 g</b><span class="muted" id="kp"></span></li>
-            <li><i class="dot carbs"></i><span>Carbs</span><b id="c">0 g</b><span class="muted" id="kc"></span></li>
-            <li><i class="dot fat"></i><span>Fat</span><b id="f">0 g</b><span class="muted" id="kf"></span></li>
-          </ul>
-          <!-- kept for app.js (energy bars), visually replaced by the donut -->
-          <div class="sr"><span id="bp"></span><span id="bc"></span><span id="bf"></span></div>
-        </div>
+        <div class="nf-rule nf-heavy" aria-hidden="true"></div>
+        <!-- kept for app.js (energy bars) -->
+        <div class="sr"><span id="bp"></span><span id="bc"></span><span id="bf"></span></div>
       </div>
 
       <div class="field">

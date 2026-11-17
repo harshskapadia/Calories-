@@ -167,20 +167,51 @@ def train(cfg: dict[str, Any], out_dir: Path, use_wandb: bool = False) -> dict[s
 
     log_path = out_dir / "metrics.csv"
     fields = ["epoch", "lr", "train_loss", "train_acc", "val_loss", "val_acc", "val_top5", "epoch_time_s"]
-    with open(log_path, "w", newline="", encoding="utf-8") as f:
-        csv.writer(f).writerow(fields)
+    best_acc, best_epoch, bad_epochs, start_epoch = -1.0, -1, 0, 1
+    resume_path, last_path = out_dir / "resume.pt", out_dir / "last.pt"
+    last = (torch.load(last_path, map_location=device, weights_only=False)
+            if last_path.exists() and not (out_dir / "summary.json").exists() else None)
+    if last is not None and last.get("classes") != classes:
+        print("found a stopped run with different dishes: starting fresh")
+        last = None
+    if last is not None and last.get("epoch", 0) >= tcfg["epochs"]:
+        last = None  # all epochs done (stopped during calibration): just train again
+    if last is not None:
+        # a stopped run: continue after its last finished epoch. Delete this folder to start from scratch instead.
+        model.load_state_dict(last["state_dict"])
+        done = last["epoch"]
+        if resume_path.exists():  # optimizer, LR schedule, AMP scaler and best score exactly as they were
+            st = torch.load(resume_path, map_location=device, weights_only=False)
+            optimizer.load_state_dict(st["optimizer"])
+            scheduler.load_state_dict(st["scheduler"])
+            scaler.load_state_dict(st["scaler"])
+            best_acc, best_epoch, bad_epochs = st["best_acc"], st["best_epoch"], st["bad_epochs"]
+        else:  # a run from before resume.pt existed: same weights and LR schedule, fresh optimizer moments
+            import warnings
 
-    best_acc, best_epoch, bad_epochs = -1.0, -1, 0
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")  # "scheduler.step() before optimizer.step()": intended here
+                for _ in range(done * steps_per_epoch):
+                    scheduler.step()
+            best = torch.load(out_dir / "best.pt", map_location="cpu", weights_only=False) if (out_dir / "best.pt").exists() else {}
+            best_acc, best_epoch = float(best.get("val_acc", -1.0)), int(best.get("epoch", -1))
+            bad_epochs = done - best_epoch if best_epoch > 0 else 0
+        start_epoch = done + 1
+        print(f"resuming after epoch {done} of {tcfg['epochs']} (best val acc so far {best_acc:.3f} at epoch {best_epoch})", flush=True)
+    else:
+        with open(log_path, "w", newline="", encoding="utf-8") as f:
+            csv.writer(f).writerow(fields)
+
     freeze_epochs = tcfg.get("freeze_backbone_epochs", 0)
     freeze_stages = tcfg.get("freeze_stages", 0)
-    for epoch in range(1, tcfg["epochs"] + 1):
+    for epoch in range(start_epoch, tcfg["epochs"] + 1):
         set_backbone_trainable(model, epoch > freeze_epochs)
         model.train()
         if freeze_stages:
             from src.models import freeze_early_stages
 
             frozen = freeze_early_stages(model, freeze_stages)
-            if epoch == 1:
+            if epoch == start_epoch:
                 print(f"frozen early layers: stem + {freeze_stages} stages ({frozen / 1e6:.1f}M parameters)")
         t0, seen = time.time(), 0
         correct = torch.zeros((), device=device, dtype=torch.long)  # running sums stay on the GPU:
@@ -231,9 +262,12 @@ def train(cfg: dict[str, Any], out_dir: Path, use_wandb: bool = False) -> dict[s
             save_checkpoint(out_dir / "best.pt", model, classes, cfg, epoch=epoch, val_acc=val["acc"])
         else:
             bad_epochs += 1
-            if bad_epochs >= tcfg.get("patience", 5):
-                print(f"early stopping at epoch {epoch} (best epoch {best_epoch})")
-                break
+        torch.save({"epoch": epoch, "optimizer": optimizer.state_dict(), "scheduler": scheduler.state_dict(),
+                    "scaler": scaler.state_dict(), "best_acc": best_acc, "best_epoch": best_epoch,
+                    "bad_epochs": bad_epochs}, resume_path)
+        if bad_epochs >= tcfg.get("patience", 5):
+            print(f"early stopping at epoch {epoch} (best epoch {best_epoch})")
+            break
 
     plot_history(log_path, out_dir / "curves.png")
     from src.calibrate import calibrate_checkpoint  # local import: calibrate imports from this module

@@ -49,7 +49,7 @@
   const ENTER = "#results, #nutrition, #ov-results, #photo-est, #plate-view, #learn, #drink-pick, #ql-result, .warn, #target, " +
     "#recent-wrap, #plate-balance, #plate-dish, #plate-total, #search-results, #prod-results, .product-info, #scanner, #offline-bar, " +
     "#ios-hint, #learned-card, .ideas-wrap";
-  const PANELS = ["panel-meal", "panel-pack", "panel-recipes", "panel-day"];
+  const PANELS = ["panel-meal", "panel-pack", "panel-recipes", "panel-day", "panel-settings"];
   let tabDir = 1;
 
   function play(el, cls, ms = 900) {
@@ -174,8 +174,8 @@
     // tab direction first (the tab classes change in the same batch as the panels' hidden flags)
     for (const r of records) {
       if (r.type === "attributes" && r.attributeName === "class" && r.target.classList.contains("on") && r.target.id.startsWith("tab-")) {
-        const now = ["meal", "pack", "recipes", "day"].indexOf(r.target.id.slice(4));
-        const was = ["meal", "pack", "recipes", "day"].findIndex((t) => !$(`panel-${t}`).hidden && t !== r.target.id.slice(4));
+        const now = ["meal", "recipes", "day"].indexOf(r.target.id.slice(4));
+        const was = ["meal", "recipes", "day"].findIndex((t) => !$(`panel-${t}`).hidden && t !== r.target.id.slice(4));
         tabDir = was === -1 || now > was ? 1 : -1;
       }
     }

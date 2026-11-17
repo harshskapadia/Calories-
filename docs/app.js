@@ -260,6 +260,7 @@ function renderTop3(top, ms) {
   const warn = $("warn");
   const unsure = best < state.meta.low_confidence;
   warn.hidden = !unsure && !state.unknownish;
+  setMore(!warn.hidden); // unsure: show other matches and tools right away
   warn.innerHTML = unsure
     ? `🤔 <b>Not sure</b> (best guess ${(best * 100).toFixed(0)}%). This may be a dish I wasn't trained on. ` +
       `Try <b>🌍 Identify anything</b> below, tap the right dish, or <b>search any food</b>.`
@@ -331,6 +332,7 @@ function render() {
     const on = b.dataset.style === (canStyle ? state.style : "normal");
     b.classList.toggle("on", on); b.setAttribute("aria-checked", on);
   });
+  $("style-sum").textContent = `How it was cooked: ${{ light: "Light", normal: "Normal", rich: "Rich" }[state.style] || "Normal"}`;
   if (canStyle) {
     const d = ((food.kcal - base.kcal) * state.grams) / 100;
     $("style-hint").textContent = state.style === "light" ? `Less oil, ghee or butter: ${Math.round(d)} kcal for this portion.`
@@ -455,24 +457,58 @@ function search(q) {
 function escapeHtml(s) { return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 
 // ---------------------------------------------------------------- events
+const TABS = ["meal", "recipes", "day"];
+/** Snap, Recipes, My day, plus Settings (opened from the top bar; no tab of its own). */
 function showTab(which) {
-  for (const t of ["meal", "pack", "recipes", "day"]) {
+  if (which !== "settings") state.tab = which;
+  for (const t of TABS) {
     const on = t === which;
     $(`tab-${t}`).classList.toggle("on", on);
     $(`tab-${t}`).setAttribute("aria-selected", on);
     $(`panel-${t}`).hidden = !on;
   }
+  $("panel-settings").hidden = which !== "settings";
+  document.querySelector(".hero").hidden = which !== "meal"; // the big headline belongs to Snap only
+  $("panel-pack").hidden = which !== "meal" || !state.packOpen;
   $("results").hidden = which !== "meal" || !$("top3").children.length;
-  $("nutrition").hidden = which === "day" || which === "recipes";
-  if (which === "day" && typeof renderDay === "function") renderDay();
+  $("nutrition").hidden = which !== "meal";
+  if ((which === "day" || which === "settings") && typeof renderDay === "function") renderDay();
   if (which === "recipes" && typeof renderRecipeList === "function") renderRecipeList();
+}
+
+function openSettings(section) {
+  showTab("settings");
+  const el = section && $(`${section}-card`);
+  requestAnimationFrame(() => (el || $("panel-settings")).scrollIntoView({ behavior: "smooth", block: "start" }));
+}
+
+/** "Not right, or more than one food?": other matches, Split the plate and Identify anything, folded away by default. */
+function setMore(open) {
+  $("results").classList.toggle("show-more", open);
+  $("more").hidden = !open;
+  $("more-btn").setAttribute("aria-expanded", open);
+  $("more-btn").textContent = open ? "Hide other matches and tools" : "Not right, or more than one food?";
 }
 
 function wire() {
   $("tab-meal").addEventListener("click", () => showTab("meal"));
-  $("tab-pack").addEventListener("click", () => showTab("pack"));
   $("tab-day").addEventListener("click", () => showTab("day"));
   $("tab-recipes").addEventListener("click", () => showTab("recipes"));
+  $("settings-btn").addEventListener("click", () => openSettings());
+  $("settings-back").addEventListener("click", () => { showTab(state.tab || "meal"); window.scrollTo({ top: 0, behavior: "smooth" }); });
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-open-settings]");
+    if (b) openSettings(b.dataset.openSettings);
+  });
+  const pack = (open) => {
+    state.packOpen = open;
+    $("panel-pack").hidden = !open;
+    $("pack-btn").setAttribute("aria-expanded", open);
+    if (open) requestAnimationFrame(() => $("panel-pack").scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
+  $("pack-btn").addEventListener("click", () => pack(!state.packOpen));
+  $("pack-close").addEventListener("click", () => pack(false));
+  $("more-btn").addEventListener("click", () => setMore($("more").hidden));
   for (const id of ["camera", "file"]) {
     $(id).addEventListener("change", (e) => { const f = e.target.files[0]; if (f) analyze(f); e.target.value = ""; });
   }

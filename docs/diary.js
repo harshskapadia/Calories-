@@ -117,7 +117,8 @@ function renderTarget() {
   const p = readProfile();
   const t = calorieTarget(p);
   $("target").hidden = !t;
-  $("panel-day").classList.toggle("no-target", !t); // new users see the target form first
+  $("panel-day").classList.toggle("no-target", !t);
+  $("target-prompt").hidden = !!t; // new users: a short prompt in My day, the form lives in Settings
   if (!t) { diary.target = null; renderToday(); return; }
   store(DIARY_PROFILE, p);
   diary.target = t;
@@ -190,7 +191,7 @@ function flash(text) {
 
 function addedMessage(eaten) {
   const t = diary.target;
-  if (!t) return `Added. ${kfmt(eaten)} kcal today · <button type="button" class="linkish" data-goto-day>set your daily target</button>`;
+  if (!t) return `Added. ${kfmt(eaten)} kcal today. <button type="button" class="linkish" data-open-settings="target">Set your daily target</button>`;
   const left = t.target - eaten;
   return left >= 0 ? `Added. <b>${kfmt(left)} kcal left</b> today (${kfmt(eaten)} of ${kfmt(t.target)}). <button type="button" class="linkish" data-goto-day>See my day</button>`
     : `Added. <b>${kfmt(-left)} kcal over</b> today's target. <button type="button" class="linkish" data-goto-day>See my day</button>`;
@@ -279,7 +280,7 @@ function renderMicrosToday(items, t) {
   const el = $("t-micros");
   if (!el) return;
   const known = items.filter((e) => e.na != null || e.fb != null || e.sg != null || e.sf != null);
-  el.hidden = !known.length;
+  $("t-micros-fold").hidden = !known.length;
   if (!known.length) { $("t-micros-note").textContent = ""; return; }
   const sum = (k) => known.reduce((a, e) => a + (e[k] || 0), 0);
   const fibre = sum("fb"), sugars = sum("sg"), sat = sum("sf"), salt = (sum("na") * 2.5) / 1000;
@@ -290,6 +291,7 @@ function renderMicrosToday(items, t) {
     row("", "Sugars", `${kfmt(sugars)} g`, "incl. fruit, milk", false) +
     row("", "Salt", `${salt.toFixed(1)} g`, `under ${DAILY.saltG} g`, salt > DAILY.saltG) +
     row("", "Saturated fat", `${kfmt(sat)} g`, `under ${kfmt(satMax)} g`, sat > satMax);
+  $("t-micros-sum").textContent = `Fibre ${kfmt(fibre)} g, salt ${salt.toFixed(1)} g${salt > DAILY.saltG || sat > satMax ? " ⚠️" : ""}`;
   $("t-micros-note").textContent = known.length < items.length
     ? `Fibre, sugars, salt and saturated fat from ${known.length} of ${items.length} foods (older entries don't have them).` : "";
 }

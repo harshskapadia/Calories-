@@ -16,7 +16,7 @@
   <meta name="apple-mobile-web-app-title" content="NutriSnap">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="preload" href="fonts/archivo-wdth.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=120adb5558">
+  <link rel="stylesheet" href="style.css?v=5b16115313">
 </head>
 <body>
   <header class="topbar">
@@ -25,6 +25,7 @@
       <div class="topbar-right">
         <button id="install-btn" type="button" class="btn primary install-btn" hidden>Install app</button>
         <span class="privacy" title="Photos are analysed on this device and never uploaded">🔒 On-device</span>
+        <button id="settings-btn" type="button" class="icon-btn" aria-label="Settings" title="Settings">⚙️</button>
       </div>
     </div>
   </header>
@@ -41,8 +42,7 @@
     </section>
 
     <div class="tabs" role="tablist" aria-label="Input type">
-      <button type="button" role="tab" id="tab-meal" class="tab on" aria-selected="true" aria-controls="panel-meal">🍽️ Photo</button>
-      <button type="button" role="tab" id="tab-pack" class="tab" aria-selected="false" aria-controls="panel-pack">📦 Packaged</button>
+      <button type="button" role="tab" id="tab-meal" class="tab on" aria-selected="true" aria-controls="panel-meal">📸 Snap</button>
       <button type="button" role="tab" id="tab-recipes" class="tab" aria-selected="false" aria-controls="panel-recipes">🍲 Recipes</button>
       <button type="button" role="tab" id="tab-day" class="tab" aria-selected="false" aria-controls="panel-day">📊 My day</button>
     </div>
@@ -66,6 +66,7 @@
           <input id="file" type="file" accept="image/*" hidden>
         </label>
       </div>
+      <button id="pack-btn" type="button" class="linkish pack-btn" aria-expanded="false" aria-controls="panel-pack">📦 Packaged food: scan a barcode or search a product</button>
       <div id="status" class="status" role="status" aria-live="polite">
         <div class="bar"><div id="bar-fill"></div></div>
         <span id="status-text">Loading the model…</span>
@@ -73,8 +74,8 @@
     </section>
 
     <!-- Packaged food -->
-    <section id="panel-pack" class="card" role="tabpanel" aria-labelledby="tab-pack" hidden>
-      <h2>Scan or search a product</h2>
+    <section id="panel-pack" class="card" aria-labelledby="pack-h" hidden>
+      <div class="card-head"><h2 id="pack-h">Scan or search a product</h2><button id="pack-close" type="button" class="linkish">Close</button></div>
       <p class="muted small">Biscuits, shakes, chips, ready meals… Product data from
         <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a> (needs internet).</p>
       <div class="actions">
@@ -175,6 +176,11 @@
 
     <!-- My day: calorie target + today's log (stored only on this device) -->
     <section id="panel-day" role="tabpanel" aria-labelledby="tab-day" hidden>
+      <div id="target-prompt" class="card target-prompt" hidden>
+        <h2>Set your daily calorie target</h2>
+        <p class="muted small">Age, height, weight and how active you are. It takes a minute and stays on this phone.</p>
+        <button type="button" class="btn primary wide" data-open-settings="target">Set my target</button>
+      </div>
       <div id="today" class="card">
         <div class="card-head"><h2>Today</h2><span class="muted small" id="today-date"></span></div>
         <div class="streak-row"><span id="streak" class="streak" hidden></span><span id="streak-cheer" class="small" role="status" aria-live="polite"></span></div>
@@ -204,17 +210,17 @@
               <li><i class="dot carbs"></i><span>Carbs</span><b id="t-c">0 g</b><span class="muted"></span></li>
               <li><i class="dot fat"></i><span>Fat</span><b id="t-f">0 g</b><span class="muted"></span></li>
             </ul>
-            <ul id="t-micros" class="legend today-micros" aria-label="Fibre, sugars, salt and saturated fat today" hidden></ul>
-            <p id="t-micros-note" class="muted small"></p>
+            <details class="fold micros-fold" id="t-micros-fold" hidden><summary id="t-micros-sum">Fibre, sugars, salt</summary>
+              <ul id="t-micros" class="legend today-micros" aria-label="Fibre, sugars, salt and saturated fat today"></ul>
+              <p id="t-micros-note" class="muted small"></p></details>
           </div>
         </div>
         <ul id="log" class="list log"></ul>
         <p id="log-empty" class="muted small">Nothing logged yet. Snap a meal, scan a product or search a food, then tap <b>Add to today</b>.</p>
         <p id="log-hint" class="muted small" hidden>Tap a food to change its amount or meal, or add it to your favourites.</p>
         <div id="recent-wrap" class="recent-wrap" hidden><div class="mini-h">⚡ Quick add</div><div id="recent" class="chips"></div></div>
-        <div class="ideas-wrap"><div class="mini-h">💡 What can I still eat?</div><div id="ideas"></div></div>
-        <div class="week" id="week" aria-label="Calories over the last 7 days"></div>
-        <button id="log-clear" type="button" class="btn ghost wide" hidden>Clear today</button>
+        <details class="fold ideas-wrap"><summary>💡 What can I still eat?</summary><div id="ideas"></div></details>
+        <button id="log-clear" type="button" class="linkish log-clear" hidden>Clear today</button>
       </div>
 
       <div class="card water" id="water-card">
@@ -254,6 +260,7 @@
       <div class="card" id="report-card">
         <div class="card-head"><h2>📅 Your week</h2><span id="report-range" class="muted small"></span></div>
         <div id="report"></div>
+        <div class="week" id="week" aria-label="Calories over the last 7 days"></div>
       </div>
 
       <div class="card weight" id="weight-card">
@@ -268,27 +275,13 @@
           with water; the line shows the real trend.</p>
       </div>
 
-      <div class="card learned">
-        <div class="card-head"><h2>🧠 Learned from you</h2><span class="muted small" id="learned-count"></span></div>
-        <p class="muted small">When you correct a photo (another dish, a search result, a drink), NutriSnap remembers it and suggests
-          your answer next time a similar photo comes up. It keeps only a numeric fingerprint of the photo, never the photo, and
-          only on this phone.</p>
-        <button id="learn-forget" type="button" class="btn ghost wide" hidden>Forget all</button>
-      </div>
+    </section>
 
-      <div class="card backup" id="backup-card">
-        <div class="card-head"><h2>💾 Backup &amp; privacy</h2></div>
-        <p class="muted small">Everything you enter stays on this phone only. <span id="backup-now"></span>
-          Save a backup file to move it to a new phone or keep it safe. <a href="privacy.html">Privacy details</a></p>
-        <div class="backup-actions">
-          <button id="backup-save" type="button" class="btn primary">Download backup</button>
-          <label class="btn ghost">Restore from file<input id="backup-load" type="file" accept="application/json,.json" hidden></label>
-        </div>
-        <p id="backup-status" class="hint" role="status" aria-live="polite"></p>
-        <button id="data-delete" type="button" class="linkish danger">Delete all my data</button>
-      </div>
-
-      <div class="card">
+    <!-- What the model sees -->
+    <!-- Settings: target, backup & privacy, learned photos, preferences -->
+    <section id="panel-settings" aria-labelledby="settings-h" hidden>
+      <div class="settings-head"><button id="settings-back" type="button" class="linkish">‹ Back</button><h2 id="settings-h">Settings</h2></div>
+      <div class="card" id="target-card">
         <div class="card-head"><h2>My calorie target</h2></div>
         <p class="muted small">Your details stay on this phone. Used only to estimate how much energy you burn in a day.</p>
         <form id="profile" class="profile" novalidate>
@@ -331,9 +324,36 @@
             3–4 weeks, lower the target by 100–200 kcal. Not for pregnancy, breastfeeding, eating disorders or medical diets: ask a doctor or dietitian.</p>
         </div>
       </div>
+
+      <div class="card" id="prefs-card">
+        <div class="card-head"><h2>Photos</h2></div>
+        <label class="second-toggle"><input type="checkbox" id="second-auto">
+          <span>Double-check every photo with Identify anything <span class="muted">(one-time ~110 MB download, about a second per
+          photo). It catches most dishes NutriSnap doesn't know and offers its answer.</span></span></label>
+      </div>
+
+      <div class="card learned">
+        <div class="card-head"><h2>🧠 Learned from you</h2><span class="muted small" id="learned-count"></span></div>
+        <p class="muted small">When you correct a photo (another dish, a search result, a drink), NutriSnap remembers it and suggests
+          your answer next time a similar photo comes up. It keeps only a numeric fingerprint of the photo, never the photo, and
+          only on this phone.</p>
+        <button id="learn-forget" type="button" class="btn ghost wide" hidden>Forget all</button>
+      </div>
+
+      <div class="card backup" id="backup-card">
+        <div class="card-head"><h2>💾 Backup &amp; privacy</h2></div>
+        <p class="muted small">Everything you enter stays on this phone only. <span id="backup-now"></span>
+          Save a backup file to move it to a new phone or keep it safe. <a href="privacy.html">Privacy details</a></p>
+        <div class="backup-actions">
+          <button id="backup-save" type="button" class="btn primary">Download backup</button>
+          <label class="btn ghost">Restore from file<input id="backup-load" type="file" accept="application/json,.json" hidden></label>
+        </div>
+        <p id="backup-status" class="hint" role="status" aria-live="polite"></p>
+        <button id="data-delete" type="button" class="linkish danger">Delete all my data</button>
+      </div>
+
     </section>
 
-    <!-- What the model sees -->
     <section id="results" class="card" aria-labelledby="res-h" hidden>
       <div class="card-head">
         <h2 id="res-h">What I see</h2>
@@ -345,12 +365,12 @@
       <div id="drink-pick" class="plate-dish drink-pick" hidden></div>
       <ol id="top3" class="top3"></ol>
       <div id="second" class="second" role="status" aria-live="polite" hidden></div>
-      <label class="second-toggle"><input type="checkbox" id="second-auto">
-        <span>Double-check every photo with Identify anything <span class="muted">(one-time ~110 MB download, about a second per photo)</span></span></label>
+      <button id="more-btn" type="button" class="more-btn" aria-expanded="false" aria-controls="more">Not right, or more than one food?</button>
+      <div id="more" class="more" hidden>
 
       <div id="plate" class="plate" hidden>
         <div class="divider"></div>
-        <div class="ov-title">🍱 More than one food?</div>
+        <div class="ov-title">🍱 More than one food on the plate?</div>
         <p class="muted small">Outline every food on the plate (rice, curry, salad, bread…) and add them up. One-time download, then it works offline.</p>
         <button id="plate-btn" type="button" class="btn soft wide">Split the plate</button>
         <div id="plate-status" class="hint" role="status" aria-live="polite"></div>
@@ -373,7 +393,7 @@
       <div class="divider"></div>
       <div class="ov">
         <div class="ov-text">
-          <div class="ov-title">Not quite right?</div>
+          <div class="ov-title">🌍 A dish I don't know?</div>
           <p class="muted small" id="ov-note">Match against <span id="ov-count">thousands of</span> dishes and foods from every cuisine,
             and estimate calories straight from the photo. One-time ~110 MB download.</p>
         </div>
@@ -390,6 +410,7 @@
         <div class="pe-macros" id="pe-macros"></div>
         <p class="muted small" id="pe-note"></p>
         <button id="pe-use" type="button" class="btn ghost wide">Set portion from photo</button>
+      </div>
       </div>
     </section>
 
@@ -433,26 +454,23 @@
         <button type="button" id="usual-hint" class="usual-hint muted small"></button>
       </div>
 
-      <div class="field" id="style-field" hidden>
-        <span class="label">How it was cooked</span>
+      <details class="adjust" id="style-field" hidden>
+        <summary id="style-sum">How it was cooked: Normal</summary>
         <div class="seg seg-style" role="radiogroup" aria-label="Cooking style">
           <button type="button" data-style="light" role="radio">Light</button>
           <button type="button" data-style="normal" role="radio" class="on">Normal</button>
           <button type="button" data-style="rich" role="radio">Rich</button>
         </div>
         <p id="style-hint" class="muted small style-hint"></p>
-      </div>
+      </details>
 
-      <p id="burn" class="burn muted small"></p>
       <button id="add-today" type="button" class="btn primary wide add-today">➕ Add to today</button>
       <div id="added" class="added" role="status" aria-live="polite"></div>
 
-      <label class="field"><span class="label">Dish</span>
-        <select id="dish"></select>
-      </label>
+      <select id="dish" hidden aria-hidden="true" tabindex="-1"></select>
 
       <div class="field">
-        <label class="label" for="search">Search any food</label>
+        <label class="label" for="search">Not this food? Search any food</label>
         <input id="search" type="search" placeholder="Search any food" autocomplete="off">
         <ul id="search-results" class="list search-results" hidden></ul>
       </div>
@@ -473,6 +491,7 @@
           <p id="ingredients" class="small"></p><p id="allergens" class="small"></p></details>
       </div>
       <p id="source" class="source"></p>
+      <p id="burn" class="burn muted small"></p>
     </section>
 
     <footer class="foot">
@@ -522,11 +541,11 @@
   </div>
 
   <script src="ort/ort.wasm.min.js"></script>
-  <script src="app.js?v=718d267387"></script>
+  <script src="app.js?v=a6a3dd492d"></script>
   <script src="products.js?v=5c2fdfff6c"></script>
-  <script src="openvocab.js?v=72c9ad3cc6"></script>
+  <script src="openvocab.js?v=1d19f433c1"></script>
   <script src="plate.js?v=f75ede5795"></script>
-  <script src="diary.js?v=3780f35587"></script>
+  <script src="diary.js?v=7506e7e3f0"></script>
   <script src="learn.js?v=83e94f1c79"></script>
   <script src="quicklog.js?v=824cda88c3"></script>
   <script src="weight.js?v=804c49732f"></script>
@@ -534,7 +553,7 @@
   <script src="report.js?v=60299acc57"></script>
   <script src="recipes.js?v=13ba89093f"></script>
   <script src="water.js?v=28619159ba"></script>
-  <script src="tour.js?v=c6027606f8"></script>
-  <script src="motion.js?v=f0b5cd75d0"></script>
+  <script src="tour.js?v=eff4741e85"></script>
+  <script src="motion.js?v=1c4c618457"></script>
 </body>
 </html>

@@ -492,7 +492,8 @@ classes) and 1,000 test photos of dishes it knows:
 
 The first two run on every photo for free and show *"This might be a dish I don't know yet"*. The CLIP check costs a
 ~110 MB one-time download and ~1 s per photo, and disagrees on 13% of known dishes, so it is a **second opinion, never
-an error**: tick *Double-check every photo* (or tap *Get a second opinion* when the app is unsure) and, when the two
+an error**: tick *Double-check every photo* in ⚙️ Settings (when the app is unsure, *Identify anything* is offered right
+under the answer anyway) and, when the two
 disagree, the app shows "this looks more like *X*" with **Use it** / **Keep *Y*** (using it also teaches *Learns from
 you*); when they agree it says so. Limits, honestly: some photos fool both models (the snack pack also looks like nachos
 to CLIP, and a brownie came out as chocolate cake 98%); CLIP's own suggestion can be wrong for foods it doesn't know
@@ -550,6 +551,16 @@ over, average protein vs the protein aim, weight change from the weight log, the
 priority (log more days → too many days over → low protein → eating far below target). Computed on the phone from the
 food log, which is now kept for ~13 months.
 
+
+### 🧭 Three tabs, one answer first
+
+The app keeps every feature but shows little at once. **📸 Snap · 🍲 Recipes · 📊 My day**, with **⚙️ Settings** in the top
+bar (calorie target, double-check, learned photos, backup & privacy) and packaged food as a link under the photo
+buttons. After a photo you see the dish, its Nutrition Facts label, the portion and **Add to today**; other matches,
+*Split the plate* and *Identify anything* sit behind **"Not right, or more than one food?"**, which opens by itself when
+the app is unsure. Cooking style, fibre/salt totals and "What can I still eat?" are one-line rows that open on tap.
+New users get a one-tap "Set your daily calorie target" card instead of the whole form. Measured at phone size, the
+photo screen got 20% shorter and My day 43% shorter.
 
 ### ✨ Look and motion
 

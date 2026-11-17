@@ -231,14 +231,9 @@ async function maybeSecondOpinion(blob, dishKey, unsure, now = false) {
   el.hidden = true;
   el.innerHTML = "";
   const name = escapeHtml(state.foods.get(dishKey)?.name || "this");
-  if (!prefs().double && !now) {
-    if (!unsure) return;
-    el.innerHTML = `<button type="button" class="btn soft small-btn" data-second-run>🌍 Get a second opinion</button>
-      <span class="muted small">Identify anything checks the photo against 10,000+ foods.</span>`;
-    el.hidden = false;
-    el.dataset.key = dishKey;
-    return;
-  }
+  // without "Double-check every photo" (Settings) there is nothing extra here: when unsure, the tools below already
+  // offer Identify anything, which is the same check
+  if (!prefs().double && !now) return;
   el.dataset.key = dishKey;
   el.hidden = false;
   el.innerHTML = `<span class="muted small">🌍 Getting a second opinion…</span>`;

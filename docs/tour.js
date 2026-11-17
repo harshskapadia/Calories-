@@ -11,9 +11,9 @@ const TOUR = [
   { art: "🍱", title: "Split the plate",
     text: "More than one food? Split the plate outlines every food, adds them up and scores how balanced your plate is. It also tells coffee, tea and juice apart." },
   { art: "📦", title: "Packaged food",
-    text: "Scan a barcode or search a product name to get the full nutrition label of over 3 million products (needs internet)." },
+    text: "Tap \"Packaged food\" under the photo buttons to scan a barcode or search a product: the full label of over 3 million products (needs internet)." },
   { art: "📊", title: "Your daily target",
-    text: "In My day, set a safe daily calorie target, then log food by photo, barcode or just typing \"2 roti and dal\". Log your weight and NutriSnap learns how much you really burn and fine-tunes your target." },
+    text: "Set a safe daily calorie target (⚙️ top right), then log food by photo, barcode or just typing what you ate. My day shows what's left; log your weight and NutriSnap learns how much you really burn." },
   { art: "🧠", title: "It learns from you",
     text: "Not quite right? Pick the right food, or use Identify anything (10,000+ foods). NutriSnap remembers your corrections on this phone and suggests them next time." },
 ];
@@ -53,7 +53,7 @@ function closeTour(then) {
   $("tour").hidden = true;
   document.body.classList.remove("tour-open");
   tourStorage(true);
-  if (then === "target") { showTab("day"); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  if (then === "target") openSettings("target");
 }
 
 function tourGo(d) {

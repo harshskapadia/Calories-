@@ -69,7 +69,7 @@ def test_calorie_head_shape() -> None:
 
 def test_new_layout_hooks() -> None:
     html = _page("index.html")
-    for el in ["tab-meal", "tab-pack", "panel-meal", "panel-pack", "donut", "ov-btn", "photo-est", "scan-btn", "chip-count"]:
+    for el in ["tab-meal", "pack-btn", "panel-meal", "panel-pack", "panel-settings", "settings-btn", "more-btn", "donut", "ov-btn", "photo-est", "scan-btn", "chip-count"]:
         assert f'id="{el}"' in html, el
     assert "examples" not in html and not (DOCS / "examples").exists()
 

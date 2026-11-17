@@ -114,8 +114,18 @@ def fetch() -> Path:
     return out
 
 
+# a committed copy of the dish list the app was built from (data/raw/ is not in git), so other machines get the same dishes
+SNAPSHOT = ROOT / "data" / "world_dishes.csv.gz"
+
+
 def load_raw() -> list[dict]:
-    rows = list(csv.DictReader(open(RAW / "dishes.csv", encoding="utf-8")))
+    if (RAW / "dishes.csv").exists():
+        rows = list(csv.DictReader(open(RAW / "dishes.csv", encoding="utf-8")))
+    else:
+        import gzip
+
+        with gzip.open(SNAPSHOT, "rt", encoding="utf-8", newline="") as f:
+            rows = list(csv.DictReader(f))
     out, seen = [], set()
     for r in rows:
         qid = r["d"].rsplit("/", 1)[-1]

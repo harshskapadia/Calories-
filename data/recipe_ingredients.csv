@@ -1,0 +1,107 @@
+key,name,source,aliases,note
+ing_toor_dal,Toor dal (pigeon peas),sr:172436,arhar dal;tuvar;red gram;pigeon pea,raw
+ing_moong_dal,Moong dal (mung beans),sr:174256,mung;moong;green gram,raw
+ing_urad_dal,Urad dal (black gram),sr:174259,urad;black gram;mungo,raw
+ing_masoor_dal,Masoor dal (red lentils),sr:174284,masoor;red lentil,raw
+ing_lentils,Lentils,sr:172420,brown lentils;green lentils,raw
+ing_chana,Chana / chickpeas (dried),sr:173756,chole;kabuli chana;chana dal;bengal gram;garbanzo,raw
+ing_rajma,Rajma (red kidney beans),sr:173744,kidney beans,raw
+ing_besan,Besan (gram flour),sr:174288,chickpea flour;gram flour,
+ing_atta,Atta (whole-wheat flour),sr:168893,whole wheat flour;wheat flour,
+ing_maida,Maida (all-purpose flour),sr:168894,plain flour;all purpose flour;white flour,
+ing_sooji,Sooji / rava (semolina),sr:169715,semolina;rava;suji,
+ing_rice,Rice (white),sr:168877,chawal;basmati;sona masoori,raw
+ing_brown_rice,Brown rice,sr:169703,,raw
+ing_poha,Poha (flattened rice),sr:168877,flattened rice;beaten rice;aval,values of raw white rice
+ing_rice_flour,Rice flour,sr:169714,,
+ing_cornflour,Cornflour (cornstarch),sr:169698,corn starch,
+ing_oats,Oats,sr:172989,rolled oats;quick oats,dry
+ing_sabudana,Sabudana (tapioca pearls),sr:169717,tapioca;sago,dry
+ing_pasta,Pasta,sr:169736,macaroni;spaghetti;penne,dry
+ing_noodles,Noodles,sr:169731,egg noodles;hakka noodles,dry
+ing_bread,Bread (white),sr:172818,pav;bread slice,low-sodium entry: salt added separately in recipes
+ing_oil,Cooking oil (vegetable),sr:172370,oil;refined oil;soybean oil;vegetable oil,
+ing_mustard_oil,Mustard oil,sr:172337,sarson oil,
+ing_coconut_oil,Coconut oil,sr:171412,,
+ing_groundnut_oil,Groundnut oil (peanut),sr:171410,peanut oil,
+ing_sunflower_oil,Sunflower oil,sr:172338,,
+ing_olive_oil,Olive oil,sr:171413,,
+ing_ghee,Ghee,sr:171314,clarified butter,
+ing_butter,Butter,sr:173410,makhan,salted
+ing_salt,Salt,sr:173468,namak;table salt,
+ing_sugar,Sugar,sr:169655,chini;white sugar,
+ing_jaggery,Jaggery (gur),sr:168833,gur;gud;panela,values of brown sugar
+ing_honey,Honey,sr:169640,shahad,
+ing_turmeric,Turmeric powder,sr:172231,haldi,
+ing_chilli_powder,Red chilli powder,sr:170932,lal mirch;cayenne;chili powder,
+ing_cumin,Cumin seeds,sr:170923,jeera;zeera,
+ing_coriander_powder,Coriander powder,sr:170922,dhania powder;coriander seed,
+ing_garam_masala,Garam masala / curry powder,sr:170924,curry powder;masala,
+ing_mustard_seeds,Mustard seeds,sr:170929,rai;sarson,
+ing_fenugreek,Fenugreek seeds,sr:171324,methi seeds,
+ing_black_pepper,Black pepper,sr:170931,kali mirch,
+ing_cardamom,Cardamom,sr:170919,elaichi,
+ing_cinnamon,Cinnamon,sr:171320,dalchini,
+ing_cloves,Cloves,sr:171321,laung,
+ing_ginger_powder,Ginger powder,sr:170926,sonth,
+ing_garlic_powder,Garlic powder,sr:171325,,
+ing_onion,Onion,sr:170000,pyaz;kanda,raw
+ing_tomato,Tomato,sr:170457,tamatar,raw
+ing_potato,Potato,sr:170026,aloo,raw
+ing_garlic,Garlic,sr:169230,lehsun;ginger garlic paste,raw
+ing_ginger,Ginger,sr:169231,adrak,raw
+ing_green_chilli,Green chilli,sr:170497,hari mirch;chili;chilli,raw
+ing_coriander_leaves,Coriander leaves,sr:169997,dhania;cilantro,raw
+ing_mint,Mint leaves,sr:173475,pudina,raw
+ing_spinach,Spinach,sr:168462,palak,raw
+ing_peas,Green peas,sr:170419,matar;mutter,raw
+ing_cauliflower,Cauliflower,sr:169986,gobi;phool gobi,raw
+ing_cabbage,Cabbage,sr:169975,patta gobi,raw
+ing_carrot,Carrot,sr:170393,gajar,raw
+ing_okra,Okra (bhindi),sr:169260,bhindi;lady finger,raw
+ing_brinjal,Brinjal (eggplant),sr:169228,baingan;aubergine;eggplant,raw
+ing_beans,Green beans,sr:169961,french beans,raw
+ing_capsicum,Capsicum (green pepper),sr:170427,bell pepper;shimla mirch,raw
+ing_red_pepper,Red bell pepper,sr:170108,,raw
+ing_bottle_gourd,Bottle gourd (lauki),sr:169232,lauki;doodhi;ghiya,raw
+ing_bitter_gourd,Bitter gourd (karela),sr:168393,karela,raw
+ing_pumpkin,Pumpkin,sr:168448,kaddu,raw
+ing_beetroot,Beetroot,sr:169145,chukandar,raw
+ing_radish,Radish,sr:169276,mooli,raw
+ing_mushroom,Mushrooms,sr:169251,,raw
+ing_sweet_corn,Sweet corn,sr:169998,makka;bhutta,raw
+ing_sweet_potato,Sweet potato,sr:168482,shakarkandi,raw
+ing_broccoli,Broccoli,sr:170379,,raw
+ing_cucumber,Cucumber,sr:168409,kheera,raw
+ing_lettuce,Lettuce,sr:169247,,raw
+ing_lemon_juice,Lemon juice,sr:167747,nimbu,
+ing_tamarind,Tamarind,sr:167763,imli,
+ing_tomato_puree,Tomato puree,sr:170460,,
+ing_ketchup,Tomato ketchup,sr:168556,sauce,
+ing_soy_sauce,Soy sauce,sr:174278,,
+ing_vinegar,Vinegar,sr:172237,sirka,
+ing_milk,Milk (whole),sr:171265,doodh;full cream milk,
+ing_milk_toned,Milk (toned / 2%),sr:171267,toned milk;low fat milk,
+ing_curd,Curd / yogurt,sr:171284,dahi;yoghurt,
+ing_curd_low_fat,Curd (low-fat),sr:170886,low fat dahi,
+ing_cream,Cream,sr:170857,malai;fresh cream,
+ing_paneer,Paneer,fndds_2705740,cottage cheese,
+ing_cheese,Cheese (cheddar),sr:173414,,
+ing_khoa,Khoa / milk powder,sr:170876,mawa;milk powder,values of whole milk powder
+ing_egg,Egg,sr:171287,anda,raw
+ing_chicken,Chicken breast,sr:171077,murgh;boneless chicken,raw
+ing_chicken_thigh,Chicken thigh,sr:173627,,raw
+ing_mutton,Mutton / goat,sr:175303,goat meat;bakra,raw
+ing_lamb_mince,Lamb mince,sr:174370,keema,raw
+ing_fish,Fish (tilapia),sr:175176,machli;fish fillet,raw
+ing_prawns,Prawns / shrimp,sr:175179,jhinga,raw
+ing_beef_mince,Beef mince (80% lean),sr:174036,ground beef,raw
+ing_tofu,Tofu,sr:172475,,
+ing_peanuts,Peanuts,sr:172430,moongphali;groundnuts,raw
+ing_cashews,Cashews,sr:170162,kaju,raw
+ing_almonds,Almonds,sr:170567,badam,
+ing_raisins,Raisins,sr:168164,kishmish,
+ing_coconut,Coconut (fresh),sr:170169,nariyal,
+ing_coconut_milk,Coconut milk,sr:170172,,
+ing_sesame,Sesame seeds,sr:170150,til,
+ing_water,Water,sr:173647,pani,

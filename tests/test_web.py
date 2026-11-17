@@ -320,3 +320,28 @@ def test_pages_are_stamped() -> None:
             assert v == hashlib.sha256((DOCS / name).read_bytes().replace(b"\r\n", b"\n")).hexdigest()[:10], f"{page.name}: {name}"
             assert f"{name}?v={v}" in shell, name
     assert not re.search(r'(?:href|src)="[\w.-]+\.(?:css|js)"', (DOCS / "index.html").read_text(encoding="utf-8"))
+
+
+def test_recipe_ingredients() -> None:
+    """Raw cooking staples for My recipes (scripts/build_ingredients.py): USDA values and kitchen measures that make sense."""
+    d = json.loads((DOCS / "data" / "ingredients.json").read_text(encoding="utf-8"))
+    items = {i[0]: i for i in d["items"]}
+    assert len(items) >= 100
+    for key, name, kcal, p, c, f, fb, sg, sf, na, portions, aliases, note in d["items"]:
+        assert 0 <= kcal <= 902 and p + c + f <= 101 and sf <= f + 0.5 and sg <= c + 1, key
+        # Atwater, counting fibre at ~2 kcal/g (spices are up to half fibre)
+        assert abs(4 * p + 4 * (c - fb) + 2 * fb + 9 * f - kcal) <= max(40, 0.2 * kcal) or kcal < 30, key
+        assert all(g > 0 for _, g in portions), key
+    assert items["ing_salt"][9] > 35000 and items["ing_oil"][5] == 100  # salt is ~39% sodium; oil is all fat
+    tbsp = dict(items["ing_oil"][10])
+    assert 13 <= tbsp["1 tablespoon"] <= 15
+    assert any("pasta" == a or "pasta" in n.lower() for n, a in [(items["ing_pasta"][1], "pasta")])
+
+
+def test_recipes_wired() -> None:
+    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    js = (DOCS / "recipes.js").read_text(encoding="utf-8")
+    assert 'id="tab-recipes"' in html and 'id="panel-recipes"' in html and 'src="recipes.js' in html
+    assert '"nutrisnap.recipes.v1"' in js and '"nutrisnap.recipes.v1"' in (DOCS / "backup.js").read_text(encoding="utf-8")
+    assert "registerRecipes()" in (DOCS / "app.js").read_text(encoding="utf-8")
+    assert "data/ingredients.json" in (DOCS / "sw.js").read_text(encoding="utf-8")

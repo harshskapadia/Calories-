@@ -2,7 +2,7 @@
    "nutrisnap.*" keys (profile, food log, weight, learned corrections, tour). A backup is that data as one JSON file. */
 "use strict";
 
-const BACKUP_KEYS = ["nutrisnap.profile.v1", "nutrisnap.log.v1", "nutrisnap.weight.v1", "nutrisnap.learned.v1", "nutrisnap.tour.v1", "nutrisnap.cheer.v1", "nutrisnap.favs.v1", "nutrisnap.water.v1"];
+const BACKUP_KEYS = ["nutrisnap.profile.v1", "nutrisnap.log.v1", "nutrisnap.weight.v1", "nutrisnap.learned.v1", "nutrisnap.tour.v1", "nutrisnap.cheer.v1", "nutrisnap.favs.v1", "nutrisnap.water.v1", "nutrisnap.recipes.v1"];
 
 function backupData() {
   const data = {};
@@ -15,7 +15,9 @@ function backupData() {
 function backupSummary(data) {
   const log = data["nutrisnap.log.v1"] || {}, w = data["nutrisnap.weight.v1"] || {}, l = data["nutrisnap.learned.v1"] || [];
   const foods = Object.values(log).reduce((s, d) => s + d.length, 0);
+  const rcp = (data["nutrisnap.recipes.v1"] || []).length;
   return `${Object.keys(log).length} days of food log (${foods} items), ${Object.keys(w).length} weigh-ins, ` +
+    (rcp ? `${rcp} recipe${rcp === 1 ? "" : "s"}, ` : "") +
     `${l.length} learned photo${l.length === 1 ? "" : "s"}${data["nutrisnap.profile.v1"] ? ", your calorie target" : ""}`;
 }
 

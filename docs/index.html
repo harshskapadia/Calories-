@@ -16,7 +16,7 @@
   <meta name="apple-mobile-web-app-title" content="NutriSnap">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="preload" href="fonts/archivo-wdth.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=967f7d1cf9">
+  <link rel="stylesheet" href="style.css?v=edffca8ce0">
 </head>
 <body>
   <header class="topbar">
@@ -41,8 +41,9 @@
     </section>
 
     <div class="tabs" role="tablist" aria-label="Input type">
-      <button type="button" role="tab" id="tab-meal" class="tab on" aria-selected="true" aria-controls="panel-meal">🍽️ Meal photo</button>
+      <button type="button" role="tab" id="tab-meal" class="tab on" aria-selected="true" aria-controls="panel-meal">🍽️ Photo</button>
       <button type="button" role="tab" id="tab-pack" class="tab" aria-selected="false" aria-controls="panel-pack">📦 Packaged</button>
+      <button type="button" role="tab" id="tab-recipes" class="tab" aria-selected="false" aria-controls="panel-recipes">🍲 Recipes</button>
       <button type="button" role="tab" id="tab-day" class="tab" aria-selected="false" aria-controls="panel-day">📊 My day</button>
     </div>
 
@@ -99,6 +100,78 @@
       <ul id="prod-results" class="list prod-results" hidden></ul>
     </section>
 
+
+    <!-- My recipes: home-cooked dishes, built from ingredients, saved on this device -->
+    <section id="panel-recipes" role="tabpanel" aria-labelledby="tab-recipes" hidden>
+      <div id="rc-list-view" class="card rc-list-card">
+        <div class="card-head"><h2>My recipes</h2><button id="rc-new" type="button" class="btn primary small-btn">New recipe</button></div>
+        <p id="rc-empty" class="muted">Add a dish you cook at home once: its ingredients and how many servings it makes.
+          NutriSnap works out every serving, and the dish shows up in search and your log like any other food.</p>
+        <ul id="rc-list" class="list rc-list"></ul>
+        <p id="rc-flash" class="hint" role="status" aria-live="polite"></p>
+      </div>
+
+      <div id="rc-editor" class="card rc-card" hidden>
+        <button id="rc-back" type="button" class="linkish rc-back">‹ My recipes</button>
+        <label class="sr" for="rc-name">Dish name</label>
+        <input id="rc-name" class="rc-name" type="text" placeholder="Name this dish" maxlength="60" autocomplete="off" enterkeyhint="next">
+        <div class="rc-yield" role="group" aria-label="Servings">
+          <span>Makes</span>
+          <button type="button" class="wt-step" data-serv="-1" aria-label="Fewer servings">−</button>
+          <b id="rc-serv" aria-live="polite">4</b>
+          <button type="button" class="wt-step" data-serv="1" aria-label="More servings">+</button>
+          <span id="rc-serv-word">servings</span>
+        </div>
+
+        <ul id="rc-ings" class="rc-ings" aria-label="Ingredients"></ul>
+        <div class="rc-add">
+          <label class="sr" for="rc-q">Add an ingredient</label>
+          <input id="rc-q" type="search" placeholder="Add an ingredient: pasta, olive oil, garlic…" autocomplete="off">
+          <ul id="rc-sugg" class="list rc-sugg" hidden></ul>
+          <div id="rc-pick" class="rc-pick" hidden>
+            <b id="rc-pick-name"></b>
+            <div class="rc-pick-row">
+              <label class="sr" for="rc-qty">Amount</label>
+              <input id="rc-qty" type="number" inputmode="decimal" min="0" step="any" value="1">
+              <label class="sr" for="rc-unit">Unit</label>
+              <select id="rc-unit"></select>
+              <button id="rc-add-btn" type="button" class="btn primary small-btn">Add</button>
+            </div>
+            <span id="rc-pick-hint" class="muted small"></span>
+          </div>
+        </div>
+
+        <label class="rc-cooked"><span>Cooked dish weighs <span class="muted">(optional)</span></span>
+          <span class="le-in"><input id="rc-cooked" type="number" inputmode="decimal" min="0" step="1" placeholder="0"><span>g</span></span></label>
+        <p class="muted small rc-cooked-help">Weigh the finished dish without the pot to log it by grams. Without it, the
+          dish is split evenly into servings.</p>
+
+        <div class="nf rc-nf" aria-live="polite">
+          <h3 class="nf-title">Nutrition Facts</h3>
+          <div class="nf-food" id="rc-per">Per serving</div>
+          <div class="nf-line nf-serving"><span>Serving size</span><b id="rc-serving">0 g</b></div>
+          <div class="nf-rule nf-heavy" aria-hidden="true"></div>
+          <div class="nf-cal"><span>Calories</span><b id="rc-kcal" class="kcal">0</b></div>
+          <div class="nf-rule nf-mid" aria-hidden="true"></div>
+          <ul class="nf-rows">
+            <li><span class="nf-k"><i class="dot fat"></i>Fat</span><b id="rc-f">0 g</b><span class="nf-e"></span></li>
+            <li class="nf-sub"><span class="nf-k">Saturated fat</span><b id="rc-sf">0 g</b><span class="nf-e"></span></li>
+            <li><span class="nf-k"><i class="dot none"></i>Sodium</span><b id="rc-na">0 mg</b><span class="nf-e" id="rc-salt"></span></li>
+            <li><span class="nf-k"><i class="dot carbs"></i>Carbohydrate</span><b id="rc-c">0 g</b><span class="nf-e"></span></li>
+            <li class="nf-sub"><span class="nf-k">Fibre</span><b id="rc-fb">0 g</b><span class="nf-e"></span></li>
+            <li class="nf-sub"><span class="nf-k">Sugars</span><b id="rc-sg">0 g</b><span class="nf-e"></span></li>
+            <li><span class="nf-k"><i class="dot protein"></i>Protein</span><b id="rc-p">0 g</b><span class="nf-e"></span></li>
+          </ul>
+          <div class="nf-rule nf-heavy" aria-hidden="true"></div>
+        </div>
+
+        <p id="rc-msg" class="hint rc-msg" role="status" aria-live="polite"></p>
+        <div class="rc-actions">
+          <button id="rc-delete" type="button" class="linkish danger" hidden>Delete recipe</button>
+          <button id="rc-save" type="button" class="btn primary">Save recipe</button>
+        </div>
+      </div>
+    </section>
 
     <!-- My day: calorie target + today's log (stored only on this device) -->
     <section id="panel-day" role="tabpanel" aria-labelledby="tab-day" hidden>
@@ -429,7 +502,7 @@
   </div>
 
   <script src="ort/ort.wasm.min.js"></script>
-  <script src="app.js?v=7717cbbe50"></script>
+  <script src="app.js?v=b60a92bdc9"></script>
   <script src="products.js?v=5c2fdfff6c"></script>
   <script src="openvocab.js?v=62177ce2f7"></script>
   <script src="plate.js?v=a0d49d169d"></script>
@@ -437,10 +510,11 @@
   <script src="learn.js?v=83e94f1c79"></script>
   <script src="quicklog.js?v=824cda88c3"></script>
   <script src="weight.js?v=804c49732f"></script>
-  <script src="backup.js?v=2aba8baa5f"></script>
+  <script src="backup.js?v=1822bab602"></script>
   <script src="report.js?v=60299acc57"></script>
+  <script src="recipes.js?v=13ba89093f"></script>
   <script src="water.js?v=28619159ba"></script>
   <script src="tour.js?v=c6027606f8"></script>
-  <script src="motion.js?v=01e6e669fe"></script>
+  <script src="motion.js?v=f0b5cd75d0"></script>
 </body>
 </html>

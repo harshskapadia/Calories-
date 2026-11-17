@@ -59,6 +59,7 @@ async function init() {
     state.foods.set(key, item);
     state.foodList.push(item);
   }
+  if (typeof registerRecipes === "function") registerRecipes(); // your own dishes join search and logging
   buildDishSelect();
   $("nutrition").hidden = false;
 
@@ -252,6 +253,7 @@ function setGrams(g) {
     their own from Open Food Facts (salt g -> sodium mg: salt = 2.5 x sodium). */
 function microsOf(food) {
   if (!food) return null;
+  if (food.match === "recipe") return food.micros || null;
   if (food.match === "off") {
     const x = food.extra && food.extra.per100;
     if (!x || [x.fiber, x.sugars, x.sat, x.salt].every((v) => v == null)) return null;
@@ -291,6 +293,10 @@ function render() {
   if (typeof renderProductInfo === "function") renderProductInfo(food, state.grams);
   if (typeof renderBurn === "function") renderBurn(kcal);
   if (food.match === "off") { $("source").innerHTML = food.sourceHtml; return; }
+  if (food.match === "recipe") {
+    $("source").textContent = `Your recipe: ${food.source}. Ingredient values from USDA. Change it in the Recipes tab.`;
+    return;
+  }
   if (food.match === "approx") {
     const [src, desc, qid, sim] = food.source.split("|");
     const recipe = sim === "recipe", rough = !recipe && Number(sim) < 0.7;
@@ -355,7 +361,7 @@ function rankFoods(q) {
   const rank = (f) => {
     const n = f.lower;
     const pos = n === phrase ? 0 : n.startsWith(phrase) ? 1 : wordStart.test(n) ? 2 : 3;
-    const kind = f.match === "usda" ? 1 : f.match === "approx" ? 2 : 0;
+    const kind = f.match === "recipe" ? -1 : f.match === "usda" ? 1 : f.match === "approx" ? 2 : 0; // your recipes first
     if (alias && f.key === alias) return -1;
     return pos * 10 + kind;
   };
@@ -368,7 +374,7 @@ function search(q) {
   const hits = rankFoods(q);
   box.innerHTML = hits.length
     ? hits.slice(0, 25).map((f) => `<li><button type="button" data-key="${f.key}">${escapeHtml(f.name)}` +
-        `<span class="tag">${f.match === "usda" ? "USDA" : f.match === "approx" ? "world dish" : "dish"} · ${Math.round(f.kcal)} kcal/100 g</span></button></li>`).join("")
+        `<span class="tag">${f.match === "recipe" ? "my recipe" : f.match === "usda" ? "USDA" : f.match === "approx" ? "world dish" : "dish"} · ${Math.round(f.kcal)} kcal/100 g</span></button></li>`).join("")
     : `<li><button type="button" disabled>No match. Try a simpler word (e.g. "lentil", "rice").</button></li>`;
   box.hidden = false;
 }
@@ -377,21 +383,23 @@ function escapeHtml(s) { return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<
 
 // ---------------------------------------------------------------- events
 function showTab(which) {
-  for (const t of ["meal", "pack", "day"]) {
+  for (const t of ["meal", "pack", "recipes", "day"]) {
     const on = t === which;
     $(`tab-${t}`).classList.toggle("on", on);
     $(`tab-${t}`).setAttribute("aria-selected", on);
     $(`panel-${t}`).hidden = !on;
   }
   $("results").hidden = which !== "meal" || !$("top3").children.length;
-  $("nutrition").hidden = which === "day";
+  $("nutrition").hidden = which === "day" || which === "recipes";
   if (which === "day" && typeof renderDay === "function") renderDay();
+  if (which === "recipes" && typeof renderRecipeList === "function") renderRecipeList();
 }
 
 function wire() {
   $("tab-meal").addEventListener("click", () => showTab("meal"));
   $("tab-pack").addEventListener("click", () => showTab("pack"));
   $("tab-day").addEventListener("click", () => showTab("day"));
+  $("tab-recipes").addEventListener("click", () => showTab("recipes"));
   for (const id of ["camera", "file"]) {
     $(id).addEventListener("change", (e) => { const f = e.target.files[0]; if (f) analyze(f); e.target.value = ""; });
   }

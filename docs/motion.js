@@ -11,7 +11,7 @@
   root.classList.add("motion");
 
   // ------------------------------------------------------------ numbers that count up / down to their new value
-  const COUNT = "#kcal, #wt-amount, #ring-left, #t-eaten, #t-p, #t-c, #t-f, .pe-kcal, .tile b, .target-big .kcal";
+  const COUNT = "#kcal, #rc-kcal, #wt-amount, #ring-left, #t-eaten, #t-p, #t-c, #t-f, .pe-kcal, .tile b, .target-big .kcal";
   const counters = new WeakMap(); // element -> { value, written, raf }
   const NUM = /^([^\d−-]*)([−-]?)(\d[\d,]*(?:\.\d+)?)(.*)$/s;
 
@@ -49,7 +49,7 @@
   const ENTER = "#results, #nutrition, #ov-results, #photo-est, #plate-view, #learn, #drink-pick, #ql-result, .warn, #target, " +
     "#recent-wrap, #plate-balance, #plate-dish, #plate-total, #search-results, #prod-results, .product-info, #scanner, #offline-bar, " +
     "#ios-hint, #learned-card, .ideas-wrap";
-  const PANELS = ["panel-meal", "panel-pack", "panel-day"];
+  const PANELS = ["panel-meal", "panel-pack", "panel-recipes", "panel-day"];
   let tabDir = 1;
 
   function play(el, cls, ms = 900) {
@@ -70,7 +70,7 @@
   }
 
   // ------------------------------------------------------------ list items: new ones slide in, removed ones fold away
-  const LISTS = "#log, #plate-list, #ql-items, #top3, #prod-results, #search-results, #recent, #ideas, .ideas-list, .report-tiles, #learned-list, #clip-picks, .clip-picks";
+  const LISTS = "#rc-ings, #rc-list, #rc-sugg, #log, #plate-list, #ql-items, #top3, #prod-results, #search-results, #recent, #ideas, .ideas-list, .report-tiles, #learned-list, #clip-picks, .clip-picks";
   const seen = new WeakMap(); // list -> Set of item texts already shown
 
   function listChanged(list) {
@@ -174,8 +174,8 @@
     // tab direction first (the tab classes change in the same batch as the panels' hidden flags)
     for (const r of records) {
       if (r.type === "attributes" && r.attributeName === "class" && r.target.classList.contains("on") && r.target.id.startsWith("tab-")) {
-        const now = ["meal", "pack", "day"].indexOf(r.target.id.slice(4));
-        const was = ["meal", "pack", "day"].findIndex((t) => !$(`panel-${t}`).hidden && t !== r.target.id.slice(4));
+        const now = ["meal", "pack", "recipes", "day"].indexOf(r.target.id.slice(4));
+        const was = ["meal", "pack", "recipes", "day"].findIndex((t) => !$(`panel-${t}`).hidden && t !== r.target.id.slice(4));
         tabDir = was === -1 || now > was ? 1 : -1;
       }
     }

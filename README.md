@@ -478,6 +478,21 @@ value scales with it) or move it to another meal, and to add it to **favourites*
 backups). **"↻ Yesterday's breakfast"** (any meal eaten yesterday and not logged yet today) copies the whole meal in one
 tap.
 
+### 🍲 My recipes
+
+A tab for dishes you cook at home. Name the dish, set how many servings it makes, and add ingredients the way a recipe
+is written: "400 g pasta", "2 tbsp olive oil", "1 medium onion", "2 cloves garlic". The card grows its own **Nutrition
+Facts label per serving** as you go (calories, fat and saturated fat, sodium/salt, carbohydrate, fibre, sugars,
+protein). Weigh the finished dish to log it by grams; without that, the dish is split evenly by raw weight. Saved recipes
+are your own foods: first in search (tagged *my recipe*), one tap to log a serving, and usable for favourites and photo
+corrections ("Learns from you"). Stored on the phone (`nutrisnap.recipes.v1`), in backups.
+
+Ingredients: the USDA survey database the app uses for dishes (FNDDS) describes food *as eaten* and has no raw dal,
+flour, semolina, salt or spices, so `scripts/build_ingredients.py` adds ~100 raw cooking staples from **USDA SR Legacy**
+(`data/recipe_ingredients.csv`: friendly names and search aliases), with USDA's own kitchen measures (1 cup pigeon peas
+205 g, 1 tbsp oil 13.6 g, 1 tsp salt 6 g, 1 medium onion 110 g); every other food in the app can be an ingredient too.
+Each recipe keeps its own copy of the values, so it never changes behind your back.
+
 ### 💧 Water
 
 A glass of ink in My day that fills as you drink: **+ Glass** (250 ml / 8 fl oz) or **+ Bottle** (500 ml / 16 fl oz), or tap

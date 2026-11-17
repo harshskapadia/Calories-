@@ -131,10 +131,13 @@
               <li><i class="dot carbs"></i><span>Carbs</span><b id="t-c">0 g</b><span class="muted"></span></li>
               <li><i class="dot fat"></i><span>Fat</span><b id="t-f">0 g</b><span class="muted"></span></li>
             </ul>
+            <ul id="t-micros" class="legend today-micros" aria-label="Fibre, sugars, salt and saturated fat today" hidden></ul>
+            <p id="t-micros-note" class="muted small"></p>
           </div>
         </div>
         <ul id="log" class="list log"></ul>
         <p id="log-empty" class="muted small">Nothing logged yet. Snap a meal, scan a product or search a food, then tap <b>Add to today</b>.</p>
+        <p id="log-hint" class="muted small" hidden>Tap a food to change its amount or meal, or add it to your favourites.</p>
         <div id="recent-wrap" class="recent-wrap" hidden><div class="mini-h">⚡ Quick add</div><div id="recent" class="chips"></div></div>
         <div class="ideas-wrap"><div class="mini-h">💡 What can I still eat?</div><div id="ideas"></div></div>
         <div class="week" id="week" aria-label="Calories over the last 7 days"></div>
@@ -284,9 +287,13 @@
         <div class="nf-cal"><span>Calories</span><b id="kcal" class="kcal">0</b></div>
         <div class="nf-rule nf-mid" aria-hidden="true"></div>
         <ul class="nf-rows">
-          <li><span class="nf-k"><i class="dot protein"></i>Protein</span><b id="p">0 g</b><span class="nf-e" id="kp"></span></li>
-          <li><span class="nf-k"><i class="dot carbs"></i>Carbohydrate</span><b id="c">0 g</b><span class="nf-e" id="kc"></span></li>
           <li><span class="nf-k"><i class="dot fat"></i>Fat</span><b id="f">0 g</b><span class="nf-e" id="kf"></span></li>
+          <li class="nf-sub"><span class="nf-k">Saturated fat</span><b id="nf-sf">–</b><span class="nf-e"></span></li>
+          <li><span class="nf-k"><i class="dot none"></i>Sodium</span><b id="nf-na">–</b><span class="nf-e" id="nf-salt"></span></li>
+          <li><span class="nf-k"><i class="dot carbs"></i>Carbohydrate</span><b id="c">0 g</b><span class="nf-e" id="kc"></span></li>
+          <li class="nf-sub"><span class="nf-k">Fibre</span><b id="nf-fb">–</b><span class="nf-e"></span></li>
+          <li class="nf-sub"><span class="nf-k">Sugars</span><b id="nf-sg">–</b><span class="nf-e"></span></li>
+          <li><span class="nf-k"><i class="dot protein"></i>Protein</span><b id="p">0 g</b><span class="nf-e" id="kp"></span></li>
         </ul>
         <div id="donut" class="nf-split empty" role="img" aria-label="Energy split between protein, carbs and fat">
           <i class="sp"></i><i class="sc"></i><i class="sf"></i>

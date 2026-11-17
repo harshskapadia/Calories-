@@ -177,7 +177,8 @@ function qlRun() {
   $("ql-add").addEventListener("click", () => {
     const entries = ql.items.filter((it) => it.food && it.grams > 0).map((it) => {
       const k = it.grams / 100, f = it.food;
-      return { name: f.name, amount: `${it.grams} ${f.unit || "g"}`, kcal: f.kcal * k, p: f.p * k, c: f.c * k, f: f.f * k };
+      return { name: f.name, amount: `${it.grams} ${f.unit || "g"}`, kcal: f.kcal * k, p: f.p * k, c: f.c * k, f: f.f * k,
+        ...microsFor(f, it.grams) };
     });
     if (!entries.length) return;
     addEntries(entries);

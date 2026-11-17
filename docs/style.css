@@ -176,6 +176,10 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 
 .nf-rows li { display: grid; grid-template-columns: 1fr auto 5.6rem; gap: 10px; align-items: baseline; padding: 6px 0;
   border-bottom: 1px solid var(--ink); font-size: .98rem; }
 .nf-k { font-weight: 750; display: inline-flex; align-items: center; gap: 8px; }
+.nf-rows li.nf-sub { border-bottom-color: var(--line); padding: 4px 0; }
+.nf-rows li.nf-sub .nf-k { font-weight: 400; padding-left: 18px; }
+.nf-rows li:has(+ .nf-sub) { border-bottom-color: var(--line); }
+.dot.none { background: transparent; }
 .nf-rows b { font-weight: 500; }
 .nf-e { color: var(--muted); font-size: .85rem; text-align: right; }
 .nf-split { --p: 0; --c: 0; display: flex; height: 8px; margin: 10px 0; gap: 2px; }
@@ -465,10 +469,14 @@ body.tour-open { overflow: hidden; }
 .m-print .nf-heavy:first-of-type { animation-delay: .08s; }
 .m-print .nf-mid { animation-delay: .22s; }
 .m-print .nf-rows li { animation: m-type .4s var(--ease) both; }
-.m-print .nf-rows li:nth-child(1) { animation-delay: .3s; }
-.m-print .nf-rows li:nth-child(2) { animation-delay: .36s; }
-.m-print .nf-rows li:nth-child(3) { animation-delay: .42s; }
-.m-print .nf-heavy:last-of-type { animation-delay: .5s; }
+.m-print .nf-rows li:nth-child(1) { animation-delay: .28s; }
+.m-print .nf-rows li:nth-child(2) { animation-delay: .32s; }
+.m-print .nf-rows li:nth-child(3) { animation-delay: .36s; }
+.m-print .nf-rows li:nth-child(4) { animation-delay: .4s; }
+.m-print .nf-rows li:nth-child(5) { animation-delay: .44s; }
+.m-print .nf-rows li:nth-child(6) { animation-delay: .48s; }
+.m-print .nf-rows li:nth-child(7) { animation-delay: .52s; }
+.m-print .nf-heavy:last-of-type { animation-delay: .6s; }
 @keyframes m-rule { from { transform: scaleX(0); } to { transform: none; } }
 @keyframes m-type { from { opacity: 0; clip-path: inset(0 100% 0 0); } to { opacity: 1; clip-path: inset(0 0 0 0); } }
 
@@ -572,3 +580,35 @@ body.tour-open { overflow: hidden; }
     transition-duration: .001ms !important; }
   .drop.scanning::after { display: none; }
 }
+
+
+/* meals, editing, favourites */
+.log .meal-h { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 12px; background: var(--surface-2);
+  font: 750 .82rem var(--font); font-stretch: 90%; }
+.log .meal-h b { font-weight: 600; color: var(--muted); }
+.log .log-name { all: unset; box-sizing: border-box; cursor: pointer; min-width: 0; font-weight: 600; padding: 2px 0; border-radius: 6px; }
+.log .log-name:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 55%, transparent); }
+.log li.log-item.editing { background: var(--surface-2); }
+.fav-mark { font-weight: 400; }
+.log li.log-edit { display: grid; grid-template-columns: 1fr; gap: 12px; padding: 4px 12px 14px; background: var(--surface-2); }
+.le-amt { display: grid; gap: 6px; }
+.le-amt .label { margin: 0; }
+.le-in { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .9rem; }
+.le-in input { width: 120px; text-align: right; }
+.le-meal { grid-template-columns: repeat(4, 1fr); background: var(--surface); }
+.le-meal button { padding: 8px 2px; font-size: .84rem; }
+.le-actions { display: flex; justify-content: space-between; gap: 10px; }
+.chip-copy { border-style: dashed; }
+.today-micros { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.today-micros li.over b, .today-micros li.over .muted { color: #d0567f; }
+#t-micros-note:empty { display: none; }
+#t-micros-note { margin: 6px 0 0; }
+/* the editor lives inside .list, whose generic "li button" rule would flatten its controls */
+.log li.log-edit .le-meal button { all: unset; box-sizing: border-box; position: relative; z-index: 1; text-align: center; padding: 8px 2px;
+  font: 600 .84rem var(--font); color: var(--muted); border-radius: 10px; cursor: pointer; min-width: 0; }
+.log li.log-edit .le-meal button.on { color: var(--ink); background: var(--surface); box-shadow: 0 1px 3px rgba(0, 0, 0, .08); }
+.log li.log-edit .le-meal button:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 55%, transparent); }
+.log li.log-edit .le-actions .btn { display: inline-flex; align-items: center; justify-content: center; width: auto; min-height: 40px;
+  padding: 0 16px; border-radius: 12px; font: 600 .9rem var(--font); cursor: pointer; border: 1px solid transparent; }
+.log li.log-edit .le-actions .btn.ghost { border-color: var(--line); background: var(--surface); color: var(--ink); }
+.log li.log-edit .le-actions .btn.primary { background: var(--primary); color: var(--primary-ink); }

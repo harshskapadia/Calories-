@@ -2,7 +2,7 @@
 "use strict";
 
 const $ = (id) => document.getElementById(id);
-const state = { meta: null, foods: new Map(), foodList: [], session: null, key: null, preset: "medium", grams: 0 };
+const state = { meta: null, foods: new Map(), foodList: [], session: null, key: null, preset: "medium", grams: 0, micros: {} };
 
 // ---------------------------------------------------------------- loading
 async function fetchWithProgress(url, onProgress) {
@@ -48,6 +48,9 @@ async function init() {
     fetch("model/meta.json").then((r) => r.json()),
     fetch("data/foods.json").then((r) => r.json()),
   ]);
+  // fibre, sugars, saturated fat, sodium per 100 g (scripts/build_micros.py); the label shows "–" until it arrives
+  fetch("data/micros.json").then((r) => r.json()).then((m) => { state.micros = m.per100g; render(); if (typeof renderToday === "function") renderToday(); })
+    .catch(() => {});
   state.meta = meta;
   prepareMeta(meta);
   if ($("dish-count")) $("dish-count").textContent = dishCount().toLocaleString("en-US");
@@ -245,6 +248,18 @@ function setGrams(g) {
   render();
 }
 
+/** Fibre, sugars, saturated fat (g) and sodium (mg) per 100 g of a food, or null when unknown. Packaged products bring
+    their own from Open Food Facts (salt g -> sodium mg: salt = 2.5 x sodium). */
+function microsOf(food) {
+  if (!food) return null;
+  if (food.match === "off") {
+    const x = food.extra && food.extra.per100;
+    if (!x || [x.fiber, x.sugars, x.sat, x.salt].every((v) => v == null)) return null;
+    return [x.fiber, x.sugars, x.sat, x.salt == null ? null : x.salt * 400];
+  }
+  return state.micros[food.key] || null;
+}
+
 function render() {
   const food = state.foods.get(state.key);
   if (!food) return;
@@ -264,6 +279,10 @@ function render() {
     $(`b${m}`).style.width = `${(e[m] / max) * 100}%`;
     $(`k${m}`).textContent = `${Math.round(e[m])} kcal`;
   }
+  const mi = microsOf(food), g = (i, unit = "g", dp = 1) => (mi && mi[i] != null ? `${(mi[i] * k).toFixed(mi[i] * k < 10 ? dp : 0)} ${unit}` : "–");
+  $("nf-fb").textContent = g(0); $("nf-sg").textContent = g(1); $("nf-sf").textContent = g(2);
+  $("nf-na").textContent = g(3, "mg", 0);
+  $("nf-salt").textContent = mi && mi[3] != null ? `${((mi[3] * k * 2.5) / 1000).toFixed(1)} g salt` : "";
   const tot = e.p + e.c + e.f;
   const donut = $("donut");
   donut.classList.toggle("empty", tot <= 0);

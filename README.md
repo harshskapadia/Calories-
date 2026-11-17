@@ -470,6 +470,24 @@ Mifflin-St Jeor estimate by ≥ 150 kcal it offers to use it; the safety floors 
 it. In a browser check with 3 weeks of simulated data (1,600 kcal a day, −0.49 kg a week) it estimated 2,140 kcal/day vs the
 formula's 1,980 and moved the target from 1,430 to 1,590 kcal.
 
+### 🍳 Meals, editing and favourites
+
+The day's log is grouped into **Breakfast, Lunch, Dinner and Snacks** (each food goes to the meal of the time it was
+added; entries from before meals existed are placed the same way). **Tap a logged food** to change its amount (every
+value scales with it) or move it to another meal, and to add it to **favourites** (★, at the front of Quick add; kept in
+backups). **"↻ Yesterday's breakfast"** (any meal eaten yesterday and not logged yet today) copies the whole meal in one
+tap.
+
+### 🧂 Fibre, sugars, salt and saturated fat
+
+The result label also lists **saturated fat, sodium (with the salt equivalent), fibre and sugars**, in the order of a
+printed Nutrition Facts label. `scripts/build_micros.py` takes them from the same USDA FNDDS recipes as the calories
+(`docs/data/micros.json`, 11,137 foods: every dish the model knows, every USDA food, the world dishes via the food or
+recipe their nutrition comes from); packaged products use their Open Food Facts values. My day adds them up against
+daily guidance: **fibre 25 g or more**, **salt under 5 g** (WHO), **saturated fat under 10% of your calorie target**;
+sugars are shown as a total (it includes the natural sugar in fruit and milk, so there is no single limit for it). Foods
+logged before this existed have no values, and the day says how many foods the totals are based on.
+
 ### 🔥 Streaks and 📅 weekly report
 
 *My day* shows the current logging streak (a day counts when anything is logged; today's streak holds until midnight)

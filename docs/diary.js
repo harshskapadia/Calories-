@@ -2,7 +2,12 @@
    Everything is stored in this browser only (localStorage); nothing is uploaded. */
 "use strict";
 
-const DIARY_PROFILE = "nutrisnap.profile.v1", DIARY_LOG = "nutrisnap.log.v1";
+const DIARY_PROFILE = "nutrisnap.profile.v1", DIARY_LOG = "nutrisnap.log.v1", DIARY_FAVS = "nutrisnap.favs.v1";
+const MEALS = [["breakfast", "Breakfast"], ["lunch", "Lunch"], ["dinner", "Dinner"], ["snack", "Snacks"]];
+// what a logged food carries: name, amount, kcal + macros (g), and when known fibre, sugars, saturated fat (g), sodium (mg)
+const ENTRY_KEYS = ["name", "amount", "kcal", "p", "c", "f", "fb", "sg", "sf", "na"];
+const SCALED = ["kcal", "p", "c", "f", "fb", "sg", "sf", "na"];
+const DAILY = { fibre: 25, saltG: 5 }; // WHO / EFSA: at least 25 g fibre, under 5 g salt a day; saturated fat under 10% of energy
 const KCAL_PER_KG = 7700;   // energy in ~1 kg of body fat (rule of thumb)
 const LB = 0.45359237;
 const GOALS = { // kg per week (negative = lose)
@@ -140,9 +145,26 @@ function saveLog(log) {
   store(DIARY_LOG, Object.fromEntries(keep.map((k) => [k, log[k]])));
 }
 
+/** The meal a time of day belongs to (entries logged before meals existed are placed by the time they were logged). */
+function mealAt(t = Date.now()) {
+  const h = new Date(t).getHours();
+  return h >= 4 && h < 11 ? "breakfast" : h >= 11 && h < 16 ? "lunch" : h >= 18 && h < 23 ? "dinner" : "snack";
+}
+const mealOf = (e) => e.meal || mealAt(e.t || Date.now());
+const pickEntry = (e) => Object.fromEntries(ENTRY_KEYS.filter((k) => e[k] != null).map((k) => [k, e[k]]));
+
+/** Fibre / sugars / saturated fat / sodium for `grams` of a food, as entry fields (empty when unknown). */
+function microsFor(food, grams) {
+  const m = typeof microsOf === "function" ? microsOf(food) : null;
+  if (!m) return {};
+  const out = {};
+  ["fb", "sg", "sf", "na"].forEach((n, i) => { if (m[i] != null) out[n] = (m[i] * grams) / 100; });
+  return out;
+}
+
 function addEntries(entries) {
   const log = loadLog(), d = today();
-  log[d] = [...(log[d] || []), ...entries.map((e) => ({ ...e, t: Date.now() }))];
+  log[d] = [...(log[d] || []), ...entries.map((e) => ({ meal: mealAt(), ...e, t: Date.now() }))];
   saveLog(log);
   renderToday();
   const eaten = log[d].reduce((s, e) => s + e.kcal, 0);
@@ -154,7 +176,7 @@ function entryFromCurrent() {
   if (!food || !state.grams) return null;
   const k = state.grams / 100;
   return { name: food.name, amount: `${Math.round(state.grams)} ${food.unit || "g"}`,
-    kcal: food.kcal * k, p: food.p * k, c: food.c * k, f: food.f * k };
+    kcal: food.kcal * k, p: food.p * k, c: food.c * k, f: food.f * k, ...microsFor(food, state.grams) };
 }
 
 function flash(text) {
@@ -195,10 +217,16 @@ function renderToday() {
     ring.style.setProperty("--pct", 0);
     ring.classList.remove("over");
   }
-  $("log").innerHTML = items.map((e, i) => `<li><span class="log-name">${escapeHtml(e.name)}<span class="sub">${escapeHtml(e.amount)} · P ${kfmt(e.p)} · C ${kfmt(e.c)} · F ${kfmt(e.f)} g</span></span>
-    <b>${kfmt(e.kcal)} kcal</b><button type="button" class="log-x" data-del="${i}" aria-label="Remove ${escapeHtml(e.name)}">✕</button></li>`).join("");
+  $("log").innerHTML = MEALS.map(([id, label]) => {
+    const rows = items.map((e, i) => [e, i]).filter(([e]) => mealOf(e) === id);
+    if (!rows.length) return "";
+    const kc = rows.reduce((s2, [e]) => s2 + e.kcal, 0);
+    return `<li class="meal-h"><span>${label}</span><b>${kfmt(kc)} kcal</b></li>` + rows.map(([e, i]) => logItemHtml(e, i)).join("");
+  }).join("");
+  renderMicrosToday(items, t);
   $("log").hidden = !items.length;
   $("log-empty").hidden = !!items.length;
+  $("log-hint").hidden = !items.length;
   $("log-clear").hidden = !items.length;
   // last 7 days
   const days = [...Array(7)].map((_, i) => { const x = new Date(); x.setDate(x.getDate() - 6 + i); return x; });
@@ -214,6 +242,55 @@ function renderToday() {
   renderRecent();
   renderIdeas();
   if (typeof renderProgress === "function") renderProgress();
+}
+
+function logItemHtml(e, i) {
+  const fav = isFav(e) ? '<span class="fav-mark" title="Favourite">★</span> ' : "";
+  const row = `<li class="log-item${diary.editing === i ? " editing" : ""}"><button type="button" class="log-name" data-edit="${i}"
+    aria-expanded="${diary.editing === i}" title="Change amount or meal">${fav}${escapeHtml(e.name)}<span class="sub">${escapeHtml(e.amount)} · P ${kfmt(e.p)} · C ${kfmt(e.c)} · F ${kfmt(e.f)} g</span></button>
+    <b>${kfmt(e.kcal)} kcal</b><button type="button" class="log-x" data-del="${i}" aria-label="Remove ${escapeHtml(e.name)}">✕</button></li>`;
+  if (diary.editing !== i) return row;
+  const m = /^([\d.]+)\s*(g|ml)$/i.exec(e.amount || "");
+  const amt = m ? `<input id="le-amount" type="number" inputmode="decimal" min="1" max="5000" step="1" value="${Math.round(Number(m[1]))}"
+      aria-label="Amount in ${m[2]}"><span>${m[2]}</span>`
+    : `<input id="le-amount" type="number" inputmode="decimal" min="0.25" max="20" step="0.25" value="1" aria-label="Times this amount"><span>× ${escapeHtml(e.amount)}</span>`;
+  const meal = mealOf(e);
+  return row + `<li class="log-edit">
+    <label class="le-amt"><span class="label">Amount</span><span class="le-in">${amt}</span></label>
+    <div class="seg le-meal" role="radiogroup" aria-label="Meal">${MEALS.map(([id, label]) =>
+      `<button type="button" role="radio" data-meal="${id}" class="${id === meal ? "on" : ""}" aria-checked="${id === meal}">${label}</button>`).join("")}</div>
+    <div class="le-actions"><button type="button" class="btn ghost small-btn" data-fav="${i}">${isFav(e) ? "★ In favourites" : "☆ Add to favourites"}</button>
+      <button type="button" class="btn primary small-btn" data-save="${i}">Save</button></div></li>`;
+}
+
+// ---------------------------------------------------------------- favourites
+const favKey = (e) => `${e.name}|${e.amount}`;
+function loadFavs() { return store(DIARY_FAVS) || []; }
+function isFav(e) { return loadFavs().some((f) => favKey(f) === favKey(e)); }
+function toggleFav(e) {
+  const favs = loadFavs(), k = favKey(e), i = favs.findIndex((f) => favKey(f) === k);
+  if (i >= 0) favs.splice(i, 1); else favs.unshift(pickEntry(e));
+  store(DIARY_FAVS, favs.slice(0, 30));
+}
+
+// ---------------------------------------------------------------- fibre, sugars, salt, saturated fat today
+function renderMicrosToday(items, t) {
+  const el = $("t-micros");
+  if (!el) return;
+  const known = items.filter((e) => e.na != null || e.fb != null || e.sg != null || e.sf != null);
+  el.hidden = !known.length;
+  if (!known.length) { $("t-micros-note").textContent = ""; return; }
+  const sum = (k) => known.reduce((a, e) => a + (e[k] || 0), 0);
+  const fibre = sum("fb"), sugars = sum("sg"), sat = sum("sf"), salt = (sum("na") * 2.5) / 1000;
+  const satMax = ((t ? t.target : 2000) * 0.1) / 9;
+  const row = (dot, name, val, goal, over) => `<li${over ? ' class="over"' : ""}><i class="dot none"></i><span>${name}</span><b>${val}</b>` +
+    `<span class="muted">${goal}</span></li>`;
+  el.innerHTML = row("", "Fibre", `${kfmt(fibre)} g`, `aim ${DAILY.fibre}+ g`, false) +
+    row("", "Sugars", `${kfmt(sugars)} g`, "incl. fruit, milk", false) +
+    row("", "Salt", `${salt.toFixed(1)} g`, `under ${DAILY.saltG} g`, salt > DAILY.saltG) +
+    row("", "Saturated fat", `${kfmt(sat)} g`, `under ${kfmt(satMax)} g`, sat > satMax);
+  $("t-micros-note").textContent = known.length < items.length
+    ? `Fibre, sugars, salt and saturated fat from ${known.length} of ${items.length} foods (older entries don't have them).` : "";
 }
 
 // ---------------------------------------------------------------- "What can I still eat?"
@@ -242,7 +319,7 @@ function ideaList(left, proteinLeft, skip = new Set()) {
     const protein = food.p * k;
     // protein still needed -> favour protein per calorie; otherwise favour light, filling foods (low energy density)
     const score = (proteinLeft > 15 ? (protein * 4) / kcal : 1 - food.kcal / 700) + Math.random() * 0.15;
-    out.push({ key, name: label || food.name, grams: g, kcal, p: protein, c: food.c * k, f: food.f * k, score });
+    out.push({ key, name: label || food.name, grams: g, kcal, p: protein, c: food.c * k, f: food.f * k, score, ...microsFor(food, g) });
   }
   return out.sort((a, b) => b.score - a.score);
 }
@@ -270,23 +347,30 @@ function renderIdeas(more = false) {
     : `<p class="small">No more ideas in the list. Try search for anything else.</p>`);
 }
 
-// ---------------------------------------------------------------- quick add (recent foods)
+// ---------------------------------------------------------------- quick add: yesterday's meals, favourites, recent foods
 function renderRecent() {
-  const log = loadLog(), seen = new Set(), recent = [];
+  const log = loadLog(), favs = loadFavs(), seen = new Set(favs.map(favKey)), recent = [];
   for (const d of Object.keys(log).sort().reverse()) {
     for (const e of [...log[d]].reverse()) {
-      const id = `${e.name}|${e.amount}`;
+      const id = favKey(e);
       if (seen.has(id)) continue;
       seen.add(id);
-      recent.push(e);
+      recent.push(pickEntry(e));
       if (recent.length >= 8) break;
     }
     if (recent.length >= 8) break;
   }
-  diary.recent = recent;
-  $("recent-wrap").hidden = !recent.length;
-  $("recent").innerHTML = recent.map((e, i) =>
-    `<button type="button" class="chip" data-recent="${i}" title="Add ${escapeHtml(e.amount)} again">＋ ${escapeHtml(e.name)} <span>${kfmt(e.kcal)}</span></button>`).join("");
+  // a meal eaten yesterday that isn't logged yet today: one tap copies the whole meal
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  const yItems = log[y.toLocaleDateString("en-CA")] || [], tItems = log[today()] || [];
+  diary.copy = MEALS.map(([id, label]) => ({ id, label, items: yItems.filter((e) => mealOf(e) === id) }))
+    .filter((m) => m.items.length && !tItems.some((e) => mealOf(e) === m.id));
+  diary.recent = [...favs.map((f) => ({ ...f, fav: true })), ...recent].slice(0, 12);
+  $("recent-wrap").hidden = !diary.recent.length && !diary.copy.length;
+  $("recent").innerHTML = diary.copy.map((m) =>
+    `<button type="button" class="chip chip-copy" data-copy="${m.id}" title="${escapeHtml(m.items.map((e) => e.name).join(", "))}">↻ Yesterday's ${m.label.toLowerCase()} <span>${kfmt(m.items.reduce((a, e) => a + e.kcal, 0))}</span></button>`).join("") +
+    diary.recent.map((e, i) =>
+      `<button type="button" class="chip${e.fav ? " chip-fav" : ""}" data-recent="${i}" title="Add ${escapeHtml(e.amount)} again">${e.fav ? "★" : "＋"} ${escapeHtml(e.name)} <span>${kfmt(e.kcal)}</span></button>`).join("");
 }
 
 // ---------------------------------------------------------------- energy equivalent
@@ -322,7 +406,8 @@ function renderDay() { renderTarget(); }
     if (!plate.items.length) return;
     const eaten = addEntries(plate.items.map((it) => {
       const k = it.grams / 100, f = it.food;
-      return { name: f.name[0].toUpperCase() + f.name.slice(1), amount: `${it.grams} g`, kcal: f.kcal * k, p: f.p * k, c: f.c * k, f: f.f * k };
+      return { name: f.name[0].toUpperCase() + f.name.slice(1), amount: `${it.grams} g`, kcal: f.kcal * k, p: f.p * k, c: f.c * k, f: f.f * k,
+        ...microsFor(state.foods.get(f.key), it.grams) };
     }));
     $("plate-status").innerHTML = addedMessage(eaten);
   });
@@ -334,21 +419,80 @@ function renderDay() { renderTarget(); }
     const b = e.target.closest("[data-idea]");
     if (!b) return;
     const i = diary.ideas[Number(b.dataset.idea)];
-    addEntries([{ name: i.name, amount: `${Math.round(i.grams)} g`, kcal: i.kcal, p: i.p, c: i.c, f: i.f }]);
+    addEntries([pickEntry({ ...i, amount: `${Math.round(i.grams)} g` })]);
   });
   $("recent").addEventListener("click", (e) => {
     const b = e.target.closest("[data-recent]");
+    const c = e.target.closest("[data-copy]");
+    if (c) {
+      const m = diary.copy.find((x) => x.id === c.dataset.copy);
+      if (m) addEntries(m.items.map((x) => ({ ...pickEntry(x), meal: m.id })));
+      return;
+    }
     if (!b) return;
-    const { name, amount, kcal, p, c, f } = diary.recent[Number(b.dataset.recent)];
-    addEntries([{ name, amount, kcal, p, c, f }]);
+    addEntries([pickEntry(diary.recent[Number(b.dataset.recent)])]);
   });
   $("log").addEventListener("click", (e) => {
+    const log = loadLog(), d = today(), items = log[d] || [];
+    const ed = e.target.closest("[data-edit]");
+    if (ed) {
+      const i = Number(ed.dataset.edit);
+      diary.editing = diary.editing === i ? null : i;
+      renderToday();
+      if (diary.editing === i) $("le-amount")?.focus();
+      return;
+    }
+    const meal = e.target.closest("[data-meal]");
+    if (meal) {
+      meal.parentElement.querySelectorAll("[data-meal]").forEach((x) => {
+        x.classList.toggle("on", x === meal); x.setAttribute("aria-checked", x === meal);
+      });
+      return;
+    }
+    const fav = e.target.closest("[data-fav]");
+    if (fav) {
+      const it = items[Number(fav.dataset.fav)];
+      if (!it) return;
+      toggleFav(it); // update in place: keeps an amount typed but not saved yet
+      const on = isFav(it);
+      fav.textContent = on ? "★ In favourites" : "☆ Add to favourites";
+      const name = fav.closest(".log-edit").previousElementSibling.querySelector(".log-name");
+      name.querySelector(".fav-mark")?.remove();
+      if (on) name.insertAdjacentHTML("afterbegin", '<span class="fav-mark" title="Favourite">★</span> ');
+      renderRecent();
+      return;
+    }
+    const save = e.target.closest("[data-save]");
+    if (save) {
+      const i = Number(save.dataset.save), it = items[i];
+      const v = parseFloat($("le-amount").value);
+      if (!it || !(v > 0)) return;
+      const m = /^([\d.]+)\s*(g|ml)$/i.exec(it.amount || "");
+      const ratio = m ? v / Number(m[1]) : v;
+      const wasFav = isFav(it);
+      if (wasFav) toggleFav(it); // the favourite follows the saved amount
+      if (ratio !== 1) {
+        for (const k of SCALED) if (it[k] != null) it[k] *= ratio;
+        it.amount = m ? `${Math.round(v)} ${m[2]}` : `${v} × ${it.amount}`;
+      }
+      const on = e.target.closest(".log-edit").querySelector("[data-meal].on");
+      if (on) it.meal = on.dataset.meal;
+      if (wasFav) toggleFav(it);
+      saveLog(log);
+      diary.editing = null;
+      renderToday();
+      return;
+    }
     const b = e.target.closest("[data-del]");
     if (!b) return;
-    const log = loadLog(), d = today();
-    (log[d] || []).splice(Number(b.dataset.del), 1);
+    items.splice(Number(b.dataset.del), 1);
     saveLog(log);
+    diary.editing = null;
     renderToday();
+  });
+  $("log").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.target.id === "le-amount") e.target.closest(".log-edit").querySelector("[data-save]").click();
+    if (e.key === "Escape" && diary.editing != null) { diary.editing = null; renderToday(); }
   });
   $("log-clear").addEventListener("click", () => {
     if (!confirm("Remove everything logged today?")) return;

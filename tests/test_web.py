@@ -264,3 +264,28 @@ def test_streaks_and_weekly_report() -> None:
     html = (DOCS / "index.html").read_text(encoding="utf-8")
     assert 'id="streak"' in html and 'id="report-card"' in html and 'src="report.js"' in html
     assert "slice(-400)" in (DOCS / "diary.js").read_text(encoding="utf-8")  # log kept ~13 months for streaks/reports
+
+
+def test_micros_cover_dishes_and_foods() -> None:
+    """Fibre, sugars, saturated fat and sodium (scripts/build_micros.py) for every recognisable dish and nearly every food."""
+    micros = json.loads((DOCS / "data" / "micros.json").read_text(encoding="utf-8"))
+    assert micros["fields"] == ["fiber", "sugars", "satfat", "sodium_mg"]
+    per = micros["per100g"]
+    meta = json.loads((DOCS / "model" / "meta.json").read_text(encoding="utf-8"))
+    foods = {r[0]: r for r in json.loads((DOCS / "data" / "foods.json").read_text(encoding="utf-8"))}
+    dishes = [c for c in meta["classes"] if c not in (meta.get("merge") or {}) and c not in (meta.get("drop") or [])]
+    assert all(c in per for c in dishes), [c for c in dishes if c not in per][:10]
+    assert len(set(foods) - set(per)) < 0.01 * len(foods)
+    for k, (fib, sug, sat, na) in per.items():
+        r = foods[k]
+        assert 0 <= fib <= 60 and 0 <= sug <= 100 and 0 <= sat <= 100 and 0 <= na <= 40000, k
+        assert sug <= r[4] + 1.5 and sat <= r[5] + 1.5, k  # sugars are carbohydrate, saturates are fat
+    assert per["wd_Q24027629"][3] > 200  # the snack pack recipe carries its salt
+
+
+def test_meals_favourites_and_backup() -> None:
+    js = (DOCS / "diary.js").read_text(encoding="utf-8")
+    assert all(m in js for m in ('"breakfast"', '"lunch"', '"dinner"', '"snack"')) and "data-copy" in js and "toggleFav" in js
+    assert '"nutrisnap.favs.v1"' in (DOCS / "backup.js").read_text(encoding="utf-8")
+    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    assert all(f'id="{i}"' in html for i in ("nf-sf", "nf-na", "nf-fb", "nf-sg", "t-micros", "log-hint"))

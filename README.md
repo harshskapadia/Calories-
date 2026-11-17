@@ -242,7 +242,7 @@ Two things went wrong and were fixed in the app without retraining:
   *burger*, *Panipuri*, *chow mein*) or varieties an old class already covers (Margherita, pepperoni, Hawaiian pizza;
   chicken, mutton, Hyderabadi biryani; mala hot pot…). They split the votes. `data/class_merges.yaml` folds 28 of them
   into their parent dish (the app adds their probabilities) and drops one non-dish (*list of apple dishes*), leaving
-  **444 distinct dishes**; the next photo list gives their photos to the parent class.
+  **444 distinct dishes** (428 once v6's clean-up list also hides 16 vague groups); the next photo list gives their photos to the parent class.
 - **The 228 earlier dishes lost ~2 points** to the 245 look-alike newcomers. The app therefore also runs the v4 model
   as a **helper**: v5 decides how likely the photo is one of the dishes both models know, and inside that share the
   two models get an equal say (`combineProbs` in `docs/app.js`). That brings those dishes back to v4's accuracy while
@@ -252,6 +252,26 @@ The new dishes are uneven: median 52% top-1, 55 of them at 70%+ (dangmyeon 96%, 
 unadon 89%, champon 88%), 109 below 50%, mostly vague Commons categories (*Doces do Brasil* 3%, *tartlet* 17%) or
 regional variants of a known dish. *Halal snack pack* did not make it: Commons has fewer than 10 usable photos of it.
 Per-class numbers: `results/multi_world_v5_convnext_tiny/per_class.csv`.
+
+### v6: v5 cleaned up, plus your own photos
+
+`configs/gpu/multi_world_v6_convnext_tiny.yaml` retrains on the same photos (nothing new to download) with the fixes
+learned from v5 applied at the source, in `data/class_merges.yaml`:
+
+- the 28 duplicate classes train **as their parent dish** (their Commons photos become extra photos of French Fries, Pizza,
+  Biryani…);
+- **17 classes are left out**: vague Commons groups (*Doces do Brasil*, *street food in South Korea*, *Thirteen desserts*,
+  *tartlet*…) and ones v5 almost never got right (recall or precision under 25%). The live v5 app already hides them,
+  so it names 428 distinct dishes;
+- **your own photos**: `data/my_photos/<dish name>/*.jpg` (any dish the app has nutrition for, e.g. *Halal snack pack*,
+  which Commons barely has). 15+ photos per dish, every 5th kept for testing; never committed (`.gitignore`). See
+  `data/my_photos/README.md`;
+- v6 warm-starts from v5, so it **keeps v5's train/test split for every photo v5 had** (`keep_splits_from`): otherwise
+  merging classes would reshuffle held-out photos and v6 could be tested on photos v5 trained on.
+
+```bash
+python run_all.py --final-config configs/gpu/multi_world_v6_convnext_tiny.yaml --steps data final evaluate export --batch-size 16 --workers 4
+```
 
 ## In-browser version (free, on-device)
 

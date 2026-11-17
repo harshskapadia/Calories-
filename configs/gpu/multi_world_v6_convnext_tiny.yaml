@@ -1,0 +1,40 @@
+# v6: v5 cleaned up + your own photos. Same photos as v5 (nothing new to download), but the 28 duplicate classes train
+# as their parent dish (fries -> French Fries, pepperoni pizza -> Pizza...) and 17 vague / near-zero classes are left out
+# (data/class_merges.yaml), plus the dishes in data/my_photos/ (e.g. halal snack pack). Warm start from v5, keeping
+# v5's train/test split for every photo it had. ~70-80 min on an RTX 3050 Ti (8 epochs x 100k photos).
+experiment: multi_world_v6_convnext_tiny
+data:
+  name: multiworld6
+  keep_splits_from: multiworld5     # photos v5 trained on never land in the v6 test set (warm start from v5)
+  sources: [food101, indian43, indianfoods15, cafsd, frcitems, turkish25, mmfood, commons, my_photos]   # see data/sources.yaml
+  short_side: 256
+  num_classes: null
+  val_frac: 0.1
+  seed: 42
+model:
+  backbone: convnext_tiny
+  pretrained: false                 # weights come from init_from
+  init_from: app/model/nutrisnap.pt
+  drop_rate: 0.2
+train:
+  img_size: 224
+  epochs: 8
+  batch_size: 16
+  lr: 1.0e-4                        # a fine-tune of v5: most classes are already learned
+  weight_decay: 0.05
+  label_smoothing: 0.1
+  warmup_epochs: 1
+  freeze_backbone_epochs: 0
+  amp: true
+  patience: 3
+  num_workers: 2
+  balanced_sampling: true           # new dishes have fewer photos: sample classes evenly
+  samples_per_epoch: 100000         # ~1,000 classes x ~100 photos each per epoch (fresh balanced draw)
+  freeze_stages: 1                  # only the stem + first stage stay fixed: more room to learn hundreds of new dishes
+  channels_last: true
+  seed: 42
+augment:
+  phone_aug: true
+  randaugment: true
+  color_jitter: 0.25
+  random_erasing: 0.25

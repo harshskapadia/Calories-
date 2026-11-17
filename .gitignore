@@ -19,3 +19,6 @@ logs/
 build/
 runs/
 yolo26*.pt
+# your own training photos stay on your computer
+data/my_photos/*
+!data/my_photos/README.md

@@ -72,6 +72,8 @@ def export(short_side: int = 256, workers: int = os.cpu_count() or 2, source: st
     spec = load_sources()[source]
     out_root = CACHE / spec["dir"].replace("_256", f"_{short_side}")
     index_path = out_root / "index.csv"
+    if load_sources()[source].get("type") == "local_folder":  # your own photos: re-read every time (you may add more)
+        return export_local_folder(load_sources()[source], out_root, short_side)
     if index_path.exists():
         print(f"[export] {source}: already done ({index_path})")
         return out_root
@@ -354,6 +356,86 @@ def export_mmfood_names(spec: dict, out_root: Path, short_side: int) -> Path:
     return out_root
 
 
+def dish_names() -> dict[str, str]:
+    """Normalised dish name -> class key, for every dish the app has nutrition for: model classes (key and display name)
+    and the Wikidata world dishes (wd_<QID>) in docs/data/foods.json."""
+    import json
+    import re
+    import unicodedata
+
+    def norm(s: str) -> str:
+        s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower()
+        return re.sub(r"[^a-z0-9]+", " ", s).strip()
+
+    out = {}
+    foods = json.loads((ROOT / "docs" / "data" / "foods.json").read_text(encoding="utf-8"))
+    for r in foods:
+        if r[0].startswith("wd_"):
+            out.setdefault(norm(r[1]), r[0])
+            out.setdefault(norm(r[0]), r[0])
+    for r in foods:
+        if not r[0].startswith(("wd_", "fndds_")):
+            out[norm(r[1])] = r[0]
+            out[norm(r[0])] = r[0]
+    return out
+
+
+def export_local_folder(spec: dict, out_root: Path, short_side: int) -> Path:
+    """Your own photos: data/my_photos/<dish>/*.jpg, where <dish> is a dish the app knows (its name as shown in the app,
+    e.g. "Halal snack pack" or "halal_snack_pack", or a class key like "pani_puri"). Photos are resized; every 5th
+    photo (by content) is kept for testing. Re-read on every run, so you can keep adding photos."""
+    import hashlib
+    import re
+
+    from PIL import ImageOps
+
+    src = ROOT / spec["path"]
+    names = dish_names()
+    rows, unknown = [], []
+    folders = sorted(p for p in src.iterdir() if p.is_dir()) if src.exists() else []
+    for folder in folders:
+        key = names.get(re.sub(r"[^a-z0-9]+", " ", folder.name.lower().replace("_", " ")).strip())
+        if not key:
+            unknown.append(folder.name)
+            continue
+        files = sorted(f for f in folder.rglob("*") if f.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"})
+        for f in files:
+            data = f.read_bytes()
+            h = hashlib.md5(data).hexdigest()
+            split = "test" if int(h[:8], 16) % 5 == 0 else "train"
+            rel = f"{split}/{key}/{h[:16]}.jpg"
+            dst = out_root / rel
+            if not dst.exists():
+                try:
+                    img = ImageOps.exif_transpose(Image.open(BytesIO(data))).convert("RGB")  # phone photos: upright
+                except Exception:  # noqa: BLE001
+                    print(f"[export]   skipped {f} (not an image PIL can read)")
+                    continue
+                sc = short_side / min(img.size)
+                if sc < 1:
+                    img = img.resize((round(img.width * sc), round(img.height * sc)), Image.BICUBIC)
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                img.save(dst, "JPEG", quality=90)
+            rows.append((rel, key, split))
+    if unknown:
+        print(f"[export] my photos: no dish called {unknown} — rename the folder to a dish name from the app's search "
+              "(e.g. 'Halal snack pack'); those photos are skipped")
+    counts: dict[str, int] = defaultdict(int)
+    for _, k, _ in rows:
+        counts[k] += 1
+    few = {k for k, n in counts.items() if n < spec.get("min_images", 15)}
+    if few:
+        print(f"[export] my photos: fewer than {spec.get('min_images', 15)} photos of {sorted(few)} — skipped for now")
+    rows = sorted(set(r for r in rows if r[1] not in few))
+    out_root.mkdir(parents=True, exist_ok=True)
+    with open(out_root / "index.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["path", "label", "split"])
+        w.writerows(rows)
+    print(f"[export] my photos: {len(rows)} photos of {len(counts) - len(few)} dishes ({dict(counts)})")
+    return out_root
+
+
 def export_commons_thumbs(spec: dict, out_root: Path, short_side: int) -> Path:
     """Wikimedia Commons dish photos (list: data/commons_dishes.csv.gz, made by scripts/build_commons_dishes.py, which
     runs first if the list is missing) -> small thumbnails, resized. Polite: a few parallel downloads, waits when the
@@ -434,6 +516,9 @@ def build_combined_index(sources: list[str], short_side: int, name: str) -> Path
     mapping labels through each source's aliases so shared dishes become one class."""
     specs = load_sources()
     out = CACHE / f"index_{name}.csv"
+    # duplicate classes -> their parent dish, vague/non-dish classes left out, for every source (data/class_merges.yaml)
+    merges = yaml.safe_load((ROOT / "data" / "class_merges.yaml").read_text(encoding="utf-8"))
+    merge, gone = merges.get("merge") or {}, set(merges.get("drop") or [])
     n = 0
     with open(out, "w", newline="", encoding="utf-8") as fo:
         w = csv.writer(fo)
@@ -444,9 +529,11 @@ def build_combined_index(sources: list[str], short_side: int, name: str) -> Path
             drop = set(specs[src].get("drop") or [])
             with open(CACHE / d / "index.csv", newline="", encoding="utf-8") as fi:
                 for row in csv.DictReader(fi):
-                    if row["label"] in drop:
+                    label = aliases.get(row["label"], row["label"])
+                    label = merge.get(label, label)
+                    if row["label"] in drop or label in gone:
                         continue
-                    w.writerow([f"{d}/{row['path']}", aliases.get(row["label"], row["label"]), row["split"], src])
+                    w.writerow([f"{d}/{row['path']}", label, row["split"], src])
                     n += 1
     print(f"[index] {'+'.join(sources)}: {n} images -> {out}")
     return out
@@ -470,6 +557,7 @@ def make_splits(
     seed: int = 42,
     index_file: Path | None = None,
     min_test: int = 20,
+    keep_splits_from: str | None = None,
 ) -> dict[str, Path]:
     """Write stratified train/val/test manifests (paths relative to ``image_root``).
 
@@ -492,7 +580,7 @@ def make_splits(
         rng.shuffle(train_paths)
         test = sorted(by_split["test"][cls])
         rng.shuffle(test)
-        if len(test) < min_test:
+        if len(test) < min_test and len(test) < 0.15 * (len(test) + len(train_paths)):
             # the source dataset has (almost) no test images for this dish: hold some out of its train pool
             n_test = max(min_test, round(len(train_paths) * val_frac))
             if len(train_paths) < 3 * n_test:  # a rare dish (a few dozen photos): keep two thirds for training
@@ -503,6 +591,27 @@ def make_splits(
         out["train"] += [(p, cls) for p in train[:train_per_class]]
         out["val"] += [(p, cls) for p in val[:val_per_class]]
         out["test"] += [(p, cls) for p in test[:test_per_class]]
+
+    if keep_splits_from:
+        # a model warm-started from an earlier run must never be tested on photos that run trained on: every photo the
+        # earlier run had keeps its split (merging or removing classes would otherwise reshuffle the held-out photos)
+        prev = {}
+        for split in ("train", "val", "test"):
+            f = SPLITS / f"{keep_splits_from}_{split}.csv"
+            if not f.exists():
+                raise SystemExit(f"{f} not found: run the earlier model's data step first, or remove keep_splits_from")
+            with open(f, newline="", encoding="utf-8") as fh:
+                prev.update({r["path"]: split for r in csv.DictReader(fh)})
+        moved = 0
+        fixed: dict[str, list[tuple[str, str]]] = {"train": [], "val": [], "test": []}
+        for split, rows in out.items():
+            for path, cls in rows:
+                to = prev.get(path, split)
+                moved += to != split
+                fixed[to].append((path, cls))
+        out = fixed
+        print(f"[split] kept the {keep_splits_from} split for {sum(p in prev for r in out.values() for p, _ in r)} photos "
+              f"({moved} moved back)")
 
     SPLITS.mkdir(parents=True, exist_ok=True)
     paths = {}
@@ -528,7 +637,8 @@ def splits_from_config(d: dict, export_missing: bool = False, workers: int = os.
     sources = d.get("sources")
     kwargs = dict(name=d["name"], num_classes=d.get("num_classes"), class_selection=d.get("class_selection", "first"),
                   train_per_class=d.get("train_per_class"), val_per_class=d.get("val_per_class"),
-                  test_per_class=d.get("test_per_class"), val_frac=d.get("val_frac", 0.1), seed=d.get("seed", 42))
+                  test_per_class=d.get("test_per_class"), val_frac=d.get("val_frac", 0.1), seed=d.get("seed", 42),
+                  keep_splits_from=d.get("keep_splits_from"))
     if not sources:
         root = export(short, workers) if export_missing else CACHE / f"food101_{short}"
         if not (root / "index.csv").exists():
@@ -537,8 +647,8 @@ def splits_from_config(d: dict, export_missing: bool = False, workers: int = os.
     specs = load_sources()
     for src in sources:
         idx = CACHE / specs[src]["dir"].replace("_256", f"_{short}") / "index.csv"
-        if not idx.exists():
-            if not export_missing:
+        if specs[src].get("type") == "local_folder" or not idx.exists():
+            if not export_missing and specs[src].get("type") != "local_folder":
                 raise FileNotFoundError(f"dataset {src!r} not exported yet: run `python run_all.py --steps data` first")
             export(short, workers, source=src)
     index = build_combined_index(sources, short, d["name"])

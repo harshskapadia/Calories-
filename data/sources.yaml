@@ -231,3 +231,11 @@ commons:
   min_images: 30                  # a new dish needs this many photos after the download
   keep: [wd_Q24027629]            # halal snack pack: kept with fewer photos (asked for by a user)
   workers: 6                      # parallel downloads (polite to Wikimedia)
+
+my_photos:
+  # your own photos: data/my_photos/<dish name>/*.jpg (see data/my_photos/README.md). Never committed to git.
+  type: local_folder
+  path: data/my_photos
+  dir: my_photos_256
+  license: your own photos
+  min_images: 15                  # a dish needs at least this many of your photos to be trained

@@ -30,5 +30,23 @@ merge:
   wd_Q139266197: hot_pot              # Taiwanese hot pot
   wd_Q15935161: hot_pot               # mutton hot pot
   wd_Q18883046: hot_pot               # mala hot pot
-# not a dish (a Wikipedia list page's photo category): never predicted
-drop: [wd_Q19839599]
+# never predicted, and left out of training: a Wikipedia list page's photo category, and Commons groups that are vague
+# collections rather than one dish, or that the v5 model got (almost) never right (recall or precision under 25%)
+drop:
+  - wd_Q19839599    # list of apple dishes
+  - wd_Q10267781    # Doces do Brasil (all Brazilian sweets)
+  - wd_Q107416756   # beans and corn porridge
+  - wd_Q70612       # Granita PAT
+  - wd_Q127037926   # Bubur ase
+  - wd_Q2631692     # Pasta di mandorle PAT
+  - wd_Q1473422     # ful medames
+  - wd_Q978397      # tuna fish sandwich
+  - wd_Q99171384    # cheese curries (a group)
+  - wd_Q48724049    # tomato chutney
+  - wd_Q48792394    # tartlet (any small tart)
+  - wd_Q132494780   # toasted marshmallow
+  - wd_Q39086082    # street food in South Korea
+  - wd_Q2739210     # Thirteen desserts (a set of 13)
+  - wd_Q105968553   # foods marinated in olive oil
+  - wd_Q3848094     # bap (cooked rice, any kind)
+  - wd_Q16172783    # banana cake (mostly stole other cakes' photos)

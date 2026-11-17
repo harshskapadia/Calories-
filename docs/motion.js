@@ -11,7 +11,7 @@
   root.classList.add("motion");
 
   // ------------------------------------------------------------ numbers that count up / down to their new value
-  const COUNT = "#kcal, #ring-left, #t-eaten, #t-p, #t-c, #t-f, .pe-kcal, .tile b, .target-big .kcal";
+  const COUNT = "#kcal, #wt-amount, #ring-left, #t-eaten, #t-p, #t-c, #t-f, .pe-kcal, .tile b, .target-big .kcal";
   const counters = new WeakMap(); // element -> { value, written, raf }
   const NUM = /^([^\d−-]*)([−-]?)(\d[\d,]*(?:\.\d+)?)(.*)$/s;
 

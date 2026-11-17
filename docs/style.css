@@ -612,3 +612,42 @@ body.tour-open { overflow: hidden; }
   padding: 0 16px; border-radius: 12px; font: 600 .9rem var(--font); cursor: pointer; border: 1px solid transparent; }
 .log li.log-edit .le-actions .btn.ghost { border-color: var(--line); background: var(--surface); color: var(--ink); }
 .log li.log-edit .le-actions .btn.primary { background: var(--primary); color: var(--primary-ink); }
+
+
+/* water: a glass of ink that fills as you drink */
+.wt-body { display: grid; grid-template-columns: 116px 1fr; gap: 18px; align-items: center; margin-top: 4px; }
+.wt-glass { width: 116px; height: auto; display: block; overflow: visible; }
+.wt-outline { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linejoin: round; }
+.wt-marks line { stroke: var(--line); stroke-width: 2; stroke-linecap: round; }
+.wt-level { transform: translateY(152px); transition: transform 1s var(--spring); }
+.wt-wave { fill: var(--ink); }
+.wt-ring { fill: none; stroke: var(--bg); stroke-width: .8; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.wt-drop { fill: var(--ink); opacity: 0; }
+.slosh .wt-wave { animation: wt-slosh 1.4s cubic-bezier(.3, .6, .3, 1); }
+@keyframes wt-slosh {
+  0% { transform: translateX(-60px) scaleY(1.9); } 35% { transform: translateX(-20px) scaleY(1.3); } 100% { transform: none; }
+}
+.wt-side { min-width: 0; }
+.wt-big { font: 900 2.9rem/.95 var(--font-display); font-stretch: 65%; font-variant-numeric: tabular-nums; }
+.wt-big span { font: 700 1rem var(--font); font-stretch: 85%; color: var(--muted); }
+#wt-goal-line { margin: 4px 0 12px; }
+.wt-actions { display: grid; gap: 8px; }
+.wt-actions .btn { justify-content: space-between; min-height: 46px; }
+.wt-size { font-weight: 500; opacity: .7; font-size: .85rem; }
+.wt-tools { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; font-size: .85rem; flex-wrap: wrap; }
+.wt-goal-edit { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); margin-left: auto; }
+.wt-goal-edit b { color: var(--ink); min-width: 3.4em; text-align: center; font-variant-numeric: tabular-nums; }
+.wt-step { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  font: 600 1rem var(--font); cursor: pointer; display: grid; place-items: center; transition: transform .25s var(--spring); }
+.wt-step:active { transform: scale(.88); }
+.wt-glasses { display: grid; grid-template-columns: repeat(var(--cols, 10), minmax(0, 1fr)); gap: 4px; margin-top: 16px; padding-top: 14px;
+  border-top: 1px solid var(--line); }
+.wt-mini { all: unset; box-sizing: border-box; height: 40px; display: grid; place-items: center; border-radius: 8px; cursor: pointer; }
+.wt-mini:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 55%, transparent); }
+.wt-mini svg { width: 20px; height: 26px; overflow: visible; }
+.wt-mini-glass { fill: none; stroke: var(--muted); stroke-width: 1.6; stroke-linejoin: round; }
+.wt-mini-fill { fill: var(--ink); transform: scaleY(0); transform-origin: 50% 100%; transform-box: fill-box; transition: transform .45s var(--spring); }
+.wt-mini.full .wt-mini-fill { transform: none; }
+.wt-mini.full .wt-mini-glass { stroke: var(--ink); }
+.wt-mini:active svg { transform: scale(.9); }
+@media (max-width: 360px) { .wt-body { grid-template-columns: 92px 1fr; gap: 12px; } .wt-glass { width: 92px; } }

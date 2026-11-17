@@ -144,6 +144,40 @@
         <button id="log-clear" type="button" class="btn ghost wide" hidden>Clear today</button>
       </div>
 
+      <div class="card water" id="water-card">
+        <div class="card-head"><h2>Water</h2><span id="wt-left" class="muted small"></span></div>
+        <div class="wt-body">
+          <svg id="wt-glass" class="wt-glass" viewBox="0 0 120 164" role="img" aria-label="Water today">
+            <defs><clipPath id="wt-clip"><path d="M16 10 H104 L93 151 Q92 158 85 158 H35 Q28 158 27 151 Z"/></clipPath></defs>
+            <g clip-path="url(#wt-clip)">
+              <g id="wt-level" class="wt-level">
+                <path class="wt-wave" d="M-120 0 C-110 -5 -100 -5 -90 0 S-70 5 -60 0 S-40 -5 -30 0 S-10 5 0 0 S20 -5 30 0 S50 5 60 0
+                  S80 -5 90 0 S110 5 120 0 S140 -5 150 0 S170 5 180 0 S200 -5 210 0 S230 5 240 0 V220 H-120 Z"/>
+                <ellipse id="wt-ring" class="wt-ring" cx="60" cy="0" rx="4" ry="1.4"/>
+              </g>
+            </g>
+            <g class="wt-marks" aria-hidden="true"><line x1="88" x2="96" y1="45" y2="45"/><line x1="86" x2="94" y1="80" y2="80"/>
+              <line x1="83" x2="91" y1="115" y2="115"/></g>
+            <path class="wt-outline" d="M16 10 H104 L93 151 Q92 158 85 158 H35 Q28 158 27 151 Z"/>
+            <circle id="wt-drop" class="wt-drop" cx="60" cy="-12" r="4.5"/>
+          </svg>
+          <div class="wt-side">
+            <div class="wt-big"><b id="wt-amount">0</b> <span id="wt-unit">ml</span></div>
+            <div id="wt-goal-line" class="muted small">of your 2.5 L goal</div>
+            <div class="wt-actions">
+              <button type="button" class="btn primary" data-water="glass">+ Glass <span id="wt-glass-size" class="wt-size">250 ml</span></button>
+              <button type="button" class="btn ghost" data-water="bottle">+ Bottle <span id="wt-bottle-size" class="wt-size">500 ml</span></button>
+            </div>
+            <div class="wt-tools">
+              <button type="button" class="linkish" id="wt-undo" hidden>Undo last</button>
+              <span class="wt-goal-edit">Goal <button type="button" class="wt-step" data-goal="-1" aria-label="Lower the goal">−</button><b
+                id="wt-goal">2.5 L</b><button type="button" class="wt-step" data-goal="1" aria-label="Raise the goal">+</button></span>
+            </div>
+          </div>
+        </div>
+        <div id="wt-glasses" class="wt-glasses" role="group" aria-label="Glasses of water today"></div>
+      </div>
+
       <div class="card" id="report-card">
         <div class="card-head"><h2>📅 Your week</h2><span id="report-range" class="muted small"></span></div>
         <div id="report"></div>
@@ -405,6 +439,7 @@
   <script src="weight.js"></script>
   <script src="backup.js"></script>
   <script src="report.js"></script>
+  <script src="water.js"></script>
   <script src="tour.js"></script>
   <script src="motion.js"></script>
 </body>

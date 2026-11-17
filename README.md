@@ -478,6 +478,14 @@ value scales with it) or move it to another meal, and to add it to **favourites*
 backups). **"↻ Yesterday's breakfast"** (any meal eaten yesterday and not logged yet today) copies the whole meal in one
 tap.
 
+### 💧 Water
+
+A glass of ink in My day that fills as you drink: **+ Glass** (250 ml / 8 fl oz) or **+ Bottle** (500 ml / 16 fl oz), or tap
+the row of small glasses to say how many you've had (tap the last full one to take it back). The daily goal starts at
+~35 ml per kg of your weight (1.5–4 L; EFSA puts adults at ~2–2.5 L a day from drinks) and can be changed with − / +.
+Each tap drops water into the glass, rings the surface and sloshes the wave; reaching the goal gets one small
+celebration a day. Stored on the phone (`nutrisnap.water.v1`) and included in backups.
+
 ### 🧂 Fibre, sugars, salt and saturated fat
 
 The result label also lists **saturated fat, sodium (with the salt equivalent), fibre and sugars**, in the order of a

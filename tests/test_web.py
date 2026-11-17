@@ -289,3 +289,12 @@ def test_meals_favourites_and_backup() -> None:
     assert '"nutrisnap.favs.v1"' in (DOCS / "backup.js").read_text(encoding="utf-8")
     html = (DOCS / "index.html").read_text(encoding="utf-8")
     assert all(f'id="{i}"' in html for i in ("nf-sf", "nf-na", "nf-fb", "nf-sg", "t-micros", "log-hint"))
+
+
+def test_water_tracker_wired() -> None:
+    html = (DOCS / "index.html").read_text(encoding="utf-8")
+    js = (DOCS / "water.js").read_text(encoding="utf-8")
+    assert 'src="water.js"' in html and 'id="water-card"' in html and 'id="wt-glasses"' in html
+    assert '"nutrisnap.water.v1"' in js and '"nutrisnap.water.v1"' in (DOCS / "backup.js").read_text(encoding="utf-8")
+    assert '"water.js"' in (DOCS / "sw.js").read_text(encoding="utf-8")
+    assert "kg * 35" in js and "prefers-reduced-motion" in js  # goal from body weight; splash respects reduced motion

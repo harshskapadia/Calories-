@@ -136,6 +136,7 @@ function renderTarget() {
   $("tg-warn").innerHTML = t.warn.map((w) => `<p>${escapeHtml(w)}</p>`).join("");
   renderToday();
   if (typeof renderWeight === "function") renderWeight();
+  if (typeof renderWater === "function") renderWater(); // the goal follows body weight and units
 }
 
 // ---------------------------------------------------------------- today's log

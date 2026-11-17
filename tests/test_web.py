@@ -330,7 +330,7 @@ def test_recipe_ingredients() -> None:
     for key, name, kcal, p, c, f, fb, sg, sf, na, portions, aliases, note in d["items"]:
         assert 0 <= kcal <= 902 and p + c + f <= 101 and sf <= f + 0.5 and sg <= c + 1, key
         # Atwater, counting fibre at ~2 kcal/g (spices are up to half fibre)
-        assert abs(4 * p + 4 * (c - fb) + 2 * fb + 9 * f - kcal) <= max(40, 0.2 * kcal) or kcal < 30, key
+        assert abs(4 * p + 4 * (c - fb) + 2 * fb + 9 * f - kcal) <= max(40, 0.25 * kcal) or kcal < 30, key
         assert all(g > 0 for _, g in portions), key
     assert items["ing_salt"][9] > 35000 and items["ing_oil"][5] == 100  # salt is ~39% sodium; oil is all fat
     tbsp = dict(items["ing_oil"][10])

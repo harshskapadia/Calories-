@@ -35,6 +35,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from build_world_dishes import RAW, UA, load_raw  # noqa: E402
 
+try:  # use the operating system's certificates (antivirus HTTPS inspection on Windows); verification stays on
+    import truststore
+
+    truststore.inject_into_ssl()
+except ImportError:
+    pass
+
 CATS = RAW / "commons_cats.json"
 FILES = RAW / "commons_files.jsonl"
 MANIFEST = ROOT / "data" / "commons_dishes.csv.gz"

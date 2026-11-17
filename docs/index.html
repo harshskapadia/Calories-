@@ -347,8 +347,8 @@
       <details>
         <summary>How it works &amp; credits</summary>
         <ul>
-          <li><b>Dish model:</b> ConvNeXt-Tiny fine-tuned on Food-101, two Indian food datasets, Central Asian Food Scenes, Food Recognition 2022, TurkishFoods-25 and MM-Food-100K phone photos (228 dishes, drinks and fruits), <b>87.5% top-1 / 96.9% top-5</b>
-            on 31,570 test photos; int8 ONNX (34 MB) running in your browser with ONNX Runtime Web, so no photo is uploaded.</li>
+          <li><b>Dish model:</b> ConvNeXt-Tiny fine-tuned on Food-101, two Indian food datasets, Central Asian Food Scenes, Food Recognition 2022, TurkishFoods-25, MM-Food-100K phone photos and Wikimedia Commons photos of world dishes (444 dishes, drinks and fruits), with the previous model as a helper: <b>87.4% top-1</b>
+            on the 228 long-standing dishes, ~52% on the newer world dishes; int8 ONNX (2 × 34 MB) running in your browser with ONNX Runtime Web, so no photo is uploaded.</li>
           <li><b>Identify anything:</b> CLIP (open_clip ViT-B/32, DataComp-XL) against every USDA food plus world dishes from Wikidata;
             world-dish nutrition is approximate (borrowed from the most similar USDA food).</li>
           <li><b>Whole plate:</b> Ultralytics YOLO26 instance segmentation (AGPL-3.0) trained on FoodSeg103 (103 foods and

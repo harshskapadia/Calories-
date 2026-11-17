@@ -1,0 +1,34 @@
+# Dish-model classes that are the same dish (or a variety the parent class already covers) as another class.
+# At prediction time the app adds the first class's probability to the second's (meta.json "merge"); the next photo
+# list (scripts/build_commons_dishes.py) gives their photos to the parent class instead of a separate class.
+merge:
+  wd_Q152088: french_fries            # fries
+  wd_Q244611: onion_rings             # onion ring
+  wd_Q876624: spaghetti_carbonara     # carbonara
+  wd_Q1138371: crab_cakes             # crab cake
+  wd_Q173265: potato_chips            # potato chip
+  wd_Q51796021: grilled_cheese_sandwich  # grilled cheese
+  wd_Q27500854: ceviche               # Peruvian ceviche
+  wd_Q12862169: khachapuri            # Adjarian khachapuri (the Central Asian photos are this one)
+  wd_Q8194132: ramen                  # Hakata ramen
+  wd_Q62271704: waffles               # Belgian waffle
+  wd_Q109260442: pancakes             # blueberry pancake
+  wd_Q2386967: tacos                  # taco al pastor
+  wd_Q13231338: hot_dog               # Czech-style hot dog
+  wd_Q500724: pizza                   # Pizza Margherita (Food-101 "pizza" has every kind)
+  wd_Q112669702: pizza                # pepperoni pizza
+  wd_Q590076: pizza                   # Hawaiian pizza
+  wd_Q18356332: pizza                 # seafood pizza
+  wd_Q135265063: pizza                # pizza with salami
+  wd_Q108327562: pizza                # pizza in New York City
+  wd_Q2445410: biryani                # Hyderabadi biryani
+  wd_Q42363635: biryani               # mutton biryani
+  wd_Q42364024: biryani               # chicken biryani
+  wd_Q2722122: paani_puri             # Panipuri
+  wd_Q111981894: hamburger            # burger
+  wd_Q964107: stir_fried_noodles      # chow mein
+  wd_Q139266197: hot_pot              # Taiwanese hot pot
+  wd_Q15935161: hot_pot               # mutton hot pot
+  wd_Q18883046: hot_pot               # mala hot pot
+# not a dish (a Wikipedia list page's photo category): never predicted
+drop: [wd_Q19839599]

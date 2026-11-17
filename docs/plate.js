@@ -283,7 +283,8 @@ async function classifyRegion(bmp, x, y, w, h) {
   const blob = await new Promise((res) => c.toBlob(res, "image/jpeg", 0.92));
   const { logits } = await state.session.run({ image: await toTensor(blob) });
   const C = state.meta.classes.length, L = logits.data;
-  const probs = softmax(Array.from({ length: C }, (_, k) => (L[k] + L[C + k]) / 2), state.meta.temperature);
+  // merged duplicate dishes / dropped classes as for whole photos (no helper model here: up to 5 crops per plate)
+  const probs = combineProbs(softmax(Array.from({ length: C }, (_, k) => (L[k] + L[C + k]) / 2), state.meta.temperature), null);
   let best = 0;
   for (let i = 1; i < C; i++) if (probs[i] > probs[best]) best = i;
   return [probs[best], best];

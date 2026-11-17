@@ -88,6 +88,9 @@ def build_foods(dish_classes: list[str]) -> list[list]:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--checkpoint", type=Path, default=ROOT / "app" / "model" / "nutrisnap.pt")
+    ap.add_argument("--helper-meta", help="meta.json of an earlier web model to use as helper (its .onnx: --helper-file)")
+    ap.add_argument("--helper-file", default="helper_v4.int8.onnx", help="helper model file in docs/model/")
+    ap.add_argument("--no-helper", action="store_true", help="drop the helper model")
     args = ap.parse_args()
 
     meta = export_onnx(args.checkpoint, DOCS / "model" / "nutrisnap.int8.onnx")
@@ -103,6 +106,21 @@ def main() -> None:
         "resize": int(round(meta["img_size"] / 0.875)), "mean": list(IMAGENET_MEAN), "std": list(IMAGENET_STD),
         "low_confidence": 0.4, "portion_multipliers": {"small": 0.6, "medium": 1.0, "large": 1.5},
     })
+    # duplicate classes folded into their parent dish, non-dishes never predicted (data/class_merges.yaml)
+    import yaml
+
+    merges = yaml.safe_load((ROOT / "data" / "class_merges.yaml").read_text(encoding="utf-8"))
+    cls = set(meta["classes"])
+    meta["merge"] = {a: b for a, b in (merges.get("merge") or {}).items() if a in cls and b in cls}
+    meta["drop"] = [k for k in merges.get("drop") or [] if k in cls]
+    # helper model (an earlier dish model that double-checks the dishes it knows); kept across rebuilds
+    old = DOCS / "model" / "meta.json"
+    helper = json.loads(old.read_text(encoding="utf-8")).get("helper") if old.exists() else None
+    if args.helper_meta:
+        h = json.loads(Path(args.helper_meta).read_text(encoding="utf-8"))
+        helper = {"file": args.helper_file, "classes": h["classes"], "temperature": h["temperature"]}
+    if helper and set(helper["classes"]) <= cls and (DOCS / "model" / helper["file"]).exists() and not args.no_helper:
+        meta["helper"] = helper
     (DOCS / "model" / "meta.json").write_text(json.dumps(meta), encoding="utf-8")
 
     foods = build_foods(meta["classes"])

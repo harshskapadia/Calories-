@@ -5,14 +5,14 @@
    - The optional "Identify anything" and "Whole plate" files are cached the first time they are downloaded.
    - Cross-origin requests (Open Food Facts) always go to the network. */
 const SHELL_VERSION = "shell-2026-11-10-2";
-const ASSET_VERSION = "assets-74236250b0"; // = hash of docs/model + docs/ort contents (tests/test_web.py checks it)
+const ASSET_VERSION = "assets-8c1ea58f36"; // = hash of docs/model + docs/ort contents (tests/test_web.py checks it)
 const SHELL = SHELL_VERSION, ASSETS = ASSET_VERSION;
 
 const CORE = [
   "./", "index.html", "style.css", "app.js", "products.js", "openvocab.js", "plate.js", "diary.js", "learn.js", "quicklog.js", "weight.js", "backup.js", "report.js", "tour.js", "motion.js", "privacy.html", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/favicon-48.png",
   "ort/ort.wasm.min.js", "ort/ort-wasm-simd-threaded.mjs", "ort/ort-wasm-simd-threaded.wasm",
-  "model/meta.json", "model/nutrisnap.int8.onnx", "data/foods.json", "model/clip_vocab.json",
+  "model/meta.json", "model/nutrisnap.int8.onnx", "model/helper_v4.int8.onnx", "data/foods.json", "model/clip_vocab.json",
 ];
 const BIG = /\.(onnx|wasm|bin)$/;
 

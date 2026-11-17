@@ -49,7 +49,8 @@ async function init() {
     fetch("data/foods.json").then((r) => r.json()),
   ]);
   state.meta = meta;
-  if ($("dish-count")) $("dish-count").textContent = meta.classes.length.toLocaleString("en-US");
+  prepareMeta(meta);
+  if ($("dish-count")) $("dish-count").textContent = dishCount().toLocaleString("en-US");
   for (const [key, name, kcal, p, c, f, serving, match, source] of foods) {
     const item = { key, name, kcal, p, c, f, serving, match, source, lower: name.toLowerCase() };
     state.foods.set(key, item);
@@ -58,11 +59,50 @@ async function init() {
   buildDishSelect();
   $("nutrition").hidden = false;
 
-  setStatus("Downloading the model (34 MB, once; then cached)…", 0);
-  const bytes = await fetchWithProgress("model/nutrisnap.int8.onnx", (f) => setStatus(`Downloading the model… ${Math.round(f * 100)}%`, f));
-  setStatus("Starting the model…", 1);
-  state.session = await ort.InferenceSession.create(bytes, { executionProviders: ["wasm"], graphOptimizationLevel: "all" });
-  setStatus(`Ready: ${meta.classes.length} dishes, running on this device.`, 1, true);
+  // the dish model, plus (optional) a helper model that double-checks dishes both models know
+  const files = ["model/nutrisnap.int8.onnx", ...(meta.helper ? [`model/${meta.helper.file}`] : [])];
+  const mb = meta.helper ? "68 MB" : "34 MB";
+  setStatus(`Downloading the model (${mb}, once; then cached)…`, 0);
+  const opts = { executionProviders: ["wasm"], graphOptimizationLevel: "all" };
+  const sessions = [];
+  for (let i = 0; i < files.length; i++) {
+    const bytes = await fetchWithProgress(files[i], (f) => {
+      const all = (i + f) / files.length;
+      setStatus(`Downloading the model… ${Math.round(all * 100)}%`, all);
+    });
+    sessions.push(await ort.InferenceSession.create(bytes, opts));
+  }
+  [state.session, state.helper = null] = sessions;
+  setStatus(`Ready: ${dishCount()} dishes, running on this device.`, 1, true);
+}
+
+/** Index tables for merged/dropped classes and the helper model (see data/class_merges.yaml, scripts/build_web.py). */
+function prepareMeta(m) {
+  const idx = new Map(m.classes.map((k, i) => [k, i]));
+  m.mergeIdx = Object.entries(m.merge || {}).filter(([a, b]) => idx.has(a) && idx.has(b)).map(([a, b]) => [idx.get(a), idx.get(b)]);
+  m.dropIdx = (m.drop || []).filter((k) => idx.has(k)).map((k) => idx.get(k));
+  if (m.helper) m.helper.idx = m.helper.classes.map((k) => idx.get(k));
+}
+
+/** Distinct dishes the model can name (merged duplicates and dropped classes don't count). */
+function dishCount() {
+  const m = state.meta;
+  return m.classes.length - m.mergeIdx.length - m.dropIdx.length;
+}
+
+/** Final dish probabilities: drop non-dishes, fold duplicate classes into their parent dish, and let the helper model
+    re-rank the dishes both models know (it gets half the say inside the probability the main model gives them). */
+function combineProbs(p, helperProbs) {
+  const m = state.meta, out = Float64Array.from(p);
+  for (const k of m.dropIdx) out[k] = 0;
+  for (const [a, b] of m.mergeIdx) { out[b] += out[a]; out[a] = 0; }
+  if (helperProbs && m.helper) {
+    let mass = 0;
+    for (const j of m.helper.idx) mass += out[j];
+    m.helper.idx.forEach((j, i) => { out[j] = 0.5 * out[j] + 0.5 * mass * helperProbs[i]; });
+  }
+  const s = out.reduce((a, b) => a + b, 0) || 1;
+  return Array.from(out, (v) => v / s);
 }
 
 // ---------------------------------------------------------------- preprocessing (matches the PyTorch eval transform)
@@ -134,10 +174,15 @@ async function analyze(blob) {
   }
   const C = state.meta.classes.length, L = logits.data;
   const avg = Array.from({ length: C }, (_, k) => (L[k] + L[C + k]) / 2);
-  const probs = softmax(avg, state.meta.temperature);
+  let helperProbs = null;
+  if (state.helper) {
+    const H = state.meta.helper.classes.length, HL = (await state.helper.run({ image: input })).logits.data;
+    helperProbs = softmax(Array.from({ length: H }, (_, k) => (HL[k] + HL[H + k]) / 2), state.meta.helper.temperature);
+  }
+  const probs = combineProbs(softmax(avg, state.meta.temperature), helperProbs);
   const top = probs.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]).slice(0, 3);
   const ms = Math.round(performance.now() - t0);
-  setStatus(`Ready: ${C} dishes, running on this device.`, 1, true);
+  setStatus(`Ready: ${dishCount()} dishes, running on this device.`, 1, true);
   state.lastTop = top; // used by "Split the plate" to spot a single mixed dish
   renderTop3(top, ms);
   selectFood(state.meta.classes[top[0][1]]);
@@ -258,7 +303,7 @@ function clearPhoto() {
   $("ov-status").textContent = "";
   $("photo-est").hidden = true;
   if ($("plate-view")) { $("plate-view").hidden = true; $("plate-status").textContent = ""; }
-  if (state.session) setStatus(`Ready: ${state.meta.classes.length} dishes, running on this device.`, 1, true);
+  if (state.session) setStatus(`Ready: ${dishCount()} dishes, running on this device.`, 1, true);
   $("panel-meal").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 

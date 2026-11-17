@@ -225,9 +225,10 @@ function render() {
   if (food.match === "off") { $("source").innerHTML = food.sourceHtml; return; }
   if (food.match === "approx") {
     const [src, desc, qid, sim] = food.source.split("|");
-    const rough = Number(sim) < 0.7;
+    const recipe = sim === "recipe", rough = !recipe && Number(sim) < 0.7;
     $("source").innerHTML = `${desc ? `<b>${escapeHtml(food.name)}</b>: ${escapeHtml(desc)}. ` : ""}` +
-      `Nutrition is <b>approximate</b>: borrowed from the most similar USDA food, "${escapeHtml(src)}".` +
+      (recipe ? `Nutrition is <b>estimated from a typical recipe</b> (USDA values): ${escapeHtml(src)}.`
+        : `Nutrition is <b>approximate</b>: borrowed from the most similar USDA food, "${escapeHtml(src)}".`) +
       (rough ? ` ⚠️ Rough match: check it or use search.` : "") +
       ` <a href="https://www.wikidata.org/wiki/${qid}" target="_blank" rel="noopener">About this dish</a> (Wikidata).`;
     return;

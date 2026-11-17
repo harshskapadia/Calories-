@@ -49,6 +49,7 @@ async function init() {
     fetch("data/foods.json").then((r) => r.json()),
   ]);
   state.meta = meta;
+  if ($("dish-count")) $("dish-count").textContent = meta.classes.length.toLocaleString("en-US");
   for (const [key, name, kcal, p, c, f, serving, match, source] of foods) {
     const item = { key, name, kcal, p, c, f, serving, match, source, lower: name.toLowerCase() };
     state.foods.set(key, item);

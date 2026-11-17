@@ -218,3 +218,16 @@ mmfood:
     pineapple: [pineapple]
     milk: [whole milk, milk]
     coffee: [iced coffee]
+
+commons:
+  # Wikimedia Commons photos of the world dishes the app already knows from Wikidata (CC BY / CC BY-SA / public domain;
+  # each file's own licence and authors are on its Commons page). The photo list data/commons_dishes.csv.gz is built
+  # by scripts/build_commons_dishes.py (automatically, the first time); only small thumbnails are downloaded.
+  # New dishes become classes wd_<QID> (nutrition from docs/data/foods.json); dishes the model already knows by name
+  # get up to 80 extra photos.
+  type: commons_thumbs
+  dir: commons_256
+  license: CC BY / CC BY-SA / public domain (Wikimedia Commons, per file)
+  min_images: 30                  # a new dish needs this many photos after the download
+  keep: [wd_Q24027629]            # halal snack pack: kept with fewer photos (asked for by a user)
+  workers: 6                      # parallel downloads (polite to Wikimedia)

@@ -7,7 +7,7 @@ const TOUR = [
   { art: '<img src="icons/icon-192.png" alt="" class="tour-logo">', title: "Welcome to NutriSnap",
     text: "Snap a meal and get its calories and macros in about a second. Everything runs on your phone: your photos are never uploaded." },
   { art: "📸", title: "Snap a meal",
-    text: "Take or upload a photo. NutriSnap names the dish (228 dishes, drinks and fruits from many cuisines) and shows calories, protein, carbs and fat. Change the portion with Small, Medium, Large or exact grams." },
+    text: () => `Take or upload a photo. NutriSnap names the dish (${typeof state !== "undefined" && state.meta ? state.meta.classes.length.toLocaleString("en-US") : "hundreds of"} dishes, drinks and fruits from many cuisines) and shows calories, protein, carbs and fat. Change the portion with Small, Medium, Large or exact grams.` },
   { art: "🍱", title: "Split the plate",
     text: "More than one food? Split the plate outlines every food, adds them up and scores how balanced your plate is. It also tells coffee, tea and juice apart." },
   { art: "📦", title: "Packaged food",
@@ -28,7 +28,7 @@ function renderTour() {
   const s = TOUR[tour.i], last = tour.i === TOUR.length - 1;
   $("tour-art").innerHTML = s.art;
   $("tour-title").textContent = s.title;
-  $("tour-text").textContent = s.text;
+  $("tour-text").textContent = typeof s.text === "function" ? s.text() : s.text;
   $("tour-step").textContent = `${tour.i + 1} of ${TOUR.length}`;
   $("tour-dots").innerHTML = TOUR.map((_, k) => `<i class="${k === tour.i ? "on" : ""}"></i>`).join("");
   $("tour-back").hidden = tour.i === 0;

@@ -13,6 +13,9 @@ from pathlib import Path
 
 DEFAULT_CSV = Path(__file__).resolve().parents[1] / "data" / "nutrition.csv"   # dishes the model can recognise
 SEARCH_CSV = Path(__file__).resolve().parents[1] / "data" / "food_search.csv"  # every USDA FNDDS food (~5,400)
+# world dishes (wd_<Wikidata QID>, approximate nutrition) written by scripts/build_world_dishes.py; the dish model
+# learns some of them from Wikimedia Commons photos (scripts/build_commons_dishes.py)
+WORLD_JSON = Path(__file__).resolve().parents[1] / "docs" / "data" / "foods.json"
 
 # Portion presets expressed as a multiple of the class's typical serving weight.
 PORTION_MULTIPLIERS: dict[str, float] = {"small": 0.6, "medium": 1.0, "large": 1.5}
@@ -149,10 +152,27 @@ def total(estimates: list[NutritionEstimate]) -> dict[str, float]:
     return {k: round(sum(getattr(e, k) for e in estimates), 1) for k in keys}
 
 
+def world_dishes(path: str | Path = WORLD_JSON) -> dict[str, FoodInfo]:
+    """The wd_* world dishes from the web app's food table, keyed like NutritionDB keys (lower case)."""
+    import json
+
+    if not Path(path).exists():
+        return {}
+    out = {}
+    for r in json.loads(Path(path).read_text(encoding="utf-8")):
+        if r[0].startswith("wd_"):
+            out[NutritionDB.normalize(r[0])] = FoodInfo(name=r[0], display_name=r[1], kcal_per_100g=r[2], protein_per_100g=r[3],
+                                                        carbs_per_100g=r[4], fat_per_100g=r[5], serving_g=r[6], match=r[7],
+                                                        source=r[8])
+    return out
+
+
 @lru_cache(maxsize=4)
 def load_db(path: str | Path = DEFAULT_CSV) -> NutritionDB:
-    """Cached loader used by the app and the prediction pipeline."""
-    return NutritionDB.from_csv(path)
+    """Cached loader used by the app and the prediction pipeline: recognisable dishes, plus the world dishes (some of
+    which the model can recognise since v5). Table dishes win on clashes."""
+    db = NutritionDB.from_csv(path)
+    return NutritionDB({**world_dishes(), **db._foods}) if Path(path) == DEFAULT_CSV else db
 
 
 @lru_cache(maxsize=1)

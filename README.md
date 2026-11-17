@@ -201,6 +201,32 @@ vegetable soup 42%, congee 50%, meat stir-fry 51%, fried fish 53%), since soups,
 above. The most-confused pairs are still Food-101's near twins (steak ↔ filet mignon, chocolate mousse ↔ cake). Per-class
 numbers: `results/multi_world_v4_convnext_tiny/per_class.csv`.
 
+### v5: hundreds of world dishes from Wikimedia Commons
+
+No openly licensed dataset has 1,000+ dish classes: Food2K (2,000 dishes) and ISIA Food-500 are research-only, and
+MM-Food-100K has only ~300 dish names with 50+ photos. But most of the ~5,500 Wikidata world dishes the app already
+knows (for *Identify anything*) link to a **Wikimedia Commons** photo category, and Commons photos are freely licensed
+(CC BY / CC BY-SA / public domain, per file). `scripts/build_commons_dishes.py` turns them into training data:
+
+1. **cats**: each dish's Commons category (Wikidata property P373; if Wikidata is busy, a name check on Commons that
+   only accepts a category Commons links to that very dish);
+2. **files**: up to 260 files per dish, plus files one sub-category down unless that sub-category is another dish;
+3. **manifest** (`data/commons_dishes.csv.gz`): JPEG photos only, at least 300 px, no logos/menus/drawings/packaging by
+   file name, no photo filed under two dishes, a stable 10% test split. A dish with **40+ usable photos** becomes the
+   class `wd_<QID>` (up to 150 photos); dishes the model already knows by name get up to 80 extra photos. Dishes whose
+   borrowed nutrition is clearly wrong (calories that don't match the macros, e.g. a dish whose nearest food was rum)
+   are left out. *Halal snack pack*, asked for by a user, is kept with its ~15 photos.
+
+Only small thumbnails (330 px, ~30 KB) are downloaded, a few at a time, waiting whenever Wikimedia asks. The new
+classes use the world dishes' **approximate** nutrition (borrowed from the most similar food, or a hand-checked recipe
+in `RECIPES` of `scripts/build_world_dishes.py`), and the app says so under the result. Commons photos are more varied
+than phone photos (restaurant shots, markets, home cooking), so expect lower accuracy on these classes than on Food-101:
+the honest per-class numbers will be in `results/multi_world_v5_convnext_tiny/per_class.csv`.
+
+```bash
+python run_all.py --final-config configs/gpu/multi_world_v5_convnext_tiny.yaml --steps data final evaluate export --batch-size 16 --workers 2
+```
+
 ## In-browser version (free, on-device)
 
 The live demo is a static site in [`docs/`](docs/) (GitHub Pages) that runs the 139-dish model **inside the visitor's browser**

@@ -81,6 +81,8 @@ def export(short_side: int = 256, workers: int = os.cpu_count() or 2, source: st
         return export_local_seg_crops(spec, out_root, short_side)
     if spec.get("type") == "mmfood_names":
         return export_mmfood_names(spec, out_root, short_side)
+    if spec.get("type") == "commons_thumbs":
+        return export_commons_thumbs(spec, out_root, short_side)
 
     rows: list[tuple[str, str, str]] = []
     with ProcessPoolExecutor(workers) as pool:
@@ -352,6 +354,81 @@ def export_mmfood_names(spec: dict, out_root: Path, short_side: int) -> Path:
     return out_root
 
 
+def export_commons_thumbs(spec: dict, out_root: Path, short_side: int) -> Path:
+    """Wikimedia Commons dish photos (list: data/commons_dishes.csv.gz, made by scripts/build_commons_dishes.py, which
+    runs first if the list is missing) -> small thumbnails, resized. Polite: a few parallel downloads, waits when the
+    server says so. Already-downloaded photos are skipped, so a stopped export can simply be run again."""
+    import gzip
+    import hashlib
+    import sys
+    import time
+    import urllib.error
+    import urllib.request
+    from concurrent.futures import ThreadPoolExecutor
+
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from build_commons_dishes import UA, ensure_manifest
+
+    with gzip.open(ensure_manifest(), "rt", newline="", encoding="utf-8") as f:
+        jobs = [(r["url"], r["label"], r["split"]) for r in csv.DictReader(f)]
+    print(f"[export] Wikimedia Commons: {len(jobs)} photos of {len({j[1] for j in jobs})} dishes "
+          f"(~{len(jobs) * 30 / 1e6:.1f} GB of small thumbnails); downloading…", flush=True)
+    pause = {"until": 0.0}
+
+    def fetch(job) -> tuple | None:
+        url, label, split = job
+        rel = f"{split}/{label}/{hashlib.md5(url.encode()).hexdigest()[:16]}.jpg"
+        dst = out_root / rel
+        if dst.exists():
+            return (rel, label, split)
+        for attempt in range(6):
+            time.sleep(max(0.0, pause["until"] - time.time()))
+            try:
+                with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": UA}), timeout=30) as r:
+                    data = r.read()
+                img = Image.open(BytesIO(data)).convert("RGB")
+                sc = short_side / min(img.size)
+                if sc < 1:
+                    img = img.resize((round(img.width * sc), round(img.height * sc)), Image.BICUBIC)
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                img.save(dst, "JPEG", quality=90)
+                return (rel, label, split)
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    return None
+                # 429 / 5xx: everybody waits (Retry-After if given), then tries again
+                pause["until"] = time.time() + min(int(e.headers.get("Retry-After") or 0) or 5 * (attempt + 1), 120)
+            except Exception:  # noqa: BLE001
+                time.sleep(2 * (attempt + 1))
+        return None
+
+    rows, failed = [], 0
+    with ThreadPoolExecutor(spec.get("workers", 6)) as pool:
+        for i, r in enumerate(pool.map(fetch, jobs), 1):
+            if r:
+                rows.append(r)
+            else:
+                failed += 1
+            if i % 2000 == 0:
+                print(f"[export]   {i}/{len(jobs)} photos ({failed} failed)", flush=True)
+    if failed > 0.2 * len(jobs):
+        raise SystemExit(f"[export] {failed} of {len(jobs)} Commons photos failed: the server may be limiting downloads. "
+                         "Wait a while and run the same command again (finished photos are kept).")
+    counts: dict[str, int] = defaultdict(int)
+    for _, label, _ in rows:
+        counts[label] += 1
+    small = {c for c, n in counts.items() if n < spec.get("min_images", 8) and c not in (spec.get("keep") or [])}
+    rows = [r for r in rows if r[1] not in small]
+    out_root.mkdir(parents=True, exist_ok=True)
+    with open(out_root / "index.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["path", "label", "split"])
+        w.writerows(rows)
+    print(f"[export] Wikimedia Commons: wrote {len(rows)} photos of {len(counts) - len(small)} dishes ({failed} failed) "
+          f"-> {out_root / 'index.csv'}")
+    return out_root
+
+
 def build_combined_index(sources: list[str], short_side: int, name: str) -> Path:
     """Merge several exported sources into data/cache/index_<name>.csv (paths relative to data/cache),
     mapping labels through each source's aliases so shared dishes become one class."""
@@ -418,6 +495,8 @@ def make_splits(
         if len(test) < min_test:
             # the source dataset has (almost) no test images for this dish: hold some out of its train pool
             n_test = max(min_test, round(len(train_paths) * val_frac))
+            if len(train_paths) < 3 * n_test:  # a rare dish (a few dozen photos): keep two thirds for training
+                n_test = len(train_paths) // 3
             test, train_paths = test + train_paths[:n_test], train_paths[n_test:]
         n_val = round(len(train_paths) * val_frac)
         val, train = train_paths[:n_val], train_paths[n_val:]

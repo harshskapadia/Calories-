@@ -1,0 +1,40 @@
+# v5: the 228-class v4 model + Wikimedia Commons photos of the world dishes the app knows from Wikidata
+# (scripts/build_commons_dishes.py): every dish with 40+ usable photos becomes a class (wd_<QID>, up to 150 photos),
+# and dishes already known get up to 80 extra photos. Warm start from the current app model.
+# First run: lists the photos (~30-60 min, resumable), downloads small thumbnails (~2-4 GB, resumable), then
+# ~1.5-2 h of training on an RTX 3050 Ti (10 epochs x 100k photos).
+experiment: multi_world_v5_convnext_tiny
+data:
+  name: multiworld5
+  sources: [food101, indian43, indianfoods15, cafsd, frcitems, turkish25, mmfood, commons]   # see data/sources.yaml
+  short_side: 256
+  num_classes: null
+  val_frac: 0.1
+  seed: 42
+model:
+  backbone: convnext_tiny
+  pretrained: false                 # weights come from init_from
+  init_from: app/model/nutrisnap.pt
+  drop_rate: 0.2
+train:
+  img_size: 224
+  epochs: 10
+  batch_size: 16
+  lr: 1.5e-4                        # many brand-new classes: a little more than the v4 fine-tune
+  weight_decay: 0.05
+  label_smoothing: 0.1
+  warmup_epochs: 1
+  freeze_backbone_epochs: 0
+  amp: true
+  patience: 3
+  num_workers: 2
+  balanced_sampling: true           # new dishes have fewer photos: sample classes evenly
+  samples_per_epoch: 100000         # ~1,000 classes x ~100 photos each per epoch (fresh balanced draw)
+  freeze_stages: 1                  # only the stem + first stage stay fixed: more room to learn hundreds of new dishes
+  channels_last: true
+  seed: 42
+augment:
+  phone_aug: true
+  randaugment: true
+  color_jitter: 0.25
+  random_erasing: 0.25

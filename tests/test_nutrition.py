@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from src.nutrition import (
+    DEFAULT_CSV,
     PORTION_MULTIPLIERS,
     FoodInfo,
     NutritionDB,
@@ -20,7 +21,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @pytest.fixture(scope="module")
 def db() -> NutritionDB:
-    return load_db()
+    """The hand-curated table (data/nutrition.csv)."""
+    return NutritionDB.from_csv(DEFAULT_CSV)
 
 
 @pytest.fixture
@@ -152,3 +154,29 @@ def test_rejects_bad_csv(tmp_path: Path) -> None:
     )
     with pytest.raises(ValueError):
         NutritionDB.from_csv(bad)
+
+
+def test_load_db_includes_world_dishes() -> None:
+    """Since v5 the model can recognise some Wikidata world dishes (wd_<QID>): the loader knows their nutrition."""
+    db = load_db()
+    assert len(db) > 5000 and "pizza" in db
+    snack = db.get("wd_Q24027629")
+    assert snack.display_name == "Halal snack pack" and snack.name == "wd_Q24027629"
+    assert 220 < snack.kcal_per_100g < 320 and snack.source.endswith("|recipe")  # recipe, not a borrowed food
+
+
+def test_commons_manifest_classes_have_sane_nutrition() -> None:
+    """Every dish in the Commons photo list has nutrition whose calories match its macros (no dish borrowed from rum)."""
+    import csv
+    import gzip
+
+    path = ROOT / "data" / "commons_dishes.csv.gz"
+    if not path.exists():
+        pytest.skip("photo list not built yet (scripts/build_commons_dishes.py)")
+    db = load_db()
+    with gzip.open(path, "rt", encoding="utf-8") as f:
+        labels = {r["label"] for r in csv.DictReader(f)}
+    for lab in labels:
+        info = db.get(lab)
+        atwater = 4 * info.protein_per_100g + 4 * info.carbs_per_100g + 9 * info.fat_per_100g
+        assert math.isclose(atwater, info.kcal_per_100g, rel_tol=0.15, abs_tol=2), lab

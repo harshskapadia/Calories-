@@ -72,6 +72,8 @@ def build_foods(dish_classes: list[str]) -> list[list]:
     db = load_full_db()
     rows = []
     for key in db.classes:
+        if key.startswith("wd_"):  # world dishes are kept from the existing foods.json (main() below)
+            continue
         f = db.get(key)
         rows.append([key, f.display_name, f.kcal_per_100g, f.protein_per_100g, f.carbs_per_100g,
                      f.fat_per_100g, f.serving_g, f.match, f.source if f.match != "usda" else ""])

@@ -46,10 +46,14 @@ function openTour() {
   if (getComputedStyle($("tour")).position !== "fixed") { $("tour").hidden = true; return false; }
   document.body.classList.add("tour-open");
   $("tour-next").focus();
+  if (typeof navPush === "function") navPush("tour"); // back gesture closes the tour
   return true;
 }
 
 function closeTour(then) {
+  if (history.state && history.state.view === "tour" && typeof nav !== "undefined" && !nav.restoring) {
+    try { history.replaceState({ view: state.tab || "meal" }, ""); } catch { /* sandboxed */ }
+  }
   $("tour").hidden = true;
   document.body.classList.remove("tour-open");
   tourStorage(true);

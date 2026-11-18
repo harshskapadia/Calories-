@@ -2,7 +2,7 @@
 "use strict";
 
 const $ = (id) => document.getElementById(id);
-const state = { meta: null, foods: new Map(), foodList: [], session: null, key: null, preset: "medium", grams: 0, micros: {}, style: "normal" };
+const state = { meta: null, foods: new Map(), foodList: [], session: null, key: null, preset: "medium", grams: 0, micros: {}, style: "normal", tab: "meal" };
 
 // ---------------------------------------------------------------- your portions and cooking style
 // NutriSnap remembers how much of a food you log (median of your last 5) and how you cook it, per food, on this phone.
@@ -246,7 +246,12 @@ async function analyze(blob) {
   const top = probs.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]).slice(0, 3);
   const ms = Math.round(performance.now() - t0);
   setStatus(`Ready: ${dishCount()} dishes, running on this device.`, 1, true);
-  state.lastTop = top; // used by "Split the plate" to spot a single mixed dish
+  state.lastTop = top;
+  $("drop").classList.add("has-photo");
+  requestAnimationFrame(() => { // phones: the answer, not the photo, is what you came for
+    const r = $("results").getBoundingClientRect();
+    if (r.top > innerHeight * 0.55) $("results").scrollIntoView({ behavior: "smooth", block: "start" });
+  }); // used by "Split the plate" to spot a single mixed dish
   renderTop3(top, ms);
   selectFood(state.meta.classes[top[0][1]]);
   if (typeof onDishResult === "function") onDishResult(state.meta.classes[top[0][1]]);
@@ -345,6 +350,8 @@ function microsOf(food) {
 
 function render() {
   const base = state.foods.get(state.key);
+  $("nutrition").classList.toggle("has-food", !!base);
+  $("search-label").textContent = base ? "Not this food? Search any food" : "Search any food";
   if (!base) return;
   const food = effectiveFood(base);
   // cooking style (only for cooked food with some fat)
@@ -413,6 +420,7 @@ function render() {
 function clearPhoto() {
   state.lastBlob = null;
   state.pendingBlob = null;
+  $("drop").classList.remove("has-photo");
   if ($("second")) $("second").hidden = true;
   state.lastEmb = null;
   $("learn").hidden = true;
@@ -499,7 +507,47 @@ function showTab(which) {
   $("nutrition").hidden = which !== "meal";
   if ((which === "day" || which === "settings") && typeof renderDay === "function") renderDay();
   if (which === "recipes" && typeof renderRecipeList === "function") renderRecipeList();
+  navPush(which === "meal" && state.packOpen ? "meal:pack" : which);
 }
+
+// ---------------------------------------------------------------- Android back button / gesture
+// Every screen change (tab, Settings, packaged food, recipe editor, tour) is a history step, so "back" moves back
+// through the app instead of closing it. Buttons that close a screen step back too, keeping the two in line.
+const nav = { restoring: false };
+function navPush(view) {
+  if (nav.restoring || (history.state && history.state.view === view)) return;
+  try { history.pushState({ view }, ""); } catch { /* sandboxed: no history */ }
+}
+/** A close button for a screen that has its own history step. */
+function navClose(view, close) {
+  if (history.state && history.state.view === view) history.back();
+  else close();
+}
+function applyView(view) {
+  nav.restoring = true;
+  try {
+    if (!$("tour").hidden && view !== "tour" && typeof closeTour === "function") closeTour();
+    if (view !== "recipes:edit" && typeof editorOpen === "function" && editorOpen()) {
+      if (!leaveEditorOk()) { history.pushState({ view: "recipes:edit" }, ""); return; }
+      closeEditor();
+    }
+    const [tab, sub] = view.split(":");
+    if (tab === "meal") setPack(sub === "pack");
+    showTab(TABS.includes(tab) || tab === "settings" ? tab : "meal");
+  } finally { nav.restoring = false; }
+}
+window.addEventListener("popstate", (e) => applyView((e.state && e.state.view) || "meal"));
+
+/** Packaged food takes the photo card's place (right under the top bar, fits one screen). */
+function setPack(open) {
+  state.packOpen = open;
+  $("panel-pack").hidden = !open || state.tab !== "meal";
+  $("panel-meal").hidden = open || state.tab !== "meal";
+  $("pack-btn").setAttribute("aria-expanded", open);
+}
+
+/** A short tap of the vibration motor on Android when something is saved (ignored where unsupported). */
+function haptic(ms = 12) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch { /* not allowed */ } }
 
 function openSettings(section) {
   showTab("settings");
@@ -520,21 +568,25 @@ function wire() {
   $("tab-day").addEventListener("click", () => showTab("day"));
   $("tab-recipes").addEventListener("click", () => showTab("recipes"));
   $("settings-btn").addEventListener("click", () => openSettings());
-  $("settings-back").addEventListener("click", () => { showTab(state.tab || "meal"); window.scrollTo({ top: 0, behavior: "smooth" }); });
+  $("settings-back").addEventListener("click", () => navClose("settings", () => showTab(state.tab || "meal")));
   document.addEventListener("click", (e) => {
     const b = e.target.closest("[data-open-settings]");
     if (b) openSettings(b.dataset.openSettings);
   });
-  // packaged food replaces the photo card (right under the tabs, fits one screen); "Back to photo" swaps them back
-  const pack = (open) => {
-    state.packOpen = open;
-    $("panel-pack").hidden = !open;
-    $("panel-meal").hidden = open;
-    $("pack-btn").setAttribute("aria-expanded", open);
-    requestAnimationFrame(() => document.querySelector(".tabs").scrollIntoView({ behavior: "smooth", block: "start" }));
-  };
-  $("pack-btn").addEventListener("click", () => pack(!state.packOpen));
-  $("pack-close").addEventListener("click", () => pack(false));
+  // packaged food replaces the photo card; "Back to photo" (or the phone's back) swaps them back
+  $("pack-btn").addEventListener("click", () => {
+    setPack(true);
+    navPush("meal:pack");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  $("pack-close").addEventListener("click", () => navClose("meal:pack", () => setPack(false)));
+  // the on-screen keyboard: the bottom bar would sit on top of what you type, so it steps aside meanwhile
+  document.addEventListener("focusin", (e) => {
+    if (e.target.matches("input:not([type=checkbox]):not([type=range]):not([type=file]), textarea, select")) document.body.classList.add("typing");
+  });
+  document.addEventListener("focusout", () => setTimeout(() => {
+    if (!document.activeElement || !document.activeElement.matches("input, textarea, select")) document.body.classList.remove("typing");
+  }, 50));
   $("more-btn").addEventListener("click", () => setMore($("more").hidden));
   for (const id of ["camera", "file"]) {
     $(id).addEventListener("change", (e) => { const f = e.target.files[0]; if (f) analyze(f); e.target.value = ""; });
@@ -611,4 +663,11 @@ function setupPwa() {
 
 setupPwa();
 wire();
+// the first history step, and the home-screen shortcuts (long-press the installed app: Snap a meal, My day, Scan a barcode)
+(function startView() {
+  const go = new URLSearchParams(location.search).get("go");
+  try { history.replaceState({ view: "meal" }, "", location.pathname); } catch { /* sandboxed */ }
+  if (go === "day" || go === "recipes") showTab(go);
+  else if (go === "barcode") { setPack(true); navPush("meal:pack"); }
+})();
 init().catch((err) => { console.error(err); setStatus(`Couldn't load the model: ${err.message}. Try reloading the page.`); });

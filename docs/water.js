@@ -83,6 +83,7 @@ function waterSet(ml, animate) {
   const hit = before < goal && d.days[k] >= goal && d.goalHit !== k;
   if (hit) d.goalHit = k;
   waterSave(d);
+  if (d.days[k] > before && typeof haptic === "function") haptic(8);
   renderWater(animate && d.days[k] > before);
   if (hit && typeof window.nsConfetti === "function") setTimeout(() => window.nsConfetti($("wt-glass"), 50), 650);
 }

@@ -356,3 +356,16 @@ def test_unknown_dish_and_portions_wired() -> None:
     assert "maybeSecondOpinion" in (DOCS / "openvocab.js").read_text(encoding="utf-8")
     keys = (DOCS / "backup.js").read_text(encoding="utf-8")
     assert all(k in keys for k in ('"nutrisnap.portions.v1"', '"nutrisnap.platesize.v1"', '"nutrisnap.prefs.v1"'))
+
+
+def test_android_navigation_and_shortcuts() -> None:
+    """Back button / gesture moves through the app (history steps), bottom bar, home-screen shortcuts."""
+    app = (DOCS / "app.js").read_text(encoding="utf-8")
+    assert "addEventListener(\"popstate\"" in app and "function navPush" in app and "function navClose" in app
+    assert 'navPush("recipes:edit")' in (DOCS / "recipes.js").read_text(encoding="utf-8")
+    assert 'navPush("tour")' in (DOCS / "tour.js").read_text(encoding="utf-8")
+    manifest = json.loads((DOCS / "manifest.webmanifest").read_text(encoding="utf-8"))
+    urls = {s["url"] for s in manifest["shortcuts"]}
+    assert urls == {"./?go=snap", "./?go=day", "./?go=barcode"} and all(f'"{u.split("=")[1]}"' in app for u in urls - {"./?go=snap"})
+    css = (DOCS / "style.css").read_text(encoding="utf-8")
+    assert ".tabs, .tabs.has-pill { position: fixed; }" in css and "env(safe-area-inset-bottom)" in css

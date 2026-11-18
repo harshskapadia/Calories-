@@ -140,8 +140,18 @@ function openEditor(r) {
   $("rc-editor").hidden = false;
   renderEditor();
   loadIngredients();
+  rc.saved = false;
+  if (typeof navPush === "function") navPush("recipes:edit"); // the phone's back button returns to the list
   if (!r) $("rc-name").focus();
 }
+
+function editorOpen() { return !$("rc-editor").hidden; }
+/** Leaving with ingredients added but not saved: ask first, so a back gesture doesn't lose a half-built recipe. */
+function leaveEditorOk() {
+  return rc.saved || !rc.draft || !rc.draft.ings.length || confirm("Leave without saving this recipe?");
+}
+/** The editor's own close buttons step back through history like the phone's back button. */
+function closeEditorNav() { if (typeof navClose === "function") navClose("recipes:edit", closeEditor); else closeEditor(); }
 
 function closeEditor() {
   $("rc-editor").hidden = true;
@@ -211,9 +221,10 @@ function saveRecipe() {
   recipesSave(list);
   registerRecipes();
   const saved = d.id, wasNew = !rc.editing;
+  rc.saved = true;
   const finish = () => {
     $("rc-editor").classList.remove("rc-filing");
-    closeEditor();
+    closeEditorNav();
     rc.justSaved = saved;
     renderRecipeList();
     $("rc-flash").textContent = wasNew ? `Saved. "${d.name}" is now in search and ready to log.` : `Saved "${d.name}".`;
@@ -227,7 +238,8 @@ function deleteRecipe() {
   if (!rc.editing || !confirm(`Delete "${d.name}"? Foods you already logged with it stay in your log.`)) return;
   recipesSave(recipesLoad().filter((r) => r.id !== rc.editing));
   registerRecipes();
-  closeEditor();
+  rc.saved = true;
+  closeEditorNav();
   $("rc-flash").textContent = `Deleted "${d.name}".`;
 }
 
@@ -260,7 +272,7 @@ function logServing(r) {
 (function initRecipes() {
   if (!$("panel-recipes")) return;
   $("rc-new").addEventListener("click", () => openEditor(null));
-  $("rc-back").addEventListener("click", closeEditor);
+  $("rc-back").addEventListener("click", () => { if (leaveEditorOk()) { rc.saved = true; closeEditorNav(); } });
   $("rc-save").addEventListener("click", saveRecipe);
   $("rc-delete").addEventListener("click", deleteRecipe);
   $("rc-list").addEventListener("click", (e) => {

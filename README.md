@@ -586,6 +586,24 @@ priority (log more days → too many days over → low protein → eating far be
 food log, which is now kept for ~13 months.
 
 
+### 📱 Built for Android phones
+
+Checked in a real browser at Galaxy S8 (360 px) and Pixel 7 (412 px) sizes:
+
+- **The back button / gesture works inside the app.** Tabs, Settings, packaged food, the recipe editor and the tour are
+  history steps, so *back* returns to the previous screen instead of closing the app (and asks before discarding a
+  recipe with unsaved ingredients); the on-screen "Back" buttons step back the same way.
+- **Bottom bar** in thumb reach: Snap · Recipes · My day, with line icons, the label's heavy ink rule along its top
+  edge and the selected section as an inverted block; it clears the gesture bar (safe area) and steps aside while the
+  keyboard is open.
+- **First screen = the camera**: a one-line headline and one sentence, then the photo area and *Take photo*. After a
+  photo, the picture shrinks and the page scrolls to the answer; **Add to today stays pinned** above the bar while you
+  read the label. Before any food is chosen, that card shows only search.
+- **48 dp touch targets** for every control the audit measured (portion, folding rows, steppers, back links, chips,
+  water glasses, log buttons, slider), label values never wrap at 360 px, pressed states instead of the grey tap flash,
+  and a light vibration when something is saved.
+- **Home-screen shortcuts** (long-press the installed app): *Snap a meal*, *My day*, *Scan a barcode* (`?go=`).
+
 ### 🧭 Three tabs, one answer first
 
 The app keeps every feature but shows little at once. **📸 Snap · 🍲 Recipes · 📊 My day**, with **⚙️ Settings** in the top

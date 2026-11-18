@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>NutriSnap</title>
   <meta name="description" content="Snap a meal or scan a barcode: on-device food recognition and calorie and macro estimates. Runs entirely in your browser.">
-  <meta name="theme-color" content="#f4f4f4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="icons/favicon-48.png" type="image/png" sizes="48x48">
   <link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
@@ -16,7 +16,7 @@
   <meta name="apple-mobile-web-app-title" content="NutriSnap">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="preload" href="fonts/archivo-wdth.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=503fdfd3c4">
+  <link rel="stylesheet" href="style.css?v=bdfaa978dc">
 </head>
 <body>
   <header class="topbar">
@@ -36,16 +36,15 @@
       <button type="button" id="ios-hint-close" aria-label="Dismiss">✕</button></div>
     <section class="hero">
       <h1>What's on your plate?</h1>
-      <p class="lede">Photograph a meal and get its calories in about a second. NutriSnap recognises
-        <b id="dish-count">425</b> dishes, matches <b id="chip-count">10,000+</b> foods, and reads the label of 3 million
-        packaged products. Your photos never leave this phone.</p>
+      <p class="lede">Calories from a photo in about a second. <b id="dish-count">425</b> dishes and
+        <b id="chip-count">10,000+</b> foods, all on this phone: photos are never uploaded.</p>
     </section>
 
-    <div class="tabs" role="tablist" aria-label="Input type">
-      <button type="button" role="tab" id="tab-meal" class="tab on" aria-selected="true" aria-controls="panel-meal">📸 Snap</button>
-      <button type="button" role="tab" id="tab-recipes" class="tab" aria-selected="false" aria-controls="panel-recipes">🍲 Recipes</button>
-      <button type="button" role="tab" id="tab-day" class="tab" aria-selected="false" aria-controls="panel-day">📊 My day</button>
-    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button type="button" role="tab" id="tab-meal" class="tab on" aria-selected="true" aria-controls="panel-meal"><svg class="tab-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.6"/></svg><span>Snap</span></button>
+      <button type="button" role="tab" id="tab-recipes" class="tab" aria-selected="false" aria-controls="panel-recipes"><svg class="tab-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11h18"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M9 4c0 2 2 2 2 4M13 4c0 2 2 2 2 4"/></svg><span>Recipes</span></button>
+      <button type="button" role="tab" id="tab-day" class="tab" aria-selected="false" aria-controls="panel-day"><svg class="tab-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V12M10 20V7M15 20v-5M20 20V4"/></svg><span>My day</span></button>
+    </nav>
 
     <!-- Meal photo -->
     <section id="panel-meal" class="card capture" role="tabpanel" aria-labelledby="tab-meal">
@@ -55,7 +54,7 @@
         <div id="drop-hint" class="drop-hint">
           <div class="drop-icon" aria-hidden="true">📸</div>
           <div class="drop-title">Add a photo of your meal</div>
-          <div class="muted small">One dish per photo works best. Tap, or drop an image here.</div>
+          <div class="muted small">One dish per photo works best.</div>
         </div>
       </div>
       <div class="actions">
@@ -485,7 +484,7 @@
       <select id="dish" hidden aria-hidden="true" tabindex="-1"></select>
 
       <div class="field">
-        <label class="label" for="search">Not this food? Search any food</label>
+        <label class="label" for="search" id="search-label">Search any food</label>
         <input id="search" type="search" placeholder="Search any food" autocomplete="off">
         <ul id="search-results" class="list search-results" hidden></ul>
       </div>
@@ -556,20 +555,20 @@
   </div>
 
   <script src="ort/ort.wasm.min.js"></script>
-  <script src="app.js?v=8faac36566"></script>
+  <script src="app.js?v=905b892426"></script>
   <script src="products.js?v=5c2fdfff6c"></script>
   <script src="openvocab.js?v=1d19f433c1"></script>
   <script src="plate.js?v=f75ede5795"></script>
-  <script src="diary.js?v=7506e7e3f0"></script>
+  <script src="diary.js?v=5c6efe06cc"></script>
   <script src="learn.js?v=83e94f1c79"></script>
   <script src="quicklog.js?v=824cda88c3"></script>
   <script src="weight.js?v=804c49732f"></script>
   <script src="backup.js?v=8c2d4501c1"></script>
   <script src="report.js?v=60299acc57"></script>
-  <script src="recipes.js?v=13ba89093f"></script>
+  <script src="recipes.js?v=336f182ad5"></script>
   <script src="labelscan.js?v=39bc039976"></script>
-  <script src="water.js?v=28619159ba"></script>
-  <script src="tour.js?v=eff4741e85"></script>
+  <script src="water.js?v=44960c67f5"></script>
+  <script src="tour.js?v=5371f31c21"></script>
   <script src="motion.js?v=1c4c618457"></script>
 </body>
 </html>

@@ -165,6 +165,7 @@ function microsFor(food, grams) {
 }
 
 function addEntries(entries) {
+  if (typeof haptic === "function") haptic();
   const log = loadLog(), d = today();
   log[d] = [...(log[d] || []), ...entries.map((e) => ({ meal: mealAt(), ...e, t: Date.now() }))];
   saveLog(log);

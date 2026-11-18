@@ -478,6 +478,26 @@ value scales with it) or move it to another meal, and to add it to **favourites*
 backups). **"↻ Yesterday's breakfast"** (any meal eaten yesterday and not logged yet today) copies the whole meal in one
 tap.
 
+### 📄 Read a nutrition label from a photo, and a faster start
+
+**Label photo** (Packaged food → *Photo of the nutrition label*): for packets that aren't in Open Food Facts. The text is
+read **on the phone** with [Tesseract.js](https://github.com/naptha/tesseract.js) (Apache-2.0, self-hosted in
+`docs/ocr/`, ~7 MB downloaded the first time it's used; the photo is never uploaded). The image is upscaled ×2 and turned
+black-and-white (Otsu threshold) and read as one block of text, which on our test labels got the most numbers right.
+`parseLabel` in `docs/labelscan.js` then reads energy (kcal, or kJ ÷ 4.184), protein, carbohydrate, sugars (total, not
+"added"), fat, saturated fat, fibre and sodium (mg, or salt × 400); takes the per-100 g column on Indian/EU labels and
+ignores %RDA / %DV columns; converts US-style per-serving labels with the serving size; and corrects the usual OCR slips
+("(g)" read as "(9)", "37g" as "379", "Og" for "0g", comma decimals). **Nothing is used unchecked**: an editable review
+form shows every value, flags ones that don't add up (protein + carbs + fat vs energy, sugars above carbs, a 559 g
+"serving"), and correcting a per-serving size re-converts all values from the numbers on the pack. Saved labels become
+your own foods (search, logging, favourites; `nutrisnap.labels.v1`, in backups). Tests: `tests/test_labelscan.py` runs
+the real parser on clean label text and on Tesseract's actual output for our test photos.
+
+**Faster start**: the dish model now downloads at once, in parallel with the food data, and the app is ready as soon as
+it's in (the helper model joins quietly later); a photo taken while it's still downloading is shown straight away and
+checked automatically when ready (before, it was refused); one silent warm-up run makes the first real photo faster.
+On a 20 Mbit/s connection, time to ready went from **35.4 s to 22.2 s**; later visits load from the phone's cache.
+
 ### 🍳 Standard recipes instead of borrowed nutrition
 
 200 of the dishes the photo model knows came from Wikimedia Commons and only had nutrition *borrowed from the most

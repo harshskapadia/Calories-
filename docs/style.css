@@ -771,3 +771,16 @@ details.adjust .seg { margin-top: 8px; }
 .pack-h { margin: 8px 0 6px; }
 /* anything scrolled into view stops below the sticky top bar */
 .tabs, [role="tabpanel"], #panel-pack, #panel-settings, #results, #nutrition, .card { scroll-margin-top: 68px; }
+
+/* nutrition label from a photo */
+.label-btn { margin-top: 10px; }
+.label-review { margin-top: 12px; padding: 14px; border-radius: 14px; background: var(--surface-2); display: grid; gap: 10px; }
+.label-review .field { margin: 0; }
+.label-fields { display: grid; gap: 6px; }
+.lf { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: .92rem; }
+.lf input { width: 110px; text-align: right; min-height: 42px; }
+.lf-missing input { border-color: #d0567f; }
+.label-checks { margin: 0; padding: 8px 12px 8px 28px; font-size: .86rem; }
+.label-raw { white-space: pre-wrap; font-size: .75rem; max-height: 180px; overflow: auto; margin: 6px 0 0; color: var(--muted); }
+.label-review.per-serving .lf-serving { order: -1; font-weight: 600; }
+.label-review.per-serving .lf-serving input { border-color: var(--ink); }

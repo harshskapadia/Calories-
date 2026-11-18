@@ -27,7 +27,7 @@ function usualPortion(key) {
   return { grams: g[Math.floor(g.length / 2)], style: STYLES[r.style] ? r.style : "normal", n: g.length };
 }
 /** Cooking style only means something for cooked food with some fat (not fruit, drinks, packaged foods or your recipes). */
-function styleAllowed(food) { return !!food && food.match !== "off" && food.match !== "recipe" && food.f >= 2; }
+function styleAllowed(food) { return !!food && !["off", "recipe", "label"].includes(food.match) && food.f >= 2; }
 /** The food as you cooked it: per-100 g values with the cooking style applied (protein and carbs stay the same). */
 function effectiveFood(food) {
   if (!styleAllowed(food) || state.style === "normal") return food;
@@ -76,6 +76,14 @@ async function init() {
   ort.env.wasm.wasmPaths = new URL("ort/", location.href).href; // absolute: required by the dynamic import
   ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 1) : 1;
 
+  // start the dish model download right away, alongside the food data (it's the long part of the first visit)
+  const opts = { executionProviders: ["wasm"], graphOptimizationLevel: "all" };
+  state.loadProgress = 0;
+  const mainModel = fetchWithProgress("model/nutrisnap.int8.onnx", (f) => {
+    state.loadProgress = f;
+    setStatus(state.pendingBlob ? `Got your photo. I'll check it as soon as the model is ready (${Math.round(f * 100)}%)…`
+      : `Downloading the model… ${Math.round(f * 100)}% (34 MB, once; then it's on your phone)`, f);
+  });
   const [meta, foods] = await Promise.all([
     fetch("model/meta.json").then((r) => r.json()),
     fetch("data/foods.json").then((r) => r.json()),
@@ -92,24 +100,28 @@ async function init() {
     state.foodList.push(item);
   }
   if (typeof registerRecipes === "function") registerRecipes(); // your own dishes join search and logging
+  if (typeof registerLabels === "function") registerLabels(); // and the package labels you photographed
   buildDishSelect();
   $("nutrition").hidden = false;
 
-  // the dish model, plus (optional) a helper model that double-checks dishes both models know
-  const files = ["model/nutrisnap.int8.onnx", ...(meta.helper ? [`model/${meta.helper.file}`] : [])];
-  const mb = meta.helper ? "68 MB" : "34 MB";
-  setStatus(`Downloading the model (${mb}, once; then cached)…`, 0);
-  const opts = { executionProviders: ["wasm"], graphOptimizationLevel: "all" };
-  const sessions = [];
-  for (let i = 0; i < files.length; i++) {
-    const bytes = await fetchWithProgress(files[i], (f) => {
-      const all = (i + f) / files.length;
-      setStatus(`Downloading the model… ${Math.round(all * 100)}%`, all);
-    });
-    sessions.push(await ort.InferenceSession.create(bytes, opts));
-  }
-  [state.session, state.helper = null] = sessions;
+  // ready as soon as the main model is in; the helper model (it double-checks dishes both know) follows quietly
+  setStatus("Downloading the model… (34 MB, once; then it's on your phone)", state.loadProgress);
+  state.session = await ort.InferenceSession.create(await mainModel, opts);
+  state.helper = null;
   setStatus(`Ready: ${dishCount()} dishes, running on this device.`, 1, true);
+  warmUp(); // one silent run, so the first real photo isn't slowed by one-time setup
+  if (state.pendingBlob) { const b = state.pendingBlob; state.pendingBlob = null; analyze(b); }
+  if (meta.helper) {
+    fetch(`model/${meta.helper.file}`).then((r) => r.arrayBuffer()).then((buf) => ort.InferenceSession.create(new Uint8Array(buf), opts))
+      .then((h) => { state.helper = h; }).catch(() => { /* offline or low memory: the main model works alone */ });
+  }
+}
+
+async function warmUp() {
+  try {
+    const S = state.meta.img_size;
+    await state.session.run({ image: new ort.Tensor("float32", new Float32Array(2 * 3 * S * S), [2, 3, S, S]) });
+  } catch { /* not needed for correctness */ }
 }
 
 /** Index tables for merged/dropped classes and the helper model (see data/class_merges.yaml, scripts/build_web.py). */
@@ -185,7 +197,17 @@ function softmax(logits, T) {
 
 // ---------------------------------------------------------------- inference
 async function analyze(blob) {
-  if (!state.session) { setStatus("The model is still loading, one moment…"); return; }
+  if (!state.session) {
+    // still downloading: show the photo now and check it the moment the model is ready
+    state.pendingBlob = blob;
+    state.lastBlob = blob;
+    $("preview").src = URL.createObjectURL(blob);
+    $("preview").hidden = false;
+    $("photo-clear").hidden = false;
+    $("drop-hint").hidden = true;
+    setStatus(`Got your photo. I'll check it as soon as the model is ready (${Math.round((state.loadProgress || 0) * 100)}%)…`, state.loadProgress || 0);
+    return;
+  }
   state.lastBlob = blob;
   $("ov-results").hidden = true;
   $("photo-est").hidden = true;
@@ -312,7 +334,7 @@ function setGrams(g) {
 function microsOf(food) {
   if (!food) return null;
   if (food.styleMicros) return food.styleMicros;
-  if (food.match === "recipe") return food.micros || null;
+  if (food.match === "recipe" || food.match === "label") return food.micros || null;
   if (food.match === "off") {
     const x = food.extra && food.extra.per100;
     if (!x || [x.fiber, x.sugars, x.sat, x.salt].every((v) => v == null)) return null;
@@ -371,6 +393,7 @@ function render() {
     $("source").textContent = `Your recipe: ${food.source}. Ingredient values from USDA. Change it in the Recipes tab.`;
     return;
   }
+  if (food.match === "label") { $("source").textContent = food.source; return; }
   if (food.match === "approx") {
     const [src, desc, qid, sim] = food.source.split("|");
     const recipe = sim === "recipe", rough = !recipe && Number(sim) < 0.7;
@@ -389,6 +412,7 @@ function render() {
 // Remove the photo and its results so a new one can be taken (the nutrition card and today's log are kept)
 function clearPhoto() {
   state.lastBlob = null;
+  state.pendingBlob = null;
   if ($("second")) $("second").hidden = true;
   state.lastEmb = null;
   $("learn").hidden = true;
@@ -436,7 +460,7 @@ function rankFoods(q) {
   const rank = (f) => {
     const n = f.lower;
     const pos = n === phrase ? 0 : n.startsWith(phrase) ? 1 : wordStart.test(n) ? 2 : 3;
-    const kind = f.match === "recipe" ? -1 : f.match === "usda" ? 1 : f.match === "approx" ? 2 : 0; // your recipes first
+    const kind = f.match === "recipe" || f.match === "label" ? -1 : f.match === "usda" ? 1 : f.match === "approx" ? 2 : 0; // your recipes first
     if (alias && f.key === alias) return -1;
     return pos * 10 + kind;
   };
@@ -449,7 +473,7 @@ function search(q) {
   const hits = rankFoods(q);
   box.innerHTML = hits.length
     ? hits.slice(0, 25).map((f) => `<li><button type="button" data-key="${f.key}">${escapeHtml(f.name)}` +
-        `<span class="tag">${f.match === "recipe" ? "my recipe" : f.match === "usda" ? "USDA" : f.match === "approx" ? "world dish" : "dish"} · ${Math.round(f.kcal)} kcal/100 g</span></button></li>`).join("")
+        `<span class="tag">${f.match === "recipe" ? "my recipe" : f.match === "label" ? "my label" : f.match === "usda" ? "USDA" : f.match === "approx" ? "world dish" : "dish"} · ${Math.round(f.kcal)} kcal/100 g</span></button></li>`).join("")
     : `<li><button type="button" disabled>No match. Try a simpler word (e.g. "lentil", "rice").</button></li>`;
   box.hidden = false;
 }

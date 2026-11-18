@@ -16,7 +16,7 @@
   <meta name="apple-mobile-web-app-title" content="NutriSnap">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="preload" href="fonts/archivo-wdth.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=7b52fb544b">
+  <link rel="stylesheet" href="style.css?v=503fdfd3c4">
 </head>
 <body>
   <header class="topbar">
@@ -84,6 +84,20 @@
         <label class="btn ghost">Barcode photo
           <input id="barcode-file" type="file" accept="image/*" hidden>
         </label>
+      </div>
+      <label class="btn soft wide label-btn">📄 Photo of the nutrition label
+        <input id="label-file" type="file" accept="image/*" capture="environment" hidden></label>
+      <p id="label-status" class="hint" role="status" aria-live="polite"></p>
+      <div id="label-review" class="label-review" hidden>
+        <label class="field"><span class="label">Product name</span><input id="label-name" type="text" maxlength="60" placeholder="e.g. Oat biscuits"></label>
+        <div class="mini-h">Per 100 g <span class="muted">(fix anything that doesn't match the pack)</span></div>
+        <div id="label-fields" class="label-fields"></div>
+        <label class="lf lf-serving"><span id="label-serving-label">One serving</span><span class="le-in"><input id="label-serving" type="number"
+          inputmode="decimal" min="0" step="any" placeholder="100"><span>g</span></span></label>
+        <ul id="label-checks" class="warn label-checks" hidden></ul>
+        <details class="fold"><summary>Text the camera read</summary><pre id="label-raw" class="label-raw"></pre></details>
+        <div class="le-actions"><button id="label-cancel" type="button" class="btn ghost small-btn">Cancel</button>
+          <button id="label-use" type="button" class="btn primary small-btn">Use these values</button></div>
       </div>
       <div id="scanner" class="scanner" hidden>
         <video id="video" playsinline muted></video>
@@ -542,7 +556,7 @@
   </div>
 
   <script src="ort/ort.wasm.min.js"></script>
-  <script src="app.js?v=eec89e67e2"></script>
+  <script src="app.js?v=8faac36566"></script>
   <script src="products.js?v=5c2fdfff6c"></script>
   <script src="openvocab.js?v=1d19f433c1"></script>
   <script src="plate.js?v=f75ede5795"></script>
@@ -550,9 +564,10 @@
   <script src="learn.js?v=83e94f1c79"></script>
   <script src="quicklog.js?v=824cda88c3"></script>
   <script src="weight.js?v=804c49732f"></script>
-  <script src="backup.js?v=f59e3d9060"></script>
+  <script src="backup.js?v=8c2d4501c1"></script>
   <script src="report.js?v=60299acc57"></script>
   <script src="recipes.js?v=13ba89093f"></script>
+  <script src="labelscan.js?v=39bc039976"></script>
   <script src="water.js?v=28619159ba"></script>
   <script src="tour.js?v=eff4741e85"></script>
   <script src="motion.js?v=1c4c618457"></script>

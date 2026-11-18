@@ -27,6 +27,7 @@ merge:
   wd_Q2722122: paani_puri             # Panipuri
   wd_Q111981894: hamburger            # burger
   wd_Q964107: stir_fried_noodles      # chow mein
+  wd_Q182339: lokum                   # Turkish delight (TurkishFoods-25 already has it as lokum)
   wd_Q139266197: hot_pot              # Taiwanese hot pot
   wd_Q15935161: hot_pot               # mutton hot pot
   wd_Q18883046: hot_pot               # mala hot pot
@@ -50,3 +51,5 @@ drop:
   - wd_Q105968553   # foods marinated in olive oil
   - wd_Q3848094     # bap (cooked rice, any kind)
   - wd_Q16172783    # banana cake (mostly stole other cakes' photos)
+  - wd_Q8265768     # "lower leg": a Commons category of body parts, not a dish
+  - wd_Q25842375    # "street food of Thailand": a topic, not one dish

@@ -139,6 +139,11 @@ def main() -> None:
         foods += [r for r in json.loads(foods_path.read_text(encoding="utf-8")) if r[0].startswith("wd_") and r[0] not in have]
     foods_path.write_text(json.dumps(foods, separators=(",", ":")), encoding="utf-8")
     print(f"foods.json: {len(foods)} foods")
+    if (DOCS / "data" / "micros.json").exists():
+        sys.path.insert(0, str(ROOT / "scripts"))
+        from dish_recipes import main as apply_dish_recipes
+
+        apply_dish_recipes()  # standard recipes (data/dish_recipes.yaml) replace borrowed nutrition
 
     print(f"site ready in {DOCS}")
 

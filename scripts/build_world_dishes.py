@@ -2,7 +2,7 @@
 
     python scripts/build_world_dishes.py fetch      # download the dish list from query.wikidata.org (~2 min)
     python scripts/build_world_dishes.py build      # embed prompts, link nutrition, write docs/model + docs/data
-    python scripts/build_world_dishes.py fix        # re-apply the hand-checked RECIPES to docs/data/foods.json
+    python scripts/build_world_dishes.py fix        # re-apply the standard recipes (data/dish_recipes.yaml)
     python scripts/build_world_dishes.py images     # download Wikimedia Commons thumbnails (evaluation only)
     python scripts/build_world_dishes.py eval       # zero-shot accuracy on those photos
 
@@ -150,39 +150,11 @@ def prompt(d: dict) -> str:
 
 
 # ---------------------------------------------------------------- build
-# Hand-checked recipes for world dishes whose borrowed (most similar) nutrition was clearly wrong. A recipe is
-# [(food key in foods.json, weight share)], mixed per 100 g, plus a serving in g. Applied by `build` and by `fix`.
-RECIPES = {
-    # Australian halal snack pack: chips, doner meat, cheese, garlic + chilli/BBQ sauce (was "fried meat substitute", 359 kcal)
-    "Q24027629": ([("fndds_2709462", .45), ("kebab", .35), ("fndds_2705709", .06), ("fndds_2710169", .08), ("fndds_2709750", .06)], 450),
-    "Q5055611": ([("kebab", 1.0)], 200),                              # cağ kebabı (had borrowed a 27 kcal dish)
-    "Q6009729": ([("kebab", .7), ("fndds_2709459", .3)], 300),        # kağıt kebabı: lamb + potato baked in paper
-}
-
-
-def apply_recipes(foods: list) -> int:
-    """Overwrite the borrowed nutrition of the RECIPES dishes with their recipe mix (source field: 'a 45% + b 35%|desc|qid|recipe')."""
-    by_key = {r[0]: r for r in foods}
-    n = 0
-    for qid, (parts, serving) in RECIPES.items():
-        row = by_key.get(f"wd_{qid}")
-        if not row:
-            continue
-        tot = sum(w for _, w in parts)
-        mix = [sum(by_key[k][i] * w for k, w in parts) / tot for i in range(2, 6)]
-        row[2:7] = [round(mix[0], 1), round(mix[1], 2), round(mix[2], 2), round(mix[3], 2), float(serving)]
-        desc = row[8].split("|")[1] if row[8].count("|") >= 3 else ""
-        row[8] = " + ".join(f"{by_key[k][1]} {round(100 * w / tot)}%" for k, w in parts) + f"|{desc}|{qid}|recipe"
-        n += 1
-    return n
-
-
 def fix() -> None:
-    """Apply RECIPES to docs/data/foods.json without rebuilding the CLIP vocabulary."""
-    path = DOCS / "data" / "foods.json"
-    foods = json.loads(path.read_text(encoding="utf-8"))
-    print(f"fixed {apply_recipes(foods)} world dishes")
-    path.write_text(json.dumps(foods, separators=(",", ":")), encoding="utf-8")
+    """Re-apply the standard recipes (data/dish_recipes.yaml) without rebuilding the CLIP vocabulary."""
+    from dish_recipes import main as apply_dish_recipes
+
+    apply_dish_recipes()
 
 
 def build() -> None:
@@ -242,8 +214,9 @@ def build() -> None:
     meta["regions"] = ["core"] * len(base) + [region_of_key[k] for k in meta["keys"][len(base):]]
     meta["region_list"] = sorted(set(meta["regions"][len(base):]), key=lambda r: (r.startswith("Other"), r))
     (DOCS / "model" / "clip_vocab.json").write_text(json.dumps(meta, separators=(",", ":")), encoding="utf-8")
-    apply_recipes(foods)
     (DOCS / "data" / "foods.json").write_text(json.dumps(foods, separators=(",", ":")), encoding="utf-8")
+    if (DOCS / "data" / "micros.json").exists():
+        fix()  # standard recipes replace borrowed nutrition where it was wrong
     counts = Counter(meta["regions"][len(base):])
     print(f"added {len(dishes)} world dishes -> vocabulary {len(meta['keys'])}; bank {(len(meta['keys'])*meta['dim'])/1e6:.1f} MB")
     print(counts.most_common())

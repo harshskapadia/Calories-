@@ -470,6 +470,7 @@ function showTab(which) {
   $("panel-settings").hidden = which !== "settings";
   document.querySelector(".hero").hidden = which !== "meal"; // the big headline belongs to Snap only
   $("panel-pack").hidden = which !== "meal" || !state.packOpen;
+  if (which === "meal" && state.packOpen) $("panel-meal").hidden = true; // packaged food takes the photo card's place
   $("results").hidden = which !== "meal" || !$("top3").children.length;
   $("nutrition").hidden = which !== "meal";
   if ((which === "day" || which === "settings") && typeof renderDay === "function") renderDay();
@@ -500,11 +501,13 @@ function wire() {
     const b = e.target.closest("[data-open-settings]");
     if (b) openSettings(b.dataset.openSettings);
   });
+  // packaged food replaces the photo card (right under the tabs, fits one screen); "Back to photo" swaps them back
   const pack = (open) => {
     state.packOpen = open;
     $("panel-pack").hidden = !open;
+    $("panel-meal").hidden = open;
     $("pack-btn").setAttribute("aria-expanded", open);
-    if (open) requestAnimationFrame(() => $("panel-pack").scrollIntoView({ behavior: "smooth", block: "start" }));
+    requestAnimationFrame(() => document.querySelector(".tabs").scrollIntoView({ behavior: "smooth", block: "start" }));
   };
   $("pack-btn").addEventListener("click", () => pack(!state.packOpen));
   $("pack-close").addEventListener("click", () => pack(false));

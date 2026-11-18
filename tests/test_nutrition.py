@@ -180,3 +180,22 @@ def test_commons_manifest_classes_have_sane_nutrition() -> None:
         info = db.get(lab)
         atwater = 4 * info.protein_per_100g + 4 * info.carbs_per_100g + 9 * info.fat_per_100g
         assert math.isclose(atwater, info.kcal_per_100g, rel_tol=0.15, abs_tol=2), lab
+
+
+def test_standard_recipes_replace_borrowed_nutrition() -> None:
+    """data/dish_recipes.yaml rebuilds dishes whose nutrition was borrowed from the wrong food (scripts/dish_recipes.py)."""
+    import json
+
+    import yaml
+
+    recipes = yaml.safe_load((ROOT / "data" / "dish_recipes.yaml").read_text(encoding="utf-8"))
+    foods = {r[0]: r for r in json.loads((ROOT / "docs" / "data" / "foods.json").read_text(encoding="utf-8"))}
+    applied = [k for k in recipes if k in foods]
+    assert len(applied) >= 75
+    for k in applied:
+        r = foods[k]
+        assert r[8].endswith("|recipe"), k  # the app says "estimated from a typical recipe"
+        assert 0 < r[2] < 700 and abs(4 * r[3] + 4 * r[4] + 9 * r[5] - r[2]) <= max(25, 0.2 * r[2]), k
+    pesto = foods["wd_Q135703315"]
+    assert 180 < pesto[2] < 260  # was "Pesto sauce" at 580 kcal per 100 g
+    assert foods["wd_Q12849581"][2] > 300  # cörek is a sweet bread, not "Turkish coffee"

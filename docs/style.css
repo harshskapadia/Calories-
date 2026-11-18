@@ -764,3 +764,10 @@ details.adjust .seg { margin-top: 8px; }
 .log-clear { display: block; margin: 12px auto 0; font-size: .85rem; color: var(--muted); }
 #report-card .week { margin-top: 14px; }
 .burn { margin: 10px 0 0; }
+
+/* packaged food: in place of the photo card */
+.pack-btn { white-space: nowrap; }
+.pack-back { font-size: .9rem; text-decoration: none; color: var(--muted); }
+.pack-h { margin: 8px 0 6px; }
+/* anything scrolled into view stops below the sticky top bar */
+.tabs, [role="tabpanel"], #panel-pack, #panel-settings, #results, #nutrition, .card { scroll-margin-top: 68px; }

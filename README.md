@@ -478,6 +478,20 @@ value scales with it) or move it to another meal, and to add it to **favourites*
 backups). **"↻ Yesterday's breakfast"** (any meal eaten yesterday and not logged yet today) copies the whole meal in one
 tap.
 
+### 🍳 Standard recipes instead of borrowed nutrition
+
+200 of the dishes the photo model knows came from Wikimedia Commons and only had nutrition *borrowed from the most
+similar USDA food*, matched by text similarity. About a third were clearly wrong: *pesto pasta* was "Pesto sauce"
+(580 kcal per 100 g), *çörek* and *pastırma* were "Turkish coffee" (27 kcal), *curd rice* was "Coconut chutney",
+*tonkatsu* was fish tempura. `data/dish_recipes.yaml` gives **81 of them a standard recipe** built from USDA ingredients
+(SR Legacy cooking staples and FNDDS foods; rice, noodles, pasta and meats taken cooked, absorbed oil for fried food,
+a cooked-weight factor where baking or simmering removes water), or points them at the right USDA food. Examples, per
+100 g: pesto pasta 580 → 216, çörek 27 → 342, curd rice 238 → 116, rendang 113 → 268, tonkatsu 177 → 282, gingerbread
+83 → 416. The app shows the recipe under the result ("estimated from a typical recipe: pasta 200 g, pesto 30 g…").
+`scripts/dish_recipes.py` applies them (calories, macros, fibre, sugars, saturated fat, sodium) and runs inside
+`build_web.py`, `build_micros.py` and `build_world_dishes.py`, so a rebuild never loses them. Turkish delight was merged
+into *lokum*, and two non-dish classes ("lower leg", "street food of Thailand") are hidden: **425 distinct dishes**.
+
 ### 🤔 "This might be a dish I don't know", and a second opinion
 
 The dish model can be confidently wrong about a dish it was never trained on (a halal snack pack came out as *Nachos
@@ -556,7 +570,7 @@ food log, which is now kept for ~13 months.
 
 The app keeps every feature but shows little at once. **📸 Snap · 🍲 Recipes · 📊 My day**, with **⚙️ Settings** in the top
 bar (calorie target, double-check, learned photos, backup & privacy) and packaged food as a link under the photo
-buttons. After a photo you see the dish, its Nutrition Facts label, the portion and **Add to today**; other matches,
+buttons that swaps the photo card for barcode scan and product search (one phone screen, "Back to photo"). After a photo you see the dish, its Nutrition Facts label, the portion and **Add to today**; other matches,
 *Split the plate* and *Identify anything* sit behind **"Not right, or more than one food?"**, which opens by itself when
 the app is unsure. Cooking style, fibre/salt totals and "What can I still eat?" are one-line rows that open on tap.
 New users get a one-tap "Set your daily calorie target" card instead of the whole form. Measured at phone size, the

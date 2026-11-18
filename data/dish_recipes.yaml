@@ -1,0 +1,148 @@
+# Standard recipes for dishes whose nutrition was only borrowed from "the most similar food" (or was clearly wrong).
+# Applied to docs/data/foods.json + micros.json by scripts/dish_recipes.py (run by build_web.py, build_micros.py and
+# build_world_dishes.py). Each entry is one typical home or restaurant batch:
+#
+#   parts:   {ingredient: grams}. An ingredient is a cooking staple from data/recipe_ingredients.csv (ing_*, USDA SR
+#            Legacy, raw) or any food in docs/data/foods.json by key (fndds_*, dish classes) or exact USDA name.
+#            Rice, noodles, pasta, lentils and meats are taken COOKED where USDA has them, so their weight is the
+#            weight on the plate; oil is what ends up in the dish (absorbed oil for fried food).
+#   yield:   cooked weight / weight of the parts, when raw parts lose water (baking, frying, simmering down); default 1.
+#   serving: one typical portion in g.
+#   same_as: use another food's values instead of a recipe (the borrowed match was simply the wrong food).
+#
+# Values per 100 g = sum(parts) / (sum of part weights x yield). Recipes are typical, not exact: home cooking varies,
+# which is why the app has Light / Normal / Rich and "My recipes".
+
+# ---------------------------------------------------------------- noodles, rice and bowls
+wd_Q135703315: {name: pesto pasta, serving: 250, parts: {"Pasta, cooked": 200, Pesto sauce: 30, "Cheese, Parmesan, dry grated": 5}}
+wd_Q1304390: {name: oyakodon, serving: 420, parts: {"Rice, white, cooked, no added fat": 200, "Chicken, NS as to part, baked, broiled, or roasted, skin not eaten": 80,
+  ing_egg: 60, ing_onion: 40, Soy sauce: 12, ing_sugar: 6, ing_water: 30}}
+wd_Q2634430: {name: curd rice, serving: 250, parts: {"Rice, white, cooked, no added fat": 200, "Yogurt, whole milk, plain": 120, ing_milk: 30,
+  ing_oil: 5, ing_mustard_seeds: 1, ing_salt: 2, ing_green_chilli: 3}}
+wd_Q715040: {name: japchae, serving: 250, parts: {"Long rice noodles, made from mung beans, cooked": 150, "Beef, roast": 30, ing_spinach: 30,
+  ing_carrot: 20, ing_onion: 20, ing_mushroom: 20, ing_oil: 10, Soy sauce: 15, ing_sugar: 8, ing_sesame: 2}}
+wd_Q55629806: {name: phat kaphrao (with rice and fried egg), serving: 420, parts: {"Rice, white, cooked, no added fat": 200,
+  "Chicken, NS as to part, baked, broiled, or roasted, skin not eaten": 100, ing_oil: 15, Soy sauce: 10, Fish sauce: 8,
+  ing_sugar: 4, ing_garlic: 5, ing_green_chilli: 5, "Egg, whole, fried no added fat": 50}}
+wd_Q843795: {name: bakso (meatball soup), serving: 450, parts: {ing_beef_mince: 80, ing_sabudana: 10, "Rice noodles, cooked": 80, ing_water: 260,
+  ing_salt: 3, ing_garlic: 3, Soy sauce: 8}, yield: 0.95}
+wd_Q50634: {name: bun cha, serving: 380, parts: {"Rice noodles, cooked": 150, "Pork, roast": 90, Fish sauce: 15, ing_sugar: 12, ing_water: 60,
+  ing_lettuce: 30, ing_mint: 5, ing_lemon_juice: 10}}
+wd_Q7799573: {name: goi cuon (2 fresh spring rolls), serving: 150, parts: {ing_rice_flour: 15, "Rice noodles, cooked": 40, "Shrimp, steamed or boiled": 30,
+  "Pork, roast": 20, ing_lettuce: 15, ing_mint: 5, Peanut sauce: 25}}
+wd_Q12497220: {name: masam keueueng (sour fish soup), serving: 400, parts: {"Fish, NS as to type, baked or broiled": 100, ing_tomato: 40,
+  ing_green_chilli: 5, ing_tamarind: 5, ing_water: 250, ing_oil: 5, ing_salt: 2}}
+wd_Q703286: {name: champon, serving: 700, parts: {"Noodles, cooked": 200, "Pork, roast": 40, "Shrimp, steamed or boiled": 30, ing_cabbage: 50,
+  "Bean sprouts, raw": 30, ing_carrot: 15, ing_oil: 8, ing_milk: 100, ing_water: 230, ing_salt: 3, Soy sauce: 5}}
+wd_Q112818476: {name: curry udon, serving: 520, parts: {"Noodles, cooked": 220, "Beef, roast": 40, ing_onion: 40, ing_maida: 10, ing_butter: 10,
+  ing_garam_masala: 3, ing_water: 200, Soy sauce: 10}}
+wd_Q1136876: {name: Okinawa soba, serving: 580, parts: {"Noodles, cooked": 200, "Pork, roast": 70, ing_water: 300, Soy sauce: 10, ing_salt: 2}}
+wd_Q1561248: {name: lamian (beef noodle soup), serving: 570, parts: {"Noodles, cooked": 200, "Beef, roast": 60, ing_water: 300, ing_salt: 3,
+  Soy sauce: 5, ing_oil: 5}}
+wd_Q11273984: {name: Nissin Donbei, same_as: instant_noodles}
+wd_Q104252174: {name: dangmyeon, same_as: "Long rice noodles, made from mung beans, cooked"}
+wd_Q1683716: {name: lontong, same_as: "Rice, white, cooked, no added fat"}
+wd_Q96385320: {name: kanji (rice gruel), serving: 250, parts: {"Rice, white, cooked, no added fat": 100, ing_water: 200, ing_salt: 2}}
+wd_Q1352897: {name: unadon, serving: 330, parts: {"Rice, white, cooked, no added fat": 200, grilled_salmon: 100, Soy sauce: 12, ing_sugar: 10}}
+wd_Q7208574: {name: poke bowl, serving: 330, parts: {"Rice, white, cooked, no added fat": 150, "Fish, tuna, raw": 100, Soy sauce: 10, ing_oil: 5,
+  ing_sesame: 3, ing_cucumber: 40, ing_onion: 10}}
+wd_Q495360: {name: gimbap, serving: 230, parts: {"Rice, white, cooked, no added fat": 150, ing_egg: 20, "Ham, canned": 15, ing_carrot: 15,
+  ing_spinach: 15, ing_oil: 4, ing_sesame: 2, ing_salt: 1}}
+wd_Q65040984: {name: silog (garlic rice, egg, cured beef), serving: 330, parts: {"Rice, white, cooked, no added fat": 200, ing_oil: 10, ing_garlic: 5,
+  "Egg, whole, fried no added fat": 50, "Beef, dried, chipped, uncooked": 60}}
+wd_Q2723206: {name: dal baati, serving: 300, parts: {ing_atta: 100, ing_ghee: 30, ing_water: 40, "Lentils, from dried, no added fat": 150, ing_oil: 5}, yield: 0.9}
+
+# ---------------------------------------------------------------- stews, curries and soups
+wd_Q865004: {name: tajine (chicken and vegetables), serving: 400, parts: {"Chicken, NS as to part, baked, broiled, or roasted, skin not eaten": 120,
+  ing_onion: 50, ing_tomato: 60, ing_carrot: 40, "Potato, boiled, from fresh, peel not eaten, no added fat": 60, ing_olive_oil: 12,
+  "Chickpeas, from dried, no added fat": 30, ing_water: 60, ing_salt: 2}}
+wd_Q1810575: {name: thieboudienne (fish and rice), serving: 450, parts: {"Rice, white, cooked, no added fat": 200, "Fish, NS as to type, baked or broiled": 100,
+  ing_tomato_puree: 30, ing_cabbage: 40, ing_carrot: 30, ing_brinjal: 30, ing_oil: 20, ing_salt: 2}}
+wd_Q123171413: {name: luwombo (chicken in peanut sauce), serving: 300, parts: {"Chicken, NS as to part, baked, broiled, or roasted, skin not eaten": 120,
+  Peanut sauce: 60, ing_tomato: 40, ing_onion: 30, ing_water: 50}}
+wd_Q133269890: {name: gonré (bean cakes), serving: 180, parts: {"Black beans, from dried, no added fat": 150, ing_oil: 10, ing_onion: 20, ing_salt: 1}}
+wd_Q2101181: {name: polbo á feira, serving: 260, parts: {Octopus: 150, "Potato, boiled, from fresh, peel not eaten, no added fat": 100, ing_olive_oil: 15,
+  ing_chilli_powder: 2, ing_salt: 2}}
+wd_Q868158: {name: cocido, serving: 480, parts: {"Chickpeas, from dried, no added fat": 150, "Beef, roast": 50, "Sausage, NFS": 30,
+  "Potato, boiled, from fresh, peel not eaten, no added fat": 80, ing_cabbage: 40, ing_water: 150, ing_salt: 2}}
+wd_Q5788351: {name: cordero asado (roast lamb), same_as: "Lamb, NS as to cut"}
+wd_Q119778178: {name: lechon, serving: 150, parts: {"Pork, roast": 85, Pork skin rinds: 15}}
+wd_Q4189322: {name: gulai (coconut curry), serving: 300, parts: {"Chicken, NS as to part, baked, broiled, or roasted, skin not eaten": 100,
+  "Coconut milk, used in cooking": 80, ing_water: 50, ing_onion: 20, ing_turmeric: 2, ing_chilli_powder: 2, ing_salt: 2}}
+wd_Q1520293: {name: rendang, serving: 150, parts: {"Beef, roast": 100, "Coconut milk, used in cooking": 60, ing_oil: 5, ing_onion: 15, ing_ginger: 3,
+  ing_salt: 2}, yield: 0.8}
+wd_Q3503333: {name: gulyásleves (goulash soup), serving: 400, parts: {"Beef, roast": 50, "Potato, boiled, from fresh, peel not eaten, no added fat": 50,
+  ing_onion: 20, ing_red_pepper: 20, ing_oil: 5, ing_water: 200, ing_salt: 2}}
+wd_Q685680: {name: grünkohlessen (kale, sausage, potatoes), serving: 400, parts: {"Kale, fresh, cooked, fat added": 150, "Sausage, NFS": 70,
+  "Potato, boiled, from fresh, peel not eaten, no added fat": 150}}
+wd_Q70241: {name: cold borscht, serving: 350, parts: {ing_beetroot: 100, ing_cucumber: 50, Kefir: 150, "Egg, whole, boiled or poached": 25, ing_salt: 2}}
+wd_Q15121455: {name: garlic soup, serving: 330, parts: {"Bread, white": 30, ing_olive_oil: 10, ing_garlic: 10, ing_egg: 25, ing_water: 250, ing_salt: 2,
+  ing_chilli_powder: 1}}
+
+# ---------------------------------------------------------------- meat, fish and eggs
+wd_Q2056399: {name: pastırma, same_as: "Beef, dried, chipped, uncooked"}
+wd_Q1142841: {name: tonkatsu, serving: 150, parts: {"Pork, roast": 100, ing_maida: 8, ing_egg: 10, "Bread, white": 15, ing_oil: 15}, yield: 0.95}
+wd_Q7650627: {name: suya, serving: 150, parts: {"Beef, roast": 100, "Peanuts, roasted, unsalted": 15, ing_oil: 5, ing_chilli_powder: 2, ing_salt: 1}}
+wd_Q1644022: {name: kibbeh (fried), serving: 150, parts: {ing_lamb_mince: 100, "Bulgur, no added fat": 120, ing_onion: 30, ing_oil: 12, ing_salt: 2}, yield: 0.85}
+wd_Q891358: {name: pastéis de bacalhau (cod fritters), serving: 120, parts: {"Fish, NS as to type, baked or broiled": 100,
+  "Potato, boiled, from fresh, peel not eaten, no added fat": 100, ing_egg: 30, ing_onion: 20, ing_oil: 20}}
+wd_Q1572563: {name: ham and eggs, serving: 180, parts: {"Ham, canned": 80, "Egg, whole, fried with butter": 100}}
+wd_Q2474644: {name: shakshuka, serving: 300, parts: {ing_egg: 100, ing_tomato: 150, ing_onion: 40, ing_red_pepper: 40, ing_olive_oil: 15, ing_salt: 2},
+  yield: 0.85}
+wd_Q453174: {name: onsen tamago, same_as: "Egg, whole, boiled or poached"}
+wd_Q957776: {name: migas, serving: 200, parts: {"Bread, white": 100, ing_olive_oil: 20, "Ham, canned": 30, ing_garlic: 5}}
+wd_Q206918: {name: moussaka, serving: 300, parts: {"Eggplant, cooked, fat added": 150, ing_lamb_mince: 60, ing_tomato: 40, ing_milk: 60, ing_butter: 6,
+  ing_maida: 6, "Cheese, Parmesan, dry grated": 10, ing_oil: 10}, yield: 0.9}
+wd_Q6421494: {name: kuli-kuli, same_as: "Peanuts, roasted, unsalted"}
+wd_Q5615325: {name: gui (Korean grilled meat), same_as: wd_Q2431975}
+
+# ---------------------------------------------------------------- salads, vegetables, snacks
+wd_Q209304: {name: gado-gado, serving: 380, parts: {"Potato, boiled, from fresh, peel not eaten, no added fat": 80, "Egg, whole, boiled or poached": 50,
+  ing_tofu: 60, ing_oil: 5, ing_cabbage: 40, "Bean sprouts, raw": 40, ing_beans: 40, Peanut sauce: 50}}
+wd_Q720230: {name: rojak, serving: 250, parts: {ing_cucumber: 50, pineapple: 50, mango: 30, ing_tofu: 20, "Peanuts, roasted, unsalted": 10, ing_jaggery: 15,
+  ing_tamarind: 5}}
+wd_Q1027884: {name: calçotada (grilled onions with romesco), serving: 250, parts: {ing_onion: 150, ing_almonds: 10, ing_olive_oil: 15, ing_tomato: 20,
+  "Bread, white": 10}}
+wd_Q107158482: {name: chips and salsa, serving: 120, parts: {"Tortilla chips, plain": 50, ing_tomato: 40, ing_onion: 10, ing_green_chilli: 2,
+  ing_lemon_juice: 3, ing_salt: 1}}
+wd_Q135113293: {name: tomato salad, serving: 180, parts: {ing_tomato: 150, ing_onion: 20, ing_olive_oil: 10, ing_salt: 1}}
+wd_Q209486: {name: salade niçoise, serving: 300, parts: {ing_lettuce: 50, ing_tomato: 80, "Egg, whole, boiled or poached": 50, "Fish, tuna, canned": 40,
+  "Olives, black": 15, ing_olive_oil: 10, ing_beans: 40}}
+wd_Q135442033: {name: poached pear, serving: 180, parts: {"Pear, raw": 150, ing_sugar: 15}}
+wd_Q1435874: {name: ugali, serving: 300, parts: {ing_maize_flour: 100, ing_water: 250}}
+
+# ---------------------------------------------------------------- breads, pastries and sweets
+wd_Q12849581: {name: çörek (sweet bread), serving: 80, parts: {ing_maida: 100, ing_milk: 50, ing_sugar: 15, ing_butter: 15, ing_egg: 25}, yield: 0.85}
+wd_Q575790: {name: lángos, serving: 180, parts: {ing_maida: 100, ing_water: 60, ing_oil: 20, "Sour cream, light": 30, "Cheese, Mozzarella, NFS": 20,
+  ing_salt: 2}, yield: 0.85}
+wd_Q12200: {name: crêpe, serving: 120, parts: {ing_maida: 50, ing_milk: 100, ing_egg: 50, ing_butter: 10, ing_sugar: 10}, yield: 0.85}
+wd_Q2548021: {name: appam, serving: 120, parts: {ing_rice_flour: 50, ing_coconut: 20, ing_sugar: 3, ing_water: 70, ing_oil: 3}, yield: 0.8}
+wd_Q3091352: {name: pastel de nata, serving: 60, parts: {"Pastry, puff": 40, ing_milk: 40, ing_cream: 20, ing_egg: 15, ing_sugar: 20, ing_maida: 3},
+  yield: 0.9}
+wd_Q12491: {name: mille-feuille, serving: 120, parts: {"Pastry, puff": 50, ing_milk: 60, ing_egg: 15, ing_sugar: 25, ing_cornflour: 5}, yield: 0.95}
+wd_Q683495: {name: gâteau Basque, serving: 90, parts: {ing_maida: 100, ing_butter: 80, ing_sugar: 100, ing_egg: 80, ing_almonds: 30, ing_milk: 100},
+  yield: 0.85}
+wd_Q2571599: {name: qatayef, serving: 100, parts: {ing_maida: 40, ing_milk: 50, ing_sugar: 25, ing_almonds: 15, ing_oil: 10, ing_water: 10}, yield: 0.85}
+wd_Q4943588: {name: boondi (sweet), serving: 60, parts: {ing_besan: 100, ing_oil: 30, ing_sugar: 60, ing_water: 30}, yield: 0.85}
+wd_Q2721752: {name: murukku, serving: 40, parts: {ing_rice_flour: 80, ing_urad_dal: 20, ing_butter: 5, ing_oil: 30, ing_water: 50, ing_salt: 2},
+  yield: 0.65}
+wd_Q5317729: {name: gajar ka halwa, serving: 120, parts: {ing_carrot: 300, ing_milk: 300, ing_sugar: 60, ing_ghee: 30, ing_almonds: 15, ing_khoa: 30},
+  yield: 0.5}
+wd_Q1471040: {name: frutti di Martorana (marzipan), serving: 40, parts: {ing_almonds: 50, ing_sugar: 50}}
+wd_Q12494: {name: savoiardi (ladyfingers), serving: 30, parts: {ing_egg: 60, ing_sugar: 40, ing_maida: 40}, yield: 0.75}
+wd_Q69475095: {name: pupi di zucchero, same_as: "Candy, hard"}
+wd_Q135442153: {name: prianyky (gingerbread), same_as: "Cookie, gingersnaps"}
+wd_Q1495867: {name: Hopje (coffee caramel candy), same_as: "Candy, hard"}
+wd_Q130248830: {name: Lindt Gold Bunny, same_as: Chocolate candy}
+wd_Q2595034: {name: goodie bag (sweets), same_as: "Candy, fruit flavored pieces"}
+wd_Q867426: {name: cendol, serving: 330, parts: {"Coconut milk, used in cooking": 100, ing_jaggery: 30, ing_water: 180, ing_rice_flour: 15}}
+wd_Q905204: {name: kakigōri, serving: 260, parts: {ing_water: 200, "Syrup, NFS": 40, "Milk, condensed, sweetened": 15}}
+wd_Q493784: {name: bingsu, serving: 300, parts: {ing_milk: 150, "Kidney beans, from dried, no added fat": 40, ing_sugar: 25, "Milk, condensed, sweetened": 20,
+  ing_water: 60}}
+wd_Q52406: {name: muesli with milk, serving: 210, parts: {ing_oats: 60, ing_raisins: 15, ing_almonds: 10, ing_sugar: 5, ing_milk: 150}}
+
+# ---------------------------------------------------------------- moved from build_world_dishes.py RECIPES
+wd_Q24027629: {name: halal snack pack, serving: 450, parts: {"Potato, french fries, restaurant": 45, kebab: 35, "Cheese, Cheddar": 6,
+  Garlic sauce: 8, Barbecue sauce: 6}}
+wd_Q5055611: {name: cağ kebabı, same_as: kebab, serving: 200}
+wd_Q6009729: {name: kağıt kebabı, serving: 300, parts: {kebab: 70, "Potato, french fries, from fresh, baked": 30}}

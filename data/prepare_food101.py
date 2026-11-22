@@ -25,6 +25,7 @@ import argparse
 import csv
 import os
 import random
+import sys
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from io import BytesIO
@@ -519,7 +520,11 @@ def build_combined_index(sources: list[str], short_side: int, name: str) -> Path
     # duplicate classes -> their parent dish, vague/non-dish classes left out, for every source (data/class_merges.yaml)
     merges = yaml.safe_load((ROOT / "data" / "class_merges.yaml").read_text(encoding="utf-8"))
     merge, gone = merges.get("merge") or {}, set(merges.get("drop") or [])
-    n = 0
+    # photos a vision model found are not the dish they are labelled as (scripts/clean_photos.py)
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from clean_photos import rejected
+    bad = rejected()
+    n = skipped = 0
     with open(out, "w", newline="", encoding="utf-8") as fo:
         w = csv.writer(fo)
         w.writerow(["path", "label", "split", "source"])
@@ -533,9 +538,13 @@ def build_combined_index(sources: list[str], short_side: int, name: str) -> Path
                     label = merge.get(label, label)
                     if row["label"] in drop or label in gone:
                         continue
+                    if (src, row["path"]) in bad:
+                        skipped += 1
+                        continue
                     w.writerow([f"{d}/{row['path']}", label, row["split"], src])
                     n += 1
-    print(f"[index] {'+'.join(sources)}: {n} images -> {out}")
+    print(f"[index] {'+'.join(sources)}: {n} images -> {out}"
+          + (f" ({skipped} photos left out: not the dish they are labelled as)" if skipped else ""))
     return out
 
 

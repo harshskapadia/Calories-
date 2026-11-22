@@ -71,3 +71,33 @@ def test_merges_drops_and_kept_splits(tmp_path: Path, monkeypatch: pytest.Monkey
     train = {r["path"] for r in csv.DictReader(open(out["train"], encoding="utf-8"))}
     assert test[f"src_256/train/{dup}/0.jpg"] == parent and "src_256/train/pizza/1.jpg" in test
     assert not ({f"src_256/train/{dup}/0.jpg", "src_256/train/pizza/1.jpg"} & train)
+
+
+def test_photo_checks_leave_out_wrong_photos(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """scripts/clean_photos.py: photos a vision model marked "no" are skipped; "unsure" ones are kept."""
+    from types import SimpleNamespace as NS
+
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import clean_photos as C
+
+    monkeypatch.setattr(C, "CHECKS", tmp_path / "checks.csv.gz")
+    C.save_checks({("s", "train/pizza/0.jpg"): {"source": "s", "path": "train/pizza/0.jpg", "label": "pizza",
+                                                 "verdict": "no", "reason": "a restaurant", "model": "m"},
+                   ("s", "train/pizza/1.jpg"): {"source": "s", "path": "train/pizza/1.jpg", "label": "pizza",
+                                                 "verdict": "unsure", "reason": "", "model": "m"}})
+    assert C.rejected() == {("s", "train/pizza/0.jpg")}
+
+    monkeypatch.setattr(P, "CACHE", tmp_path)
+    (tmp_path / "src_256").mkdir()
+    with open(tmp_path / "src_256" / "index.csv", "w", newline="", encoding="utf-8") as f:
+        csv.writer(f).writerows([("path", "label", "split"), *[(f"train/pizza/{i}.jpg", "pizza", "train") for i in range(3)]])
+    monkeypatch.setattr(P, "load_sources", lambda: {"s": {"dir": "src_256"}})
+    paths = {r["path"] for r in csv.DictReader(open(P.build_combined_index(["s"], 256, "t"), encoding="utf-8"))}
+    assert paths == {"src_256/train/pizza/1.jpg", "src_256/train/pizza/2.jpg"}
+
+    # answers: a clean JSON verdict, a refusal and a cut-off answer (both keep the photo)
+    msg = lambda stop, text: NS(stop_reason=stop, content=[NS(type="text", text=text)])  # noqa: E731
+    assert C.parse(msg("end_turn", '{"verdict": "no", "reason": "raw dough"}')) == ("no", "raw dough")
+    assert C.parse(msg("refusal", ""))[0] == "unsure"
+    assert C.parse(msg("max_tokens", '{"verd'))[0] == "unsure"
+    assert C.parse(msg("end_turn", "not json"))[0] == "unsure"

@@ -13,6 +13,7 @@ matplotlib>=3.8
 seaborn>=0.13
 pyyaml>=6.0
 requests>=2.31
+anthropic>=1.0           # optional: scripts/clean_photos.py (checks training photos with Claude)
 # App
 gradio>=4.40
 # Dev

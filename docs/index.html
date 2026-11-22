@@ -16,7 +16,7 @@
   <meta name="apple-mobile-web-app-title" content="NutriSnap">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="preload" href="fonts/archivo-wdth.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=bdfaa978dc">
+  <link rel="stylesheet" href="style.css?v=924c5771e4">
 </head>
 <body>
   <header class="topbar">
@@ -65,7 +65,11 @@
           <input id="file" type="file" accept="image/*" hidden>
         </label>
       </div>
-      <button id="pack-btn" type="button" class="linkish pack-btn" aria-expanded="false" aria-controls="panel-pack">📦 Packaged food (barcode)</button>
+      <button id="pack-btn" type="button" class="pack-btn" aria-expanded="false" aria-controls="panel-pack">
+        <span class="pack-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M10.5 8v8M14 8v8M17 8v8"/></svg></span>
+        <span class="pack-txt"><b>Packaged food</b><span>Scan a barcode or label</span></span>
+        <span class="pack-chev" aria-hidden="true">›</span>
+      </button>
       <div id="status" class="status" role="status" aria-live="polite">
         <div class="bar"><div id="bar-fill"></div></div>
         <span id="status-text">Loading the model…</span>

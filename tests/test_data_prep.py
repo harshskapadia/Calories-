@@ -101,3 +101,19 @@ def test_photo_checks_leave_out_wrong_photos(tmp_path: Path, monkeypatch: pytest
     assert C.parse(msg("refusal", ""))[0] == "unsure"
     assert C.parse(msg("max_tokens", '{"verd'))[0] == "unsure"
     assert C.parse(msg("end_turn", "not json"))[0] == "unsure"
+
+
+def test_photo_checks_never_starve_a_dish(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """CLIP's "looks like another dish" is cancelled for a dish left with < 15 photos; "a market stall" never is."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import clean_photos as C
+
+    def row(lab, i, verdict, reason):
+        return (("s", f"{lab}/{i}.jpg"), {"source": "s", "path": f"{lab}/{i}.jpg", "label": lab, "verdict": verdict,
+                                          "reason": reason, "model": "clip:ViT-L-14"})
+    checks = dict([row("koba", i, "yes", "") for i in range(6)]
+                  + [row("koba", 10, "no", "looks like sapin-sapin"), row("koba", 11, "no", "looks like a market stall")]
+                  + [row("pizza", i, "yes", "") for i in range(20)] + [row("pizza", 50, "no", "looks like Sushi")])
+    monkeypatch.setattr(C, "CHECKS", tmp_path / "c.csv.gz")
+    C.save_checks(checks)
+    assert C.rejected() == {("s", "koba/11.jpg"), ("s", "pizza/50.jpg")}

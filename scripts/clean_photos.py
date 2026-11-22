@@ -92,9 +92,28 @@ def save_checks(checks: dict[tuple[str, str], dict]) -> None:
     tmp.replace(CHECKS)   # never leave a half-written file behind
 
 
+MIN_KEEP = 15   # a dish keeps its "looks like a different dish" photos if it would otherwise be left with fewer
+
+
+def final(checks: dict[tuple[str, str], dict]) -> dict[tuple[str, str], dict]:
+    """The checks with one safety rule applied: CLIP's "looks like <another dish>" is the least certain reason (it
+    confuses similar dishes it barely knows), so for a dish that would be left with fewer than MIN_KEEP photos those
+    removals are cancelled. Photos that are clearly not a dish (a stall, people, a sign...) are always removed."""
+    not_food = {f"looks like {r}" for r in [*NOT_FOOD.values(), "a menu, sign or text"]}
+    other_dish = lambda r: (r["verdict"] == "no" and r["model"].startswith("clip:")  # noqa: E731
+                            and r["reason"].startswith("looks like ") and r["reason"] not in not_food)
+    kept = Counter(r["label"] for r in checks.values() if r["verdict"] != "no")
+    out = {}
+    for k, r in checks.items():
+        if other_dish(r) and kept[r["label"]] < MIN_KEEP:
+            r = {**r, "verdict": "unsure", "reason": f"kept: only {kept[r['label']]} photos otherwise ({r['reason']})"}
+        out[k] = r
+    return out
+
+
 def rejected() -> set[tuple[str, str]]:
     """(source, path) of the photos to leave out of training. Used by data/prepare_food101.py."""
-    return {k for k, r in load_checks().items() if r["verdict"] == "no"}
+    return {k for k, r in final(load_checks()).items() if r["verdict"] == "no"}
 
 
 def dish_name(label: str, names: dict[str, str]) -> str:
@@ -384,7 +403,7 @@ def run_local(items: list[dict], spec: str, names: dict, checks: dict, batch: in
 
 
 def summary(names: dict) -> None:
-    checks = load_checks()
+    checks = final(load_checks())
     c = Counter(r["verdict"] for r in checks.values())
     print(f"[clean] all checks: {len(checks):,} photos: {c['yes']:,} yes, {c['no']:,} no, {c['unsure']:,} unsure")
     by = defaultdict(Counter)
@@ -397,6 +416,11 @@ def summary(names: dict) -> None:
               "consider dropping them in data/class_merges.yaml):")
         for k, n in bad[:30]:
             print(f"          {dish_name(k, names)[:34]:34} {n['no']}/{sum(n.values())} rejected")
+    few = sorted((k for k, n in by.items() if n["yes"] + n["unsure"] < MIN_KEEP), key=lambda k: by[k]["yes"] + by[k]["unsure"])
+    if few:
+        print(f"[clean] {len(few)} dishes have fewer than {MIN_KEEP} good photos from these sources (they may still have "
+              "photos from the other datasets): " + ", ".join(f"{dish_name(k, names)} ({by[k]['yes'] + by[k]['unsure']})"
+                                                             for k in few[:15]) + ("…" if len(few) > 15 else ""))
 
 
 def review(names: dict) -> None:
@@ -409,7 +433,7 @@ def review(names: dict) -> None:
 
     specs = load_sources()
     by = defaultdict(lambda: {"no": [], "yes": [], "unsure": []})
-    for r in load_checks().values():
+    for r in final(load_checks()).values():
         f = CACHE / specs[r["source"]]["dir"] / r["path"]
         if f.exists():
             by[r["label"]][r["verdict"]].append((f.relative_to(CACHE).as_posix(), r["reason"]))

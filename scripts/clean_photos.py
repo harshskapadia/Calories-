@@ -1,20 +1,24 @@
-"""Check training photos with a vision model and leave out the ones that are not the dish they are labelled as.
+"""Check training photos and leave out the ones that are not the dish they are labelled as.
 
 The Wikimedia Commons and MM-Food photos were matched to dishes by name, so some of them show something else: the
 restaurant, the raw ingredients, a menu, a market stall, a different dish. Training on those teaches the model wrong
-things. This script asks Claude to look at each photo ("is this a serving of <dish>?") and stores the answers in
-data/photo_checks.csv.gz (committed, so every later training run uses them). data/prepare_food101.py then skips the
-photos marked "no". "unsure" photos are kept.
+things. This script looks at each photo and stores a verdict in data/photo_checks.csv.gz (committed, so every later
+training run uses it). data/prepare_food101.py then skips the photos marked "no"; "unsure" photos are kept.
 
-Needs an Anthropic API key in the ANTHROPIC_API_KEY environment variable (never in a file in this repo).
+Free, on your own GPU (CLIP ViT-L/14, ~10-20 min for ~60k photos on an RTX 3050 Ti):
 
-    # 1. try it on 200 photos: see what it rejects and what the whole run would cost
-    python scripts/clean_photos.py --sample 200 --model claude-haiku-5-5
-    python scripts/clean_photos.py --review           # opens a page of the rejected photos, to check its judgement
-    # 2. the rest, through the Message Batches API (half price, usually done within an hour; safe to stop and re-run)
-    python scripts/clean_photos.py --all --model claude-haiku-5-5
-    python scripts/clean_photos.py --review
-    # 3. retrain (the rejected photos are skipped automatically)
+    python scripts/clean_photos.py --sample 3000 --free  # a few dozen dishes first
+    python scripts/clean_photos.py --review               # a page of what it removed, to check its judgement
+    python scripts/clean_photos.py --local                # the rest
+
+A photo is removed when CLIP finds it looks more like "a restaurant", "raw ingredients", "a menu", "people"... than
+food, or when its own dish is not among the 30 dishes it looks most like (unless CLIP fails that for most photos of the
+dish: then it doesn't know the dish's name, and those photos are kept).
+
+Paid alternative, a more careful judge (Claude; needs an Anthropic API key in ANTHROPIC_API_KEY, never in a file here):
+
+    python scripts/clean_photos.py --sample 200 --model claude-haiku-5-5   # prints what --all would cost
+    python scripts/clean_photos.py --all --model claude-haiku-5-5          # Message Batches API, half price
 
 Photos already checked are never sent again. Run it after exporting the photos (the training command does that).
 """
@@ -239,6 +243,142 @@ def run_all(client, todo: list[dict], model: str, names: dict, checks: dict) -> 
     summary(names)
 
 
+# ---------------------------------------------------------------------------- free: CLIP on your own GPU
+CLIP_DEFAULT = "ViT-L-14:datacomp_xl_s13b_b90k"   # open_clip, MIT licence; ~1.7 GB download, ~1 GB of GPU memory
+DISH_TEMPLATES = ["a photo of {}, a type of food.", "a close-up photo of {}.", "a serving of {}."]
+FOOD = ["a photo of a dish of food.", "a photo of a meal on a plate."]
+NOT_FOOD = {   # what a wrongly-labelled photo usually shows instead (prompt -> reason shown on the review page)
+    "a photo of a restaurant or a shop front.": "a restaurant or shop",
+    "a photo of a market stall.": "a market stall",
+    "a photo of a menu, a sign or a page of text.": "a menu, sign or text",
+    "a photo of raw vegetables, raw meat or other uncooked ingredients.": "raw ingredients",
+    "a photo of a person.": "people",
+    "a photo of a group of people.": "people",
+    "a drawing or a painting.": "a drawing or painting",
+    "a photo of a building or a street.": "a building or street",
+    "a photo of a food package or a box.": "packaging",
+    "a photo of a kitchen.": "a kitchen",
+    "a map.": "a map",
+    "a photo of a live animal.": "an animal",
+    "a photo of a plant or a tree.": "a plant",
+}
+# CLIP reads text, so a menu or sign with the dish's name on it looks like the dish: check for that per dish
+TEXT_TEMPLATES = ['a menu or a sign with the words "{}".', 'a page of text about {}.']
+NOT_FOOD_P = 0.6     # leave a photo out when "not food" prompts take more than this share of the match
+RANK = 30            # ... or when its own dish is not among the 30 dishes it looks most like
+CLASS_GUARD = 0.5    # if most photos of a dish fail the rank test, CLIP doesn't know that dish's name: keep them
+
+
+def dish_classes(labels: set[str]) -> tuple[list[str], dict[str, str]]:
+    """The dishes the model learns (after data/class_merges.yaml) and the merge map, to rank each photo against."""
+    import yaml
+
+    m = yaml.safe_load((ROOT / "data" / "class_merges.yaml").read_text(encoding="utf-8")) or {}
+    merge, drop = m.get("merge") or {}, set(m.get("drop") or [])
+    meta = ROOT / "docs" / "model" / "meta.json"
+    keys = set(json.loads(meta.read_text(encoding="utf-8"))["classes"]) if meta.exists() else set()
+    keys |= labels
+    return sorted({merge.get(k, k) for k in keys} - drop), merge
+
+
+def run_local(items: list[dict], spec: str, names: dict, checks: dict, batch: int = 64) -> None:
+    import open_clip
+    import torch
+    from PIL import Image
+
+    arch, tag = spec.split(":")
+    dev = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"[clean] loading CLIP {arch} ({tag}) on {dev}" + ("" if dev == "cuda" else " (no GPU found: this will be slow)"))
+    model, _, pre = open_clip.create_model_and_transforms(arch, pretrained=tag, device=dev)
+    tok = open_clip.get_tokenizer(arch)
+    model.eval()
+    amp = torch.autocast("cuda", dtype=torch.float16) if dev == "cuda" else torch.autocast("cpu", enabled=False)
+
+    @torch.no_grad()
+    def text(prompts: list[str]) -> torch.Tensor:
+        out = []
+        for i in range(0, len(prompts), 256):
+            with amp:
+                e = model.encode_text(tok(prompts[i:i + 256]).to(dev)).float()
+            out.append(e / e.norm(dim=-1, keepdim=True))
+        return torch.cat(out)
+
+    classes, merge = dish_classes({it["label"] for it in items})
+    cidx = {k: i for i, k in enumerate(classes)}
+    n_t = len(DISH_TEMPLATES)
+    dish = text([t.format(dish_name(k, names)) for k in classes for t in DISH_TEMPLATES]).view(len(classes), n_t, -1).mean(1)
+    dish = dish / dish.norm(dim=-1, keepdim=True)
+    food = text(FOOD).mean(0, keepdim=True)
+    food = food / food.norm(dim=-1, keepdim=True)
+    neg_reason = list(NOT_FOOD.values()) + ["a menu, sign or text"] * len(TEXT_TEMPLATES)
+    neg = text(list(NOT_FOOD))
+    n_x = len(TEXT_TEMPLATES)
+    words = text([t.format(dish_name(k, names)) for k in classes for t in TEXT_TEMPLATES]).view(len(classes), n_x, -1)
+    scale = model.logit_scale.exp().float()
+
+    def load(it):
+        try:
+            return pre(Image.open(it["file"]).convert("RGB"))
+        except Exception:  # noqa: BLE001
+            return None
+
+    results: dict[str, list] = defaultdict(list)   # dish -> [(item, verdict, reason, rank_failed)]
+    t0 = time.time()
+    with ThreadPoolExecutor(6) as pool:
+        for start in range(0, len(items), batch):
+            chunk = items[start:start + batch]
+            imgs = list(pool.map(load, chunk))
+            ok = [i for i, x in enumerate(imgs) if x is not None]
+            if not ok:
+                continue
+            with torch.no_grad(), amp:
+                e = model.encode_image(torch.stack([imgs[i] for i in ok]).to(dev)).float()
+            e = e / e.norm(dim=-1, keepdim=True)
+            sim_d = e @ dish.T                                   # [n, dishes]
+            for row, i in enumerate(ok):
+                it = chunk[i]
+                lab = merge.get(it["label"], it["label"])
+                if lab not in cidx:
+                    continue                                     # a dropped class: never trained anyway
+                own = sim_d[row, cidx[lab]]
+                # 1) not food at all: own dish + generic food vs. the "not food" prompts
+                logits = scale * torch.cat([own[None], (e[row] @ food.T), e[row] @ neg.T, words[cidx[lab]] @ e[row]])
+                p = logits.softmax(0)
+                p_neg = p[2:].sum().item()
+                if p_neg > NOT_FOOD_P:
+                    results[lab].append((it, "no", f"looks like {neg_reason[int(p[2:].argmax())]}", False))
+                    continue
+                # 2) a different dish: its own dish is far down the list of dishes it looks like
+                rank = int((sim_d[row] > own).sum())
+                if rank >= RANK:
+                    top = classes[int(sim_d[row].argmax())]
+                    results[lab].append((it, "no", f"looks like {dish_name(top, names)}", True))
+                else:
+                    results[lab].append((it, "yes", f"dish rank {rank + 1}", False))
+            done = min(start + batch, len(items))
+            if done % (batch * 50) < batch or done == len(items):
+                rate = done / max(1e-6, time.time() - t0)
+                print(f"[clean]   {done:,}/{len(items):,} photos ({rate:.0f}/s, ~{(len(items) - done) / rate / 60:.0f} min left)",
+                      flush=True)
+
+    unknown = []
+    for lab, rows in results.items():
+        failed = sum(r[3] for r in rows)
+        guard = len(rows) >= 5 and failed / len(rows) > CLASS_GUARD
+        if guard:
+            unknown.append(lab)
+        for it, v, reason, rank_failed in rows:
+            if guard and rank_failed:
+                v, reason = "unsure", "CLIP does not know this dish's name"
+            checks[(it["source"], it["path"])] = {**it, "verdict": v, "reason": reason, "model": f"clip:{arch}"}
+    save_checks(checks)
+    if unknown:
+        print(f"[clean] {len(unknown)} dishes CLIP doesn't recognise by name: only non-food photos were removed there "
+              f"(e.g. {', '.join(dish_name(k, names) for k in unknown[:8])})")
+    summary(names)
+    print("[clean] check what it removed:  python scripts/clean_photos.py --review")
+
+
 def summary(names: dict) -> None:
     checks = load_checks()
     c = Counter(r["verdict"] for r in checks.values())
@@ -282,12 +422,18 @@ def review(names: dict) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument("--sample", type=int, metavar="N", help="check N random photos now and estimate the full cost")
-    g.add_argument("--all", action="store_true", help="check every remaining photo through the Message Batches API")
+    g.add_argument("--local", action="store_true", help="free: check every photo with CLIP on this computer's GPU")
+    g.add_argument("--sample", type=int, metavar="N", help="check N random photos now (with --local: ~N photos of "
+                   "whole dishes; with Claude: estimates the full cost)")
+    g.add_argument("--all", action="store_true", help="paid: check every remaining photo with Claude (Batches API)")
     g.add_argument("--review", action="store_true", help="write a page of the rejected photos")
     g.add_argument("--summary", action="store_true", help="print the counts so far")
-    ap.add_argument("--model", default="claude-opus-5-5", help="Claude model (default claude-opus-5-5; "
-                    "claude-haiku-5-5 costs ~40x less)")
+    ap.add_argument("--free", action="store_true", help="with --sample: use CLIP on this computer instead of Claude")
+    ap.add_argument("--clip", default=CLIP_DEFAULT, help=f"open_clip model:pretrained for --local (default {CLIP_DEFAULT}; "
+                    "ViT-B-32:datacomp_xl_s13b_b90k if the GPU runs out of memory)")
+    ap.add_argument("--redo", action="store_true", help="forget earlier CLIP checks and check those photos again")
+    ap.add_argument("--model", default="claude-opus-5-5", help="Claude model for --sample / --all (default "
+                    "claude-opus-5-5; claude-haiku-5-5 costs ~40x less)")
     ap.add_argument("--sources", default=",".join(DEFAULT_SOURCES), help="comma-separated, from data/sources.yaml")
     args = ap.parse_args()
 
@@ -297,13 +443,29 @@ def main() -> None:
     if args.summary:
         return summary(names)
 
-    import anthropic
-
     checks = load_checks()
+    if args.redo:
+        checks = {k: r for k, r in checks.items() if not r["model"].startswith("clip:")}
     todo = [p for p in photos(args.sources.split(",")) if (p["source"], p["path"]) not in checks]
-    print(f"[clean] {len(todo):,} photos not checked yet ({len(checks):,} already done); model {args.model}")
+    print(f"[clean] {len(todo):,} photos not checked yet ({len(checks):,} already done)")
     if not todo:
         return summary(names)
+    if args.local or args.free:
+        if args.sample:   # whole dishes, so the "CLIP doesn't know this dish" guard sees all of a dish's photos
+            by = defaultdict(list)
+            for p in todo:
+                by[p["label"]].append(p)
+            labs, pick = sorted(by), []
+            random.Random(0).shuffle(labs)
+            for lab in labs:
+                if len(pick) >= args.sample:
+                    break
+                pick += by[lab]
+            todo = pick
+        return run_local(todo, args.clip, names, checks)
+
+    import anthropic
+
     client = anthropic.Anthropic()
     if args.sample:
         run_sample(client, todo, args.sample, args.model, names, checks)

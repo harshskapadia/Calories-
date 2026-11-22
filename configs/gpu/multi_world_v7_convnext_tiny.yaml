@@ -1,4 +1,4 @@
-# v7: v6 + cleaned photos. Before training, scripts/clean_photos.py has Claude look at every Wikimedia Commons and
+# v7: v6 + cleaned photos. Before training, scripts/clean_photos.py --local (free, CLIP on your GPU) checks every Commons and
 # MM-Food photo and marks the ones that are not the dish they are labelled as (a restaurant, raw ingredients, a menu,
 # another dish); those are left out of training and testing (data/photo_checks.csv.gz). Everything else as v6:
 # v6: v5 cleaned up + your own photos. Same photos as v5 (nothing new to download), but the 28 duplicate classes train

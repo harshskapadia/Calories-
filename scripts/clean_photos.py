@@ -265,6 +265,7 @@ NOT_FOOD = {   # what a wrongly-labelled photo usually shows instead (prompt -> 
 # CLIP reads text, so a menu or sign with the dish's name on it looks like the dish: check for that per dish
 TEXT_TEMPLATES = ['a menu or a sign with the words "{}".', 'a page of text about {}.']
 NOT_FOOD_P = 0.6     # leave a photo out when "not food" prompts take more than this share of the match
+TEXT_P = 0.9         # ... text needs to dominate: a real dish photo with a caption or watermark must stay
 RANK = 30            # ... or when its own dish is not among the 30 dishes it looks most like
 CLASS_GUARD = 0.5    # if most photos of a dish fail the rank test, CLIP doesn't know that dish's name: keep them
 
@@ -344,9 +345,12 @@ def run_local(items: list[dict], spec: str, names: dict, checks: dict, batch: in
                 # 1) not food at all: own dish + generic food vs. the "not food" prompts
                 logits = scale * torch.cat([own[None], (e[row] @ food.T), e[row] @ neg.T, words[cidx[lab]] @ e[row]])
                 p = logits.softmax(0)
-                p_neg = p[2:].sum().item()
-                if p_neg > NOT_FOOD_P:
-                    results[lab].append((it, "no", f"looks like {neg_reason[int(p[2:].argmax())]}", False))
+                n_gen = 2 + len(NOT_FOOD)
+                if p[2:n_gen].sum().item() > NOT_FOOD_P:
+                    results[lab].append((it, "no", f"looks like {neg_reason[int(p[2:n_gen].argmax())]}", False))
+                    continue
+                if p[n_gen:].sum().item() > TEXT_P:
+                    results[lab].append((it, "no", "looks like a menu, sign or text", False))
                     continue
                 # 2) a different dish: its own dish is far down the list of dishes it looks like
                 rank = int((sim_d[row] > own).sum())
@@ -396,27 +400,46 @@ def summary(names: dict) -> None:
 
 
 def review(names: dict) -> None:
-    """A page of every rejected photo with the reason, to check the model's judgement by eye."""
+    """A page of every rejected photo with the reason, grouped by dish (most-removed dishes first), to check the
+    judgement by eye. Each dish also shows a few photos it kept, for comparison."""
+    import html
+
     sys.path.insert(0, str(ROOT))
     from data.prepare_food101 import load_sources
 
     specs = load_sources()
-    rows = [r for r in load_checks().values() if r["verdict"] == "no"]
-    rows.sort(key=lambda r: (dish_name(r["label"], names), r["path"]))
-    cells = []
-    for r in rows:
+    by = defaultdict(lambda: {"no": [], "yes": [], "unsure": []})
+    for r in load_checks().values():
         f = CACHE / specs[r["source"]]["dir"] / r["path"]
         if f.exists():
-            cells.append(f'<figure><img loading="lazy" src="{f.relative_to(CACHE).as_posix()}"><figcaption><b>'
-                         f'{dish_name(r["label"], names)}</b><br>{r["reason"]}</figcaption></figure>')
+            by[r["label"]][r["verdict"]].append((f.relative_to(CACHE).as_posix(), r["reason"]))
+    dishes = sorted((k for k in by if by[k]["no"]), key=lambda k: -len(by[k]["no"]) / sum(map(len, by[k].values())))
+    not_food = {f"looks like {r}" for r in [*NOT_FOOD.values(), "a menu, sign or text"]}
+    reasons = Counter(why if why in not_food or not why.startswith("looks like") else "looks like a different dish"
+                      for k in dishes for _, why in by[k]["no"])
+    fig = lambda src, cap: (f'<figure><img loading="lazy" src="{html.escape(src)}"><figcaption>{html.escape(cap)}'  # noqa: E731
+                            "</figcaption></figure>")
+    parts, total = [], 0
+    for k in dishes:
+        d = by[k]
+        n_all = sum(map(len, d.values()))
+        total += len(d["no"])
+        parts.append(f'<h2>{html.escape(dish_name(k, names))} <small>removed {len(d["no"])} of {n_all}</small></h2>'
+                     '<main>' + "".join(fig(src, why) for src, why in d["no"]) + "</main>"
+                     + (f'<p class=kept>kept, for comparison:</p><main class=kept>'
+                        + "".join(fig(src, "kept") for src, _ in d["yes"][:6]) + "</main>" if d["yes"] else ""))
+    summary_html = "".join(f"<li>{html.escape(r)}: {n}</li>" for r, n in reasons.most_common())
     out = CACHE / "rejected_photos.html"
     out.write_text("<!doctype html><meta charset=utf-8><title>Rejected photos</title><style>body{font:14px system-ui;"
-                   "margin:16px}main{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}"
-                   "img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px}figure{margin:0}</style>"
-                   f"<h1>{len(cells)} rejected photos</h1><p>Each one will be left out of training. If many are "
-                   "actually fine, tell me and I'll make the check less strict.</p><main>" + "".join(cells) + "</main>",
-                   encoding="utf-8")
-    print(f"[clean] {len(cells)} rejected photos -> {out}  (open it in a browser)")
+                   "margin:16px;max-width:1200px}main{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));"
+                   "gap:10px}img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px}figure{margin:0}"
+                   "h2{margin:28px 0 8px;border-top:2px solid #000;padding-top:12px}small{font-weight:400;color:#666}"
+                   "main.kept{opacity:.75}main.kept img{border:3px solid #2a9d4b}p.kept{color:#2a9d4b;margin:10px 0 4px}"
+                   "</style>"
+                   f"<h1>{total} photos would be left out, of {len(dishes)} dishes</h1><p>Most-removed dishes first. "
+                   "Green-bordered photos were kept, for comparison. If many removed photos are actually good, tell "
+                   f"me which dishes.</p><ul>{summary_html}</ul>" + "".join(parts), encoding="utf-8")
+    print(f"[clean] {total} rejected photos -> {out}  (open it in a browser)")
 
 
 def main() -> None:
@@ -431,7 +454,8 @@ def main() -> None:
     ap.add_argument("--free", action="store_true", help="with --sample: use CLIP on this computer instead of Claude")
     ap.add_argument("--clip", default=CLIP_DEFAULT, help=f"open_clip model:pretrained for --local (default {CLIP_DEFAULT}; "
                     "ViT-B-32:datacomp_xl_s13b_b90k if the GPU runs out of memory)")
-    ap.add_argument("--redo", action="store_true", help="forget earlier CLIP checks and check those photos again")
+    ap.add_argument("--redo", action="store_true", help="check the photos CLIP already checked again (after a change "
+                    "to the rules); with --local, then also the rest")
     ap.add_argument("--model", default="claude-opus-5-5", help="Claude model for --sample / --all (default "
                     "claude-opus-5-5; claude-haiku-5-5 costs ~40x less)")
     ap.add_argument("--sources", default=",".join(DEFAULT_SOURCES), help="comma-separated, from data/sources.yaml")
@@ -444,14 +468,18 @@ def main() -> None:
         return summary(names)
 
     checks = load_checks()
+    again = set()
     if args.redo:
-        checks = {k: r for k, r in checks.items() if not r["model"].startswith("clip:")}
+        again = {k for k, r in checks.items() if r["model"].startswith("clip:")}
+        checks = {k: r for k, r in checks.items() if k not in again}
     todo = [p for p in photos(args.sources.split(",")) if (p["source"], p["path"]) not in checks]
+    if args.redo and args.sample:   # re-check exactly the photos checked before
+        todo = [p for p in todo if (p["source"], p["path"]) in again]
     print(f"[clean] {len(todo):,} photos not checked yet ({len(checks):,} already done)")
     if not todo:
         return summary(names)
     if args.local or args.free:
-        if args.sample:   # whole dishes, so the "CLIP doesn't know this dish" guard sees all of a dish's photos
+        if args.sample and not args.redo:   # whole dishes, so the "CLIP doesn't know this dish" guard sees all of a dish's photos
             by = defaultdict(list)
             for p in todo:
                 by[p["label"]].append(p)
